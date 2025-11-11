@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project>
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Authors>Massimiliano Filanti</Authors>
+		<Product>Massimiliano Filanti</Product>
+		<Copyright>Copyright © 2025</Copyright>
+		<AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+		<Revision>0000</Revision>
+		<AssemblyVersion>2025.11.11.$(Revision)</AssemblyVersion>
+		<FileVersion>$(AssemblyVersion)</FileVersion>
+		<VersionPrefix>$(AssemblyVersion)</VersionPrefix>
+		<VersionSuffix>Build-</VersionSuffix>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<NoWarn>CS8765</NoWarn>
+	</PropertyGroup>
+	
+
+</Project>

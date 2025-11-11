@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36623.8
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoMath", "GeoMath\GeoMath.csproj", "{04736537-166F-4CEA-863F-FA49B5EEC5CF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		SharedBuildProps.xml = SharedBuildProps.xml
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoMathTest", "GeoMathTest\GeoMathTest.csproj", "{00522EA3-2C3C-40DA-827A-FEBA63C8807E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{04736537-166F-4CEA-863F-FA49B5EEC5CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04736537-166F-4CEA-863F-FA49B5EEC5CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04736537-166F-4CEA-863F-FA49B5EEC5CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04736537-166F-4CEA-863F-FA49B5EEC5CF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00522EA3-2C3C-40DA-827A-FEBA63C8807E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00522EA3-2C3C-40DA-827A-FEBA63C8807E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00522EA3-2C3C-40DA-827A-FEBA63C8807E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00522EA3-2C3C-40DA-827A-FEBA63C8807E}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {741BC52A-E9F9-4854-919C-BF4F10CFE42D}
+	EndGlobalSection
+EndGlobal
