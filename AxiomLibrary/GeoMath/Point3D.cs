@@ -103,7 +103,7 @@
 			// Calcolo il determinante equivalente al doppio dell'area del triangolo
 			double area2 = X * (point2.Y - point3.Y) + point2.X * (point3.Y - Y) + point3.X * (Y - point2.Y);
 
-			return Math.Abs(area2) < MathUtils.Epsilon;
+			return Math.Abs(area2) < MathUtils.FineTolerance;
 		}
 
 		/// <summary>
@@ -131,9 +131,9 @@
 			double crossY = abz * acx - abx * acz;
 			double crossZ = abx * acy - aby * acx;
 
-			return Math.Abs(crossX) < MathUtils.Epsilon &&
-				   Math.Abs(crossY) < MathUtils.Epsilon &&
-				   Math.Abs(crossZ) < MathUtils.Epsilon;
+			return Math.Abs(crossX) < MathUtils.FineTolerance &&
+				   Math.Abs(crossY) < MathUtils.FineTolerance &&
+				   Math.Abs(crossZ) < MathUtils.FineTolerance;
 		}
 
 
@@ -164,9 +164,9 @@
 		public override int GetHashCode()
 		{
 			// Usa una tolleranza per evitare problemi di arrotondamento
-			int hashX = Math.Round(X / MathUtils.Epsilon).GetHashCode();
-			int hashY = Math.Round(Y / MathUtils.Epsilon).GetHashCode();
-			int hashZ = Math.Round(Z / MathUtils.Epsilon).GetHashCode();
+			int hashX = Math.Round(X / MathUtils.FineTolerance).GetHashCode();
+			int hashY = Math.Round(Y / MathUtils.FineTolerance).GetHashCode();
+			int hashZ = Math.Round(Z / MathUtils.FineTolerance).GetHashCode();
 			return HashCode.Combine(hashX, hashY, hashZ);
 		}
 
@@ -178,6 +178,12 @@
 		{
 			return double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z);
 		}
+
+		/// <summary>
+		/// Trasforma il punto in un vettore.
+		/// </summary>
+		/// <returns></returns>
+		public Vector3D ToVector()=> new Vector3D(X, Y, Z);
 		#endregion
 
 		#region Operators
