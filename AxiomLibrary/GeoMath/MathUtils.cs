@@ -33,7 +33,7 @@ namespace Axiom.GeoMath
 		/// <param name="val1">Valore 1</param>
 		/// <param name="val2">Valore 2</param>
 		/// <returns>True se i valori sono uguali a meno della precisione, false altrimenti</returns>
-		public static bool IsEqual(double val1, double val2) => IsEqual(val1, val2, FineTolerance);
+		public static bool IsEqual(double val1, double val2) => IsEquals(val1, val2, FineTolerance);
 
 		/// <summary>
 		/// Funzione che verifica se i due valori sono uguali a meno della 
@@ -43,7 +43,7 @@ namespace Axiom.GeoMath
 		/// <param name="val2">Valore 2</param>
 		/// <param name="precision">Precisione</param>
 		/// <returns>True se i valori sono uguali a meno della precisione, false altrimenti</returns>
-		public static bool IsEqual(double val1, double val2, double precision) => Math.Abs(val1 - val2) < precision;
+		public static bool IsEquals(double val1, double val2, double precision) => Math.Abs(val1 - val2) < precision;
 
 
 		/// <summary>
@@ -61,7 +61,7 @@ namespace Axiom.GeoMath
 		/// <param name="n2">secondo valore</param>
 		/// <param name="tolerance">Tolleranza</param>
 		/// <returns><c>true</c> Se è uguale o maggiore</returns>
-		public static bool IsEqualsOrGreater(double n1, double n2, double tolerance) => IsEqual(n1, n2, tolerance) || n1 > n2;
+		public static bool IsEqualsOrGreater(double n1, double n2, double tolerance) => IsEquals(n1, n2, tolerance) || n1 > n2;
 
 		/// <summary>
 		/// Confronto tra 2 double con tolleranza uguale a MathUtils.Tolerance.
@@ -78,7 +78,7 @@ namespace Axiom.GeoMath
 		/// <param name="n2">secondo valore</param>
 		/// <param name="tolerance">Tolleranza</param>
 		/// <returns><c>true</c> Se è uguale o minore</returns>
-		public static bool IsEqualsOrLesser(double n1, double n2, double tolerance) => IsEqual(n1, n2, tolerance) || n1 < n2;
+		public static bool IsEqualsOrLesser(double n1, double n2, double tolerance) => IsEquals(n1, n2, tolerance) || n1 < n2;
 
 		/// <summary>
 		/// Converte l'angolo (in radianti) in ingresso nel range (0, 2*PI)

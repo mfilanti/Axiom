@@ -116,6 +116,17 @@ namespace Axiom.GeoMath
 		}
 
 		/// <summary>
+		/// Cambia segno a tutte le componenti
+		/// </summary>
+		/// <returns></returns>
+		public void SetNegate()
+		{
+			X = -X;
+			Y = -Y;
+			Z = -Z;
+		}
+
+		/// <summary>
 		/// Prodotto scalare tra questo vettore e un altro.
 		/// </summary>
 		public double Dot(Vector3D other) => X * other.X + Y * other.Y + Z * other.Z;
@@ -156,6 +167,33 @@ namespace Axiom.GeoMath
 
 			return result;
 		}
+
+		/// <summary>
+		/// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
+		/// Con tolleranza pari a MathUtils.Tolerance.
+		/// </summary>
+		/// <param name="vector"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public bool IsParallel(Vector3D vector)
+		{
+			return IsParallel(vector, MathUtils.FineTolerance);
+		}
+
+		/// <summary>
+		/// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
+		/// Con tolleranza indicata.
+		/// </summary>
+		/// <param name="vector"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public bool IsParallel(Vector3D vector, double tolerance)
+		{
+			Vector3D v1 = Normalize();
+			Vector3D v2 = vector.Normalize();
+			bool result = MathUtils.IsEquals(Math.Abs(v1.Dot(v2)), 1, tolerance);
+			return result;
+		}
 		#endregion
 		#region Operators
 
@@ -163,7 +201,7 @@ namespace Axiom.GeoMath
 		/// Implicit conversion from Point3D to Vector3D.
 		/// </summary>
 		/// <param name="point3D"></param>
-		public static implicit operator Vector3D(Point3D point3D)=> new Vector3D(point3D.X, point3D.Y, point3D.Z);
+		public static implicit operator Vector3D(Point3D point3D) => new Vector3D(point3D.X, point3D.Y, point3D.Z);
 
 		/// <summary>
 		/// Somma tra due vettori.

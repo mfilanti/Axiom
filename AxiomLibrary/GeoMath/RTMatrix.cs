@@ -150,6 +150,7 @@ namespace Axiom.GeoMath
 		}
 
 		#endregion STATICS
+
 		#region Fields
 		// Prima riga
 		[DataMember]

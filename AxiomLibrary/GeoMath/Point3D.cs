@@ -5,6 +5,24 @@
 	/// </summary>
 	public class Point3D
 	{
+		#region Static
+		/// <summary>
+		/// Cambia segno a tutte le componenti
+		/// </summary>
+		/// <param name="left"></param>
+		/// <returns></returns>
+		public static Point3D Negate(Point3D left) => -left;
+
+		/// <summary>
+		/// Punto zero
+		/// </summary>
+		public static Point3D Zero => new Point3D(0, 0, 0);
+
+		/// <summary>
+		/// Punto nullo: Point3D(double.NaN, double.NaN, double.NaN)
+		/// </summary>
+		public static Point3D NullPoint => new Point3D(double.NaN, double.NaN, double.NaN);
+		#endregion
 		#region Fields
 
 		#endregion
@@ -183,10 +201,29 @@
 		/// Trasforma il punto in un vettore.
 		/// </summary>
 		/// <returns></returns>
-		public Vector3D ToVector()=> new Vector3D(X, Y, Z);
+		public Vector3D ToVector() => new Vector3D(X, Y, Z);
+
+
+
+		/// <summary>
+		/// Distanza tra punti al quadrato
+		/// </summary>
+		/// <param name="point"></param>
+		/// <returns></returns>
+		public double DistanceSqr(Point3D point)
+		{
+			return Math.Pow(this.X - point.X, 2) + Math.Pow(this.Y - point.Y, 2) + Math.Pow(this.Z - point.Z, 2);
+		}
 		#endregion
 
 		#region Operators
+		/// <summary>
+		/// Implicit conversion from Vector3D to Point3D .
+		/// </summary>
+		/// <param name="vector3D">Vettore</param>
+		public static implicit operator Point3D(Vector3D vector3D) => new Point3D(vector3D.X, vector3D.Y, vector3D.Z);
+
+
 		/// <summary>
 		/// Operatore ==
 		/// </summary>
@@ -229,7 +266,7 @@
 		/// <param name="a">Primo oggetto</param>
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Somma dei due oggetti.</returns>
-		public static Point3D operator +(Point3D a, Vector3D b) => new Point3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		public static Point3D operator +(Point3D a, Point3D b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
 		/// <summary>
 		/// Operatore -
@@ -237,23 +274,14 @@
 		/// <param name="a">Primo oggetto</param>
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Differenza dei due oggetti.</returns>
-		public static Point3D operator -(Point3D a, Vector3D b) => new Point3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+		public static Vector3D operator -(Point3D a, Point3D b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
 		/// <summary>
-		/// Operatore +
+		/// Cambia segno a tutte le componenti
 		/// </summary>
-		/// <param name="a">Primo oggetto</param>
-		/// <param name="b">Secondo oggetto</param>
-		/// <returns>Somma dei due oggetti.</returns>
-		public static Point3D operator +(Point3D a, Point3D b) => new Point3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-
-		/// <summary>
-		/// Operatore -
-		/// </summary>
-		/// <param name="a">Primo oggetto</param>
-		/// <param name="b">Secondo oggetto</param>
-		/// <returns>Differenza dei due oggetti.</returns>
-		public static Vector3D operator -(Point3D a, Point3D b) => new Vector3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+		/// <param name="left"></param>
+		/// <returns></returns>
+		public static Point3D operator -(Point3D left) => new(-left.X, -left.Y, -left.Z);
 
 		/// <summary>
 		/// Operatore *
@@ -261,7 +289,14 @@
 		/// <param name="a">Oggetto</param>
 		/// <param name="scalar">Scalare</param>
 		/// <returns>Moltiplicazione dell'oggetto per lo scalare.</returns>
-		public static Point3D operator *(Point3D a, double scalar) => new Point3D(a.X * scalar, a.Y * scalar, a.Z * scalar);
+		public static Point3D operator *(Point3D a, double scalar) => new(a.X * scalar, a.Y * scalar, a.Z * scalar);
+		/// <summary>
+		/// Operatore *
+		/// </summary>
+		/// <param name="a">Oggetto</param>
+		/// <param name="scalar">Scalare</param>
+		/// <returns>Moltiplicazione dell'oggetto per lo scalare.</returns>
+		public static Point3D operator *(double scalar, Point3D a) => new(a.X * scalar, a.Y * scalar, a.Z * scalar);
 
 		/// <summary>
 		/// Operatore /
@@ -269,7 +304,23 @@
 		/// <param name="a">Oggetto</param>
 		/// <param name="scalar">Scalare</param>
 		/// <returns>Divisione dell'oggetto per lo scalare.</returns>
-		public static Point3D operator /(Point3D a, double scalar) => new Point3D(a.X / scalar, a.Y / scalar, a.Z / scalar);
+		public static Point3D operator /(Point3D a, double scalar) => new(a.X / scalar, a.Y / scalar, a.Z / scalar);
+
+		/// <summary>
+		/// Confronto strettamente maggiore
+		/// </summary>
+		/// <param name="left"></param>
+		/// <param name="right"></param>
+		/// <returns></returns>
+		public static bool operator >(Point3D left, Point3D right) => left.X > right.X && left.Y > right.Y && left.Z > right.Z;
+
+		/// <summary>
+		/// Confronto strettamente minore
+		/// </summary>
+		/// <param name="left"></param>
+		/// <param name="right"></param>
+		/// <returns></returns>
+		public static bool operator <(Point3D left, Point3D right) => left.X < right.X && left.Y < right.Y && left.Z < right.Z;
 		#endregion
 	}
 }
