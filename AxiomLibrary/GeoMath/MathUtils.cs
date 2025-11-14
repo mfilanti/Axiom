@@ -33,7 +33,7 @@ namespace Axiom.GeoMath
 		/// <param name="val1">Valore 1</param>
 		/// <param name="val2">Valore 2</param>
 		/// <returns>True se i valori sono uguali a meno della precisione, false altrimenti</returns>
-		public static bool IsEqual(double val1, double val2) => IsEquals(val1, val2, FineTolerance);
+		public static bool IsEquals(double val1, double val2) => IsEquals(val1, val2, FineTolerance);
 
 		/// <summary>
 		/// Funzione che verifica se i due valori sono uguali a meno della 
@@ -120,6 +120,19 @@ namespace Axiom.GeoMath
 			if (result > 180)
 				result = 360 - result;
 			return result;
+		}
+
+		/// <summary>
+		/// Esegue lo swap di due variabili di tipo generico.
+		/// </summary>
+		/// <typeparam name="T">Tipo</typeparam>
+		/// <param name="val1">variabile 1</param>
+		/// <param name="val2">Variabile 2</param>
+		public static void Swap<T>(ref T val1, ref T val2)
+		{
+			var temp = val1;
+			val1 = val2;
+			val2 = temp;
 		}
 	}
 }

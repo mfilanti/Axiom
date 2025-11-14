@@ -142,7 +142,7 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public static RTMatrix FromNormal(Vector3D normal, Vector3D trasl)
 		{
-			normal.SetNormalized();
+			normal.SetNormalize();
 			Vector3D x = normal.Perpendicular();
 			Vector3D y = normal.Cross(x);
 			RTMatrix result = new RTMatrix(x, y, normal, trasl);
@@ -165,7 +165,30 @@ namespace Axiom.GeoMath
 		[DataMember]
 		private double _m41, _m42, _m43, _m44;
 		#endregion
-
+		#region Serialized Properties
+		// Proprietà compatta per serializzazione
+		[JsonPropertyName("values")]
+		public double[] Values
+		{
+			get =>
+			[
+				_m11, _m12, _m13, _m14,
+				_m21, _m22, _m23, _m24,
+				_m31, _m32, _m33, _m34,
+				_m41, _m42, _m43, _m44
+			];
+			set
+			{
+				if (value is { Length: 16 })
+				{
+					_m11 = value[0]; _m12 = value[1]; _m13 = value[2]; _m14 = value[3];
+					_m21 = value[4]; _m22 = value[5]; _m23 = value[6]; _m24 = value[7];
+					_m31 = value[8]; _m32 = value[9]; _m33 = value[10]; _m34 = value[11];
+					_m41 = value[12]; _m42 = value[13]; _m43 = value[14]; _m44 = value[15];
+				}
+			}
+		}
+		#endregion
 		#region Properties
 		/// <summary>
 		/// Traslazione X
@@ -300,6 +323,15 @@ namespace Axiom.GeoMath
 				  x.Z, y.Z, z.Z, trasl.Z,
 				  0, 0, 0, 1)
 		{
+		}
+
+		// Costruttore alternativo: da array
+		public RTMatrix(double[] values)
+		{
+			_m11 = values[0]; _m12 = values[1]; _m13 = values[2]; _m14 = values[3];
+			_m21 = values[4]; _m22 = values[5]; _m23 = values[6]; _m24 = values[7];
+			_m31 = values[8]; _m32 = values[9]; _m33 = values[10]; _m34 = values[11];
+			_m41 = values[12]; _m42 = values[13]; _m43 = values[14]; _m44 = values[15];
 		}
 
 		public RTMatrix(double m11, double m12, double m13, double m14,
@@ -565,10 +597,10 @@ namespace Axiom.GeoMath
 		{
 			if (obj is RTMatrix other)
 			{
-				bool row1 = MathUtils.IsEqual(_m11, other._m11) && MathUtils.IsEqual(_m12, other._m12) && MathUtils.IsEqual(_m13, other._m13) && MathUtils.IsEqual(_m14, other._m14);
-				bool row2 = MathUtils.IsEqual(_m21, other._m21) && MathUtils.IsEqual(_m22, other._m22) && MathUtils.IsEqual(_m23, other._m23) && MathUtils.IsEqual(_m24, other._m24);
-				bool row3 = MathUtils.IsEqual(_m31, other._m31) && MathUtils.IsEqual(_m32, other._m32) && MathUtils.IsEqual(_m33, other._m33) && MathUtils.IsEqual(_m34, other._m34);
-				bool row4 = MathUtils.IsEqual(_m41, other._m41) && MathUtils.IsEqual(_m42, other._m42) && MathUtils.IsEqual(_m43, other._m43) && MathUtils.IsEqual(_m44, other._m44);
+				bool row1 = MathUtils.IsEquals(_m11, other._m11) && MathUtils.IsEquals(_m12, other._m12) && MathUtils.IsEquals(_m13, other._m13) && MathUtils.IsEquals(_m14, other._m14);
+				bool row2 = MathUtils.IsEquals(_m21, other._m21) && MathUtils.IsEquals(_m22, other._m22) && MathUtils.IsEquals(_m23, other._m23) && MathUtils.IsEquals(_m24, other._m24);
+				bool row3 = MathUtils.IsEquals(_m31, other._m31) && MathUtils.IsEquals(_m32, other._m32) && MathUtils.IsEquals(_m33, other._m33) && MathUtils.IsEquals(_m34, other._m34);
+				bool row4 = MathUtils.IsEquals(_m41, other._m41) && MathUtils.IsEquals(_m42, other._m42) && MathUtils.IsEquals(_m43, other._m43) && MathUtils.IsEquals(_m44, other._m44);
 				return row1 && row2 && row3 && row4;
 			}
 			return false;
@@ -594,6 +626,7 @@ namespace Axiom.GeoMath
 			return hashCode;
 		}
 		#endregion
+
 		#region Operations
 		/// <summary>
 		/// Somma elemento per elemento
@@ -626,6 +659,7 @@ namespace Axiom.GeoMath
 
 
 		#endregion
+
 		#region Multiply
 
 		/// <summary>
@@ -752,7 +786,7 @@ namespace Axiom.GeoMath
 		/// <param name="zRadAngle"></param>
 		public void ToEulerAnglesXYZ(bool simmetricRange, out double xRadAngle, out double yRadAngle, out double zRadAngle)
 		{
-			if (MathUtils.IsEqual(_m11, 0) && MathUtils.IsEqual(_m21, 0))
+			if (MathUtils.IsEquals(_m11, 0) && MathUtils.IsEquals(_m21, 0))
 			{
 				// Caso particolare: singolarità
 				if (_m31 < 0)
@@ -849,6 +883,7 @@ namespace Axiom.GeoMath
 			}
 		}
 		#endregion
+
 		#region Private Methods
 		/// <summary>
 		/// Get del vettore della colonna i-esima
@@ -872,6 +907,7 @@ namespace Axiom.GeoMath
 			this[2, col] = vector.Z;
 		}
 		#endregion
+
 		#region OPERATORS
 		/// <summary>
 		/// Moltiplicazione matrice-matrice
@@ -1096,8 +1132,6 @@ namespace Axiom.GeoMath
 		}
 
 		#endregion OPERATORS
-
-
 
 		#region PRIVATE METHODS
 		private RTMatrix Adjoint()

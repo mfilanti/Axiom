@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+
+	<Import Project="..\SharedBuildProps.xml" />
+	<PropertyGroup>
+		<AssemblyName>Axiom.GeoShape</AssemblyName>
+		<RootNamespace>Axiom.GeoShape</RootNamespace>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\GeoMath\GeoMath.csproj" />
+	</ItemGroup>
+
+</Project>

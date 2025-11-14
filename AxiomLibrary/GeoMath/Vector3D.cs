@@ -84,9 +84,9 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public bool IsEquals(Vector3D other)
 		{
-			return MathUtils.IsEqual(X, other.X) &&
-				   MathUtils.IsEqual(Y, other.Y) &&
-				   MathUtils.IsEqual(Z, other.Z);
+			return MathUtils.IsEquals(X, other.X) &&
+				   MathUtils.IsEquals(Y, other.Y) &&
+				   MathUtils.IsEquals(Z, other.Z);
 		}
 
 		/// <summary>
@@ -102,7 +102,7 @@ namespace Axiom.GeoMath
 		/// <summary>
 		/// NOrmalizza il vettore corrente.
 		/// </summary>
-		public void SetNormalized()
+		public double SetNormalize()
 		{
 			double length = Norm;
 			if (length > double.Epsilon)
@@ -113,6 +113,7 @@ namespace Axiom.GeoMath
 				Y *= inverseLength;
 				Z *= inverseLength;
 			}
+			return length;
 		}
 
 		/// <summary>
@@ -195,6 +196,7 @@ namespace Axiom.GeoMath
 			return result;
 		}
 		#endregion
+
 		#region Operators
 
 		/// <summary>

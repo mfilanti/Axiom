@@ -23,6 +23,7 @@
 		/// </summary>
 		public static Point3D NullPoint => new Point3D(double.NaN, double.NaN, double.NaN);
 		#endregion
+
 		#region Fields
 
 		#endregion
@@ -95,9 +96,19 @@
 		/// </summary>
 		/// <param name="point">Punto di verifica</param>
 		/// <returns><c>true</c>se sono uguali</returns>
-		public bool IsEqual(Point3D point)
+		public bool IsEquals(Point3D point)
 		{
-			return MathUtils.IsEqual(X, point.X) && MathUtils.IsEqual(Y, point.Y) && MathUtils.IsEqual(Z, point.Z);
+			return MathUtils.IsEquals(X, point.X) && MathUtils.IsEquals(Y, point.Y) && MathUtils.IsEquals(Z, point.Z);
+		}
+
+		/// <summary>
+		/// Verifica l'uguaglianza con una tolleranza
+		/// </summary>
+		/// <param name="point">Punto di verifica</param>
+		/// <returns><c>true</c>se sono uguali</returns>
+		public bool IsEquals(Point3D point, double tolerance)
+		{
+			return MathUtils.IsEquals(X, point.X, tolerance) && MathUtils.IsEquals(Y, point.Y, tolerance) && MathUtils.IsEquals(Z, point.Z, tolerance);
 		}
 
 		/// <summary>
@@ -172,7 +183,7 @@
 			if (obj is null || obj.GetType() != typeof(Point3D))
 				return false;
 			var other = (Point3D)obj;
-			return IsEqual(other);
+			return IsEquals(other);
 		}
 
 		/// <summary>
@@ -267,6 +278,14 @@
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Somma dei due oggetti.</returns>
 		public static Point3D operator +(Point3D a, Point3D b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+
+		/// <summary>
+		/// Operatore +
+		/// </summary>
+		/// <param name="a">Primo oggetto</param>
+		/// <param name="b">Secondo oggetto</param>
+		/// <returns>Somma dei due oggetti.</returns>
+		public static Point3D operator +(Point3D a, Vector3D b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
 		/// <summary>
 		/// Operatore -
