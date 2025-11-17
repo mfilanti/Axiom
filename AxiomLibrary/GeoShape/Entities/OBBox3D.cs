@@ -16,38 +16,43 @@ namespace Axiom.GeoShape.Entities
 	/// - una matrice che ne determina l'orientamento e la posizione nello spazio (ereditata da Entity)
 	/// Se la matrice è un'identità allora lo zero coincide con il centro del box
 	/// </summary>
-	public class OBBox3D : Entity
+	public class OBBox3D : Entity3D
 	{
+		#region Constants
+		private const string LX_CONST = "lX";
+		private const string LY_CONST = "lY";
+		private const string LZ_CONST = "lZ";
+		#endregion
 		#region Properties
 		/// <summary>
 		/// L in direzione X
 		/// </summary>
-		public double LX { get; set; }
+		public double LX { get => _parameters[LX_CONST].Value; set => _parameters[LX_CONST].Value = value; }
 
 		/// <summary>
 		/// L in direzione Y
 		/// </summary>
-		public double LY { get; set; }
+		public double LY { get => _parameters[LY_CONST].Value; set => _parameters[LY_CONST].Value = value; }
 
 		/// <summary>
 		/// L in direzione Z
 		/// </summary>
-		public double LZ { get; set; }
+		public double LZ { get => _parameters[LZ_CONST].Value; set => _parameters[LZ_CONST].Value = value; }
 
 		/// <summary>
 		/// Formula LX
 		/// </summary>
-		public string LXFormula { get; set; }
+		public string LXFormula { get => _parameters[LX_CONST].Formula; set => _parameters[LX_CONST].Formula = value; }
 
 		/// <summary>
 		/// Formula LY
 		/// </summary>
-		public string LYFormula { get; set; }
+		public string LYFormula { get => _parameters[LY_CONST].Formula; set => _parameters[LY_CONST].Formula = value; }
 
 		/// <summary>
 		/// Formula LZ
 		/// </summary>
-		public string LZFormula { get; set; }
+		public string LZFormula { get => _parameters[LZ_CONST].Formula; set => _parameters[LZ_CONST].Formula = value; }
 		#endregion
 
 		#region Constructors
@@ -82,21 +87,18 @@ namespace Axiom.GeoShape.Entities
 		public OBBox3D(double lX, double lY, double lZ, string lXFormula, string lYFormula, string lZFormula)
 			: base()
 		{
-			LX = lX;
-			LY = lY;
-			LZ = lZ;
-			LXFormula = lXFormula;
-			LYFormula = lYFormula;
-			LZFormula = lZFormula;
+			_parameters.Add(LX_CONST, new Parameter(LX_CONST, true, lXFormula, lX));
+			_parameters.Add(LY_CONST, new Parameter(LY_CONST, true, lYFormula, lY));
+			_parameters.Add(LZ_CONST, new Parameter(LZ_CONST, true, lZFormula, lZ));
 		}
 		#endregion CONSTRUCTORS
 
-		#region PUBLIC METHODS
+		#region Methods
 		/// <summary>
 		/// Clona il OBBox3D
 		/// </summary>
 		/// <returns></returns>
-		public override Entity Clone()
+		public override Entity3D Clone()
 		{
 			OBBox3D result = new OBBox3D(LX, LY, LZ, LXFormula, LYFormula, LZFormula);
 			CloneTo(result);
@@ -109,18 +111,19 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			List<Point3D> points = new List<Point3D>();
-			// Faccia sotto
-			points.Add(new Point3D(-LX / 2, -LY / 2, -LZ / 2));
-			points.Add(new Point3D(LX / 2, -LY / 2, -LZ / 2));
-			points.Add(new Point3D(LX / 2, LY / 2, -LZ / 2));
-			points.Add(new Point3D(-LX / 2, LY / 2, -LZ / 2));
-
-			// Faccia sopra
-			points.Add(new Point3D(-LX / 2, -LY / 2, LZ / 2));
-			points.Add(new Point3D(LX / 2, -LY / 2, LZ / 2));
-			points.Add(new Point3D(LX / 2, LY / 2, LZ / 2));
-			points.Add(new Point3D(-LX / 2, LY / 2, LZ / 2));
+			List<Point3D> points =
+			[
+				// Faccia sotto
+				new Point3D(-LX / 2, -LY / 2, -LZ / 2),
+				new Point3D(LX / 2, -LY / 2, -LZ / 2),
+				new Point3D(LX / 2, LY / 2, -LZ / 2),
+				new Point3D(-LX / 2, LY / 2, -LZ / 2),
+				// Faccia sopra
+				new Point3D(-LX / 2, -LY / 2, LZ / 2),
+				new Point3D(LX / 2, -LY / 2, LZ / 2),
+				new Point3D(LX / 2, LY / 2, LZ / 2),
+				new Point3D(-LX / 2, LY / 2, LZ / 2),
+			];
 
 			RTMatrix matrix = ParentRTMatrix.Multiply(RTMatrix);
 			for (int i = 0; i < points.Count; i++)
@@ -128,35 +131,6 @@ namespace Axiom.GeoShape.Entities
 
 			AABBox3D result = AABBox3D.FromPoints(points);
 			return result;
-		}
-
-		/// <summary>
-		/// Lista di parametri che devono essere valutati con eventuali formule. 
-		/// Se nel set passo una lista con numero di elementi non corretto, viene restituita una eccezione.
-		/// </summary>
-		[XmlIgnore()]
-		public override List<Parameter> ParametersFormula
-		{
-			get
-			{
-				List<Parameter> result = new List<Parameter>();
-				result.Add(new Parameter("lX", true, LXFormula, LX));
-				result.Add(new Parameter("lY", true, LYFormula, LY));
-				result.Add(new Parameter("lZ", true, LZFormula, LZ));
-				return result;
-			}
-			set
-			{
-				if (value.Count != 3)
-					throw new Exception("OBBox3D: wrong parameters count.");
-
-				LX = value[0].Value;
-				LXFormula = value[0].Formula;
-				LY = value[1].Value;
-				LYFormula = value[1].Formula;
-				LZ = value[2].Value;
-				LZFormula = value[2].Formula;
-			}
 		}
 
 		/// <summary>

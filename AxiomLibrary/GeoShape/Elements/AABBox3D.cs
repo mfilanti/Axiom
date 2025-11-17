@@ -1,10 +1,10 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
-using Axiom.GeoShape.Elements;
+using Axiom.GeoShape.Entities;
 using System.Text.Json.Serialization;
 using System.Xml.Serialization;
 
-namespace Axiom.GeoShape.Entities
+namespace Axiom.GeoShape.Elements
 {
 	/// <summary>
 	/// Box 3D Axis Aligned

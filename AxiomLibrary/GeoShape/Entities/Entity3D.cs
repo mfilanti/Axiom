@@ -1,4 +1,5 @@
 ﻿using Axiom.GeoMath;
+using Axiom.GeoShape.Elements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,15 @@ namespace Axiom.GeoShape.Entities
 	/// <summary>
 	/// Entità geometrica generica.
 	/// </summary>
-	public abstract class Entity:ICloneable
+	public abstract class Entity3D : ICloneable
 	{
+		#region Fields
+		/// <summary>
+		/// Parametri specifici della sottoclasse
+		/// </summary>
+		protected Dictionary<string, Parameter> _parameters = new();
+
+		#endregion
 		#region Properties
 		/// <summary>
 		/// Identificativo entità
@@ -114,10 +122,20 @@ namespace Axiom.GeoShape.Entities
 		/// Se nel set passo una lista con numero di elementi non corretto, viene restituita una eccezione.
 		/// </summary>
 		[XmlIgnore()]
-		public virtual List<Parameter> ParametersFormula
+		public List<Parameter> ParametersFormula
 		{
-			get => [];
-			set { }
+			get => [.. _parameters.Values];
+			set
+			{
+				if (value.Count != _parameters.Count)
+					throw new Exception("Wrong parameters count.");
+				for (int i = 0; i < _parameters.Count; i++)
+				{
+					var key = _parameters.Keys.ElementAt(i);
+					_parameters[key].Value = value[i].Value;
+					_parameters[key].Formula = value[i].Formula;
+				}
+			}
 		}
 
 		/// <summary>
@@ -132,7 +150,7 @@ namespace Axiom.GeoShape.Entities
 		/// <summary>
 		/// Costruttore di default comune alle sottoclassi
 		/// </summary>
-		public Entity()
+		public Entity3D()
 		{
 			Id = "";
 			Path = "";
@@ -146,7 +164,7 @@ namespace Axiom.GeoShape.Entities
 			RotYFormula = "";
 			RotZFormula = "";
 		}
-		#endregion 
+		#endregion
 
 
 		#region PUBLIC METHODS
@@ -154,7 +172,7 @@ namespace Axiom.GeoShape.Entities
 		/// Clona l'entità
 		/// </summary>
 		/// <param name="entity"></param>
-		public void CloneTo(Entity entity)
+		public void CloneTo(Entity3D entity)
 		{
 			entity.Id = Id;
 			entity.Path = Path;
@@ -173,7 +191,7 @@ namespace Axiom.GeoShape.Entities
 		/// Clona l'entità
 		/// </summary>
 		/// <returns></returns>
-		public abstract Entity Clone();
+		public abstract Entity3D Clone();
 
 		/// <summary>
 		/// Restituisce l'AABBox corrispondente

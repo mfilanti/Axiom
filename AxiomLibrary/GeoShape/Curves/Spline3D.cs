@@ -1,4 +1,5 @@
 ﻿using Axiom.GeoMath;
+using Axiom.GeoShape.Elements;
 using Axiom.GeoShape.Entities;
 using System.Xml.Serialization;
 
