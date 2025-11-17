@@ -1,14 +1,9 @@
 ﻿using Axiom.GeoMath;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+using Axiom.GeoShape.Entities;
 
-namespace Axiom.GeoShape.Curves2D
+namespace Axiom.GeoShape.Curves
 {
-	public abstract class Curve : ICloneable
+	public abstract class Curve3D : ICloneable
 	{
 		#region Fields
 
@@ -17,31 +12,31 @@ namespace Axiom.GeoShape.Curves2D
 		#region Properties
 		/// <summary>
 		/// Punto di start. 
-		/// Sola lettura.
+		
 		/// </summary>
 		public abstract Point3D StartPoint { get; }
 
 		/// <summary>
 		/// Punto di end. 
-		/// Sola lettura.
+		
 		/// </summary>
 		public abstract Point3D EndPoint { get; }
 
 		/// <summary>
 		/// Tangente di start. 
-		/// Sola lettura.
+		
 		/// </summary>
 		public abstract Vector3D StartTangent { get; }
 
 		/// <summary>
 		/// Tangente di end. 
-		/// Sola lettura.
+		
 		/// </summary>
 		public abstract Vector3D EndTangent { get; }
 
 		/// <summary>
 		/// Lunghezza della curva. 
-		/// Sola lettura.
+		
 		/// </summary>
 		public abstract double Length { get; }
 		#endregion
@@ -50,7 +45,7 @@ namespace Axiom.GeoShape.Curves2D
 		/// <summary>
 		/// Costruttore
 		/// </summary>
-		public Curve()
+		public Curve3D()
 		{
 		}
 		#endregion
@@ -59,28 +54,28 @@ namespace Axiom.GeoShape.Curves2D
 		/// <summary>
 		/// Clona la curva
 		/// </summary>
-		public abstract Curve Clone();
+		public abstract Curve3D Clone();
 
 		/// <summary>
 		/// Clona i dati di Curve nel parametro target
 		/// </summary>
-		protected virtual void CloneTo(Curve target) { }
+		protected virtual void CloneTo(Curve3D target) { }
 
 		/// <summary>
 		/// Distanza punto - curva
 		/// </summary>
 		/// <param name="point">Punto</param>
-		public abstract double Dist(Point3D point);
+		public virtual double Dist(Point3D point) { throw new System.NotImplementedException(); }
 
 		/// <summary>
 		/// Confronta le due curve considerando la tolleranza di default
 		/// </summary>
-		public abstract bool IsEquals(Curve curve);
+		public abstract bool IsEquals(Curve3D curve);
 
 		/// <summary>
 		/// Confronta le due curve considerando la tolleranza indicata
 		/// </summary>
-		public abstract bool IsEquals(Curve curve, double tolerance);
+		public abstract bool IsEquals(Curve3D curve, double tolerance);
 
 		/// <summary>
 		/// Evaluate percentuale. 
@@ -175,13 +170,13 @@ namespace Axiom.GeoShape.Curves2D
 		/// Restituisce la curva scalata
 		/// </summary>
 		/// <param name="factor"></param>
-		public abstract Curve Scale(double factor);
+		public abstract Curve3D Scale(double factor);
 
 		/// <summary>
 		/// Restituisce la curva invertita
 		/// </summary>
 		/// <returns></returns>
-		public abstract Curve Inverse();
+		public abstract Curve3D Inverse();
 
 		/// <summary>
 		/// Inverte la curva
@@ -197,7 +192,7 @@ namespace Axiom.GeoShape.Curves2D
 		/// <param name="start">Inizio: distanza dal punto di start</param>
 		/// <param name="end">Fine: distanza dal punto di start</param>
 		/// <returns></returns>
-		public abstract Curve Trim(double start, double end);
+		public abstract Curve3D Trim(double start, double end);
 
 		/// <summary>
 		/// Restituisce la lunghezza della curva tra i due offset
@@ -206,7 +201,7 @@ namespace Axiom.GeoShape.Curves2D
 		/// <param name="end"></param>
 		/// <returns></returns>
 		public virtual double LengthFromTo(double start, double end) => Trim(start * Length, end * Length).Length;
-		
+
 		/// <summary>
 		/// Restituisce l'ABBox2D corrispondente
 		/// </summary>
@@ -217,13 +212,42 @@ namespace Axiom.GeoShape.Curves2D
 		/// Restituisce una curva clone specchiata sull'asse X
 		/// </summary>
 		/// <returns></returns>
-		public abstract Curve MirrorX();
+		public virtual Curve3D MirrorX() { throw new System.NotImplementedException(); }
 
 		/// <summary>
 		/// Restituisce una curva clone specchiata sull'asse Y
 		/// </summary>
 		/// <returns></returns>
-		public abstract Curve MirrorY();
+		public virtual Curve3D MirrorY() { throw new System.NotImplementedException(); }
+
+		/// <summary>
+		/// Intersezione tra 2 Curve3D. 
+		/// Vengono restituiti i punti di intersezione. 
+		/// Le eventuali sovrapposizioni vengono ignorate.
+		/// </summary>
+		/// <param name="curve">Curva con cui determinare le intersezioni</param>
+		/// <param name="intersections">Lista di punti intersezione</param>
+		/// <returns>Indica se c'è o meno intersezione</returns>
+		public bool Intersection(Curve3D curve, out List<Point3D> intersections)
+		{
+			bool result = false;
+			intersections = new List<Point3D>();
+
+			if ((this is Line3D line) && (curve is Line3D line1))
+			{
+				Point3D intersection;
+				result = line.Intersection(line1, out intersection);
+				if (result)
+					intersections.Add(intersection);
+			}
+			else if ((this is Arc3D arc) && (curve is Arc3D arc1))
+				result = arc.Intersection(arc1, out intersections);
+			else if ((this is Arc3D arc2) && (curve is Line3D line2))
+				result = arc2.Intersection(line2, out intersections);
+			else if ((this is Line3D line3) && (curve is Arc3D arc3))
+				result = arc3.Intersection(line3, out intersections);
+			return result;
+		}
 		#endregion
 
 		#region ICloneable Members

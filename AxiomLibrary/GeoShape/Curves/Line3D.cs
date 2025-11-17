@@ -1,12 +1,5 @@
 ﻿using Axiom.GeoMath;
-using Axiom.GeoShape.Curves2D;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.Serialization;
-using System.Text;
-using System.Threading.Tasks;
+using Axiom.GeoShape.Entities;
 
 namespace Axiom.GeoShape.Curves
 {
@@ -14,7 +7,7 @@ namespace Axiom.GeoShape.Curves
 	/// Classe segmento lineare tridimensionale
 	/// </summary>
 	[Serializable]
-	public class Line : Curve
+	public class Line3D : Curve3D
 	{
 		#region Fields
 
@@ -67,7 +60,7 @@ namespace Axiom.GeoShape.Curves
 		/// <summary>
 		/// Costruttore di default
 		/// </summary>
-		public Line()
+		public Line3D()
 		{
 			PStart = new Point3D();
 			PEnd = new Point3D();
@@ -82,7 +75,7 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="x2"></param>
 		/// <param name="y2"></param>
 		/// <param name="z2"></param>
-		public Line(double x1, double y1, double z1, double x2, double y2, double z2)
+		public Line3D(double x1, double y1, double z1, double x2, double y2, double z2)
 		{
 			PStart = new Point3D(x1, y1, z1);
 			PEnd = new Point3D(x2, y2, z2);
@@ -93,7 +86,7 @@ namespace Axiom.GeoShape.Curves
 		/// </summary>
 		/// <param name="start"></param>
 		/// <param name="end"></param>
-		public Line(Point3D start, Point3D end)
+		public Line3D(Point3D start, Point3D end)
 		{
 			PStart = new(start);
 			PEnd = new(end);
@@ -107,9 +100,9 @@ namespace Axiom.GeoShape.Curves
 		/// Specchia la curva sull'asse X solo in 2D
 		/// </summary>
 		/// <returns></returns>
-		public override Curve MirrorX()
+		public override Curve3D MirrorX()
 		{
-			Line result = ToLine2D();
+			Line3D result = ToLine2D();
 			result.PStart.Y *= -1;
 			result.PEnd.Y *= -1;
 			return result;
@@ -119,9 +112,9 @@ namespace Axiom.GeoShape.Curves
 		/// Specchia la curva sull'asse Y solo in 2D
 		/// </summary>
 		/// <returns></returns>
-		public override Curve MirrorY()
+		public override Curve3D MirrorY()
 		{
-			Line result = ToLine2D();
+			Line3D result = ToLine2D();
 			result.PStart.X *= -1;
 			result.PEnd.X *= -1;
 			return result;
@@ -157,9 +150,9 @@ namespace Axiom.GeoShape.Curves
 		/// Clona la curva
 		/// </summary>
 		/// <returns></returns>
-		public override Curve Clone()
+		public override Curve3D Clone()
 		{
-			return new Line(PStart, PEnd);
+			return new Line3D(PStart, PEnd);
 		}
 
 		/// <summary>
@@ -167,10 +160,10 @@ namespace Axiom.GeoShape.Curves
 		/// </summary>
 		/// <param name="curve"></param>
 		/// <returns></returns>
-		public override bool IsEquals(Curve curve)
+		public override bool IsEquals(Curve3D curve)
 		{
 			bool result = false;
-			if (curve is Line line)
+			if (curve is Line3D line)
 			{
 				result = PStart.IsEquals(line.PStart) && PEnd.IsEquals(line.PEnd);
 			}
@@ -184,10 +177,10 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="curve"></param>
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
-		public override bool IsEquals(Curve curve, double tolerance)
+		public override bool IsEquals(Curve3D curve, double tolerance)
 		{
 			bool result = false;
-			if (curve is Line line)
+			if (curve is Line3D line)
 			{
 				result = PStart.IsEquals(line.PStart, tolerance) && PEnd.IsEquals(line.PEnd, tolerance);
 			}
@@ -257,13 +250,13 @@ namespace Axiom.GeoShape.Curves
 		/// Restituisce la curva scalata
 		/// </summary>
 		/// <param name="factor"></param>
-		public override Curve Scale(double factor) => new Line(factor * PStart, factor * PEnd);
+		public override Curve3D Scale(double factor) => new Line3D(factor * PStart, factor * PEnd);
 
 		/// <summary>
 		/// Restituisce la curva invertita
 		/// </summary>
 		/// <returns></returns>
-		public override Curve Inverse() => new Line(PEnd, PStart);
+		public override Curve3D Inverse() => new Line3D(PEnd, PStart);
 
 		/// <summary>
 		/// Inverte la curva
@@ -299,16 +292,16 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="start">Inizio: distanza dal punto di start</param>
 		/// <param name="end">Fine: distanza dal punto di start</param>
 		/// <returns></returns>
-		public override Curve Trim(double start, double end)
+		public override Curve3D Trim(double start, double end)
 		{
-			Line result = null;
+			Line3D result = null;
 			double length = Length;
-			if (MathUtils.IsEquals(end, length))
+			if (end.IsEquals(length))
 				end = length;
 
 			if (start >= 0 && end <= length)
 			{
-				result = Clone() as Line;
+				result = Clone() as Line3D;
 				if (start > 0)
 					result.PStart = EvaluateAbs(start);
 				if (end < length)
@@ -415,13 +408,13 @@ namespace Axiom.GeoShape.Curves
 			double distance = DistancePerp(point);
 
 			// se è sulla stessa retta
-			if (MathUtils.IsEquals(distance, 0, tolerance))
+			if (distance.IsEquals(0, tolerance))
 			{
 				// controlla se sta tra start ed end
 				double startDistance = (point - PStart).Dot((PEnd - PStart).Normalize());
 
-				if (MathUtils.IsEquals(startDistance, 0, tolerance)) startDistance = 0;
-				if (MathUtils.IsEquals(startDistance, Length, tolerance)) startDistance = Length;
+				if (startDistance.IsEquals(0, tolerance)) startDistance = 0;
+				if (startDistance.IsEquals(Length, tolerance)) startDistance = Length;
 
 				offset = startDistance / Length;
 				if (offset >= 0 && offset <= 1)
@@ -437,7 +430,7 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="line">Linea con cui determinare le intersezioni</param>
 		/// <param name="intersection">Intersezione</param>
 		/// <returns>Indica se c'è o meno intersezione</returns>
-		public bool Intersection(Line line, out Point3D intersection) => Intersection(line, out _, out _, out intersection);
+		public bool Intersection(Line3D line, out Point3D intersection) => Intersection(line, out _, out _, out intersection);
 
 		/// <summary>
 		/// Intersezione tra 2 Line. 
@@ -447,7 +440,7 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="uA"></param>
 		/// <param name="uB"></param>
 		/// <returns>Indica se c'è o meno intersezione</returns>
-		public bool Intersection(Line line, out double uA, out double uB) => Intersection(line, out uA, out uB, out _);
+		public bool Intersection(Line3D line, out double uA, out double uB) => Intersection(line, out uA, out uB, out _);
 
 		/// <summary>
 		/// Intersezione tra 2 Line. 
@@ -459,7 +452,7 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="uB"></param>
 		/// <param name="intersection">Intersezione</param>
 		/// <returns>Indica se c'è o meno intersezione</returns>
-		public bool Intersection(Line line, out double uA, out double uB, out Point3D intersection)
+		public bool Intersection(Line3D line, out double uA, out double uB, out Point3D intersection)
 		{
 			bool result = false;
 			uA = double.PositiveInfinity;
@@ -477,7 +470,7 @@ namespace Axiom.GeoShape.Curves
 			double d2121 = v21.X * v21.X + v21.Y * v21.Y + v21.Z * v21.Z;
 
 			double denom = d2121 * d4343 - d4321 * d4321;
-			if (MathUtils.IsEquals(denom, 0) == false)
+			if (denom.IsEquals(0) == false)
 			{
 				double numer = d1343 * d4321 - d1321 * d4343;
 				uA = numer / denom;
@@ -502,12 +495,12 @@ namespace Axiom.GeoShape.Curves
 		/// Converte in Line2D ignorando la componente Z
 		/// </summary>
 		/// <returns></returns>
-		public Line ToLine2D()
+		public Line3D ToLine2D()
 		{
-			Line result;
+			Line3D result;
 			Point3D pStart2 = new Point3D(PStart.X, PStart.Y);
 			Point3D pEnd2 = new Point3D(PEnd.X, PEnd.Y);
-			result = new Line(pStart2, pEnd2);
+			result = new Line3D(pStart2, pEnd2);
 
 			return result;
 		}
@@ -543,7 +536,7 @@ namespace Axiom.GeoShape.Curves
 				for (int i = result.Count - 1; i >= 0; i--)
 					mirror.Add(lenght - result[i]);
 
-				if (MathUtils.IsEquals(mirror[0], result[result.Count - 1]))
+				if (mirror[0].IsEquals(result[result.Count - 1]))
 					mirror.RemoveAt(0);
 
 				result.AddRange(mirror);
@@ -560,5 +553,4 @@ namespace Axiom.GeoShape.Curves
 		#endregion PUBLIC METHODS
 
 	}
-
 }

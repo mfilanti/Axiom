@@ -38,6 +38,15 @@ namespace Axiom.GeoMath
 		/// </summary>
 		public static Vector3D NegativeUnitZ => new Vector3D(0, 0, -1);
 
+		/// <summary>
+		/// Vettore nullo.
+		/// </summary>
+		public static Vector3D Zero => new Vector3D(0, 0, 0);
+
+		/// <summary>
+		/// Vettore nullo: Vector3D(double.NaN, double.NaN, double.NaN)
+		/// </summary>
+		public static Vector3D NullVector => new Vector3D(double.NaN, double.NaN, double.NaN);
 		#endregion
 
 		#region Fields
@@ -62,6 +71,18 @@ namespace Axiom.GeoMath
 		/// Restituisce la norma (lunghezza) del vettore.
 		/// </summary>
 		public double Norm => Math.Sqrt(X * X + Y * Y + Z * Z);
+
+		/// <summary>
+		/// Restituisce la lunghezza al quadrato
+		/// </summary>
+		public double LengthSquared => X * X + Y * Y + Z * Z;
+
+		/// <summary>
+		/// Lungezza del vettore.
+		/// </summary>
+		public double Length => Norm;
+
+
 		#endregion
 
 		#region Constructors
@@ -74,9 +95,62 @@ namespace Axiom.GeoMath
 			Y = y;
 			Z = z;
 		}
+		/// <summary>
+		/// Crea un nuovo vettore 3D.
+		/// </summary>
+		public Vector3D(Vector3D vector3D)
+			: this(vector3D.X, vector3D.Y, vector3D.Z)
+		{
+		}
 		#endregion
 
 		#region Methods
+
+		/// <summary>
+		/// Accesso tramite indice
+		/// </summary>
+		/// <param name="index"></param>
+		/// <returns></returns>
+		public double this[int index]
+		{
+			get
+			{
+				double result;
+				switch (index)
+				{
+					case 0:
+						result = X;
+						break;
+					case 1:
+						result = Y;
+						break;
+					case 2:
+						result = Z;
+						break;
+					default:
+						result = 0;
+						break;
+				}
+				return result;
+			}
+			set
+			{
+				switch (index)
+				{
+					case 0:
+						X = value;
+						break;
+					case 1:
+						Y = value;
+						break;
+					case 2:
+						Z = value;
+						break;
+				}
+			}
+		}
+
+
 		/// <summary>
 		/// Ugauale a un altro vettore, con tolleranza.
 		/// </summary>
@@ -84,10 +158,39 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public bool IsEquals(Vector3D other)
 		{
-			return MathUtils.IsEquals(X, other.X) &&
-				   MathUtils.IsEquals(Y, other.Y) &&
-				   MathUtils.IsEquals(Z, other.Z);
+			return X.IsEquals(other.X) &&
+				   Y.IsEquals(other.Y) &&
+				   Z.IsEquals(other.Z);
 		}
+
+		/// <summary>
+		/// Ugauale a un altro vettore, con tolleranza.
+		/// </summary>
+		/// <param name="other"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public bool IsEquals(Vector3D other, double tolerance)
+		{
+			return X.IsEquals(other.X, tolerance) &&
+				   Y.IsEquals(other.Y, tolerance) &&
+				   Z.IsEquals(other.Z, tolerance);
+		}
+
+		/// <summary>
+		/// Confronta i due vettori considerando la tolleranza uguale a MathUtils.Tolerance. 
+		/// Il confronto viene effettuato guardando se l'angolo interno (in radianti) tende a zero.
+		/// </summary>
+		/// <param name="vector"></param>
+		/// <returns></returns>
+		public bool ApproxEqualsInnerAngle(Vector3D vector) => Angle(vector).IsEquals(0);
+
+		/// <summary>
+		/// Confronta i due vettori considerando la tolleranza indicata. 
+		/// Il confronto viene effettuato guardando se l'angolo interno (in radianti) tende a zero.
+		/// </summary>
+		/// <param name="vector"></param>
+		/// <returns></returns>
+		public bool ApproxEqualsInnerAngle(Vector3D vector, double tolerance) => Angle(vector).IsEquals(0, tolerance);
 
 		/// <summary>
 		/// Restituisce il vettore normalizzato (versore).
@@ -192,7 +295,106 @@ namespace Axiom.GeoMath
 		{
 			Vector3D v1 = Normalize();
 			Vector3D v2 = vector.Normalize();
-			bool result = MathUtils.IsEquals(Math.Abs(v1.Dot(v2)), 1, tolerance);
+			bool result = GeoMathExtensions.IsEquals(Math.Abs(v1.Dot(v2)), 1, tolerance);
+			return result;
+		}
+
+		/// <summary>
+		/// Restituisce la interpolazione sferica lineare. 
+		/// Se i due vettori sono identici restituisce this. 
+		/// Se sono opposti ci sarebbero infiniti piani su cui ruotare, in questo caso considera il piano 
+		/// individuato dal parametro normal (che altrimenti non viene considerato). 
+		/// Il parametro t deve essere compreso tra 0 e 1.
+		/// </summary>
+		/// <param name="destination"></param>
+		/// <param name="t"></param>
+		/// <returns></returns>
+		public Vector3D Slerp(Vector3D destination, double t, Vector3D normal)
+		{
+			Vector3D result = this;
+			Vector3D v0 = this;
+			Vector3D v1 = destination;
+			v0.SetNormalize();
+			v1.SetNormalize();
+
+			double d = v0.Dot(v1);
+			// Se il dot è 1 allora i due vettori sono uguali
+			if (d < 1)
+			{
+				Vector3D planeNormal = this.Cross(destination).Normalize();
+				// Se sono opposti considera il parametro normal
+				if (d.IsEquals(-1))
+					planeNormal = normal;
+
+				if (planeNormal.IsEquals(Vector3D.Zero) == false)
+				{
+					double angle = destination.Angle(this, planeNormal);
+					result = this.Rotate(planeNormal, t * angle);
+				}
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Determina l'angolo INTERNO tra this e il vettore passato come parametro.
+		/// Restituisce un angolo in radianti compreso tra 0 e + PI (N.B. angolo interno)
+		/// </summary>
+		/// <param name="vector"></param>
+		/// <returns></returns>
+		public double Angle(Vector3D vector)
+		{
+			Vector3D a = Normalize();
+			Vector3D b = vector.Normalize();
+			return Math.Atan2(a.Cross(b).Length, a.Dot(b));
+		}
+
+		/// <summary>
+		/// Determina l'angolo di this rispetto a refX considerando refZ come riferimento Z. 
+		/// Restituisce un angolo in radianti compreso tra -PI e + PI (N.B. Può essere o meno l'angolo interno). 
+		/// Normal deve essere perpendicolare a this e vector.
+		/// </summary>
+		/// <param name="refX"></param>
+		/// <param name="refZ"></param>
+		/// <returns></returns>
+		public double Angle(Vector3D refX, Vector3D refZ)
+		{
+			Vector3D a = this.Normalize();
+			Vector3D b = refX.Normalize();
+			Vector3D cross = a.Cross(b);
+			double result = Math.Atan2(cross.Length, a.Dot(b));
+			if (cross.Dot(refZ) > 0)
+				result = -result;
+
+			return result;
+		}
+
+		/// <summary>
+		/// Ruota attorno al vettore normal di una quantità pari ad angle
+		/// </summary>
+		/// <param name="normal"></param>
+		/// <returns></returns>
+		public Vector3D Rotate(Vector3D normal, double radAngle)
+		{
+			RTMatrix matrixA = RTMatrix.FromEulerAnglesXYZ(0, 0, radAngle);
+			RTMatrix matrixB = RTMatrix.Identity;
+			Vector3D thisNorm = Normalize();
+			Vector3D locX, locY, locZ;
+			locZ = normal;
+			locY = normal.Cross(thisNorm).Normalize();
+			locX = locY.Cross(locZ);
+			matrixB.SetFromAxes(locX, locY, locZ);
+			return (matrixB * matrixA * matrixB.Transpose()) * this;
+		}
+
+		/// <summary>
+		/// Restituisce un vettore con segno cambiato per tutte le componenti
+		/// </summary>
+		/// <returns></returns>
+		public Vector3D Negate()
+		{
+			Vector3D result = new(this);
+			result.SetNegate();
 			return result;
 		}
 		#endregion
@@ -203,20 +405,27 @@ namespace Axiom.GeoMath
 		/// Implicit conversion from Point3D to Vector3D.
 		/// </summary>
 		/// <param name="point3D"></param>
-		public static implicit operator Vector3D(Point3D point3D) => new Vector3D(point3D.X, point3D.Y, point3D.Z);
+		public static implicit operator Vector3D(Point3D point3D) => new(point3D.X, point3D.Y, point3D.Z);
 
 		/// <summary>
 		/// Somma tra due vettori.
 		/// </summary>
-		public static Vector3D operator +(Vector3D a, Vector3D b) => new Vector3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		public static Vector3D operator +(Vector3D a, Vector3D b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 		/// <summary>
 		/// Differenza tra due vettori.
 		/// </summary>
-		public static Vector3D operator -(Vector3D a, Vector3D b) => new Vector3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+		public static Vector3D operator -(Vector3D a, Vector3D b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+
+		/// <summary>
+		/// Cambia segno a tutte le componenti
+		/// </summary>
+		/// <param name="left"></param>
+		/// <returns></returns>
+		public static Vector3D operator -(Vector3D left) => new(-left.X, -left.Y, -left.Z);
 		/// <summary>
 		/// Moltiplicazione per scalare.
 		/// </summary>
-		public static Vector3D operator *(Vector3D v, double scalar) => new Vector3D(v.X * scalar, v.Y * scalar, v.Z * scalar);
+		public static Vector3D operator *(Vector3D v, double scalar) => new(v.X * scalar, v.Y * scalar, v.Z * scalar);
 		/// <summary>
 		/// Moltiplicazione per scalare (commutativa).
 		/// </summary>
@@ -224,7 +433,7 @@ namespace Axiom.GeoMath
 		/// <summary>
 		/// Divisione per scalare.
 		/// </summary>
-		public static Vector3D operator /(Vector3D v, double scalar) => new Vector3D(v.X / scalar, v.Y / scalar, v.Z / scalar);
+		public static Vector3D operator /(Vector3D v, double scalar) => new(v.X / scalar, v.Y / scalar, v.Z / scalar);
 		#endregion
 	}
 }

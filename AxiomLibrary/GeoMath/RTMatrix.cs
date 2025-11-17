@@ -123,6 +123,11 @@ namespace Axiom.GeoMath
 		public static RTMatrix FromVectors(Vector3D x, Vector3D y, Vector3D z, Vector3D trasl) => new(x, y, z, trasl);
 
 		/// <summary>
+		/// Dati 3 vettori 
+		/// </summary>
+		/// <returns></returns>
+		public static RTMatrix FromVectors(Vector3D x, Vector3D y, Vector3D z) => new(x, y, z, Vector3D.Zero);
+		/// <summary>
 		/// Indetità con traslazione
 		/// </summary>
 		/// <param name="trasl"></param>
@@ -148,6 +153,14 @@ namespace Axiom.GeoMath
 			RTMatrix result = new RTMatrix(x, y, normal, trasl);
 			return result;
 		}
+
+		/// <summary>
+		/// Data normale e traslazione. 
+		/// Con vettori x e y ottenuti in maniera arbitraria. 
+		/// Regola: [(this x UnitX) x this] con eccezioni nel caso this sia UnitX o NegativeUnitX.
+		/// </summary>
+		/// <returns></returns>
+		public static RTMatrix FromNormal(Vector3D normal) => FromNormal(normal, Vector3D.Zero);
 
 		#endregion STATICS
 
@@ -597,10 +610,10 @@ namespace Axiom.GeoMath
 		{
 			if (obj is RTMatrix other)
 			{
-				bool row1 = MathUtils.IsEquals(_m11, other._m11) && MathUtils.IsEquals(_m12, other._m12) && MathUtils.IsEquals(_m13, other._m13) && MathUtils.IsEquals(_m14, other._m14);
-				bool row2 = MathUtils.IsEquals(_m21, other._m21) && MathUtils.IsEquals(_m22, other._m22) && MathUtils.IsEquals(_m23, other._m23) && MathUtils.IsEquals(_m24, other._m24);
-				bool row3 = MathUtils.IsEquals(_m31, other._m31) && MathUtils.IsEquals(_m32, other._m32) && MathUtils.IsEquals(_m33, other._m33) && MathUtils.IsEquals(_m34, other._m34);
-				bool row4 = MathUtils.IsEquals(_m41, other._m41) && MathUtils.IsEquals(_m42, other._m42) && MathUtils.IsEquals(_m43, other._m43) && MathUtils.IsEquals(_m44, other._m44);
+				bool row1 = _m11.IsEquals(other._m11) && _m12.IsEquals(other._m12) && _m13.IsEquals(other._m13) && _m14.IsEquals(other._m14);
+				bool row2 = _m21.IsEquals(other._m21) && _m22.IsEquals(other._m22) && _m23.IsEquals(other._m23) && _m24.IsEquals(other._m24);
+				bool row3 = _m31.IsEquals(other._m31) && _m32.IsEquals(other._m32) && _m33.IsEquals(other._m33) && _m34.IsEquals(other._m34);
+				bool row4 = _m41.IsEquals(other._m41) && _m42.IsEquals(other._m42) && _m43.IsEquals(other._m43) && _m44.IsEquals(other._m44);
 				return row1 && row2 && row3 && row4;
 			}
 			return false;
@@ -786,7 +799,7 @@ namespace Axiom.GeoMath
 		/// <param name="zRadAngle"></param>
 		public void ToEulerAnglesXYZ(bool simmetricRange, out double xRadAngle, out double yRadAngle, out double zRadAngle)
 		{
-			if (MathUtils.IsEquals(_m11, 0) && MathUtils.IsEquals(_m21, 0))
+			if (_m11.IsEquals(0) && _m21.IsEquals(0))
 			{
 				// Caso particolare: singolarità
 				if (_m31 < 0)
@@ -890,7 +903,7 @@ namespace Axiom.GeoMath
 		/// </summary>
 		/// <param name="col"></param>
 		/// <returns></returns>
-		private Vector3D GetVector(int col)
+		public Vector3D GetVector(int col)
 		{
 			return new Vector3D(this[0, col], this[1, col], this[2, col]);
 		}

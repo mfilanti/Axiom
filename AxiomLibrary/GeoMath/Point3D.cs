@@ -98,7 +98,7 @@
 		/// <returns><c>true</c>se sono uguali</returns>
 		public bool IsEquals(Point3D point)
 		{
-			return MathUtils.IsEquals(X, point.X) && MathUtils.IsEquals(Y, point.Y) && MathUtils.IsEquals(Z, point.Z);
+			return X.IsEquals(point.X) && Y.IsEquals(point.Y) && Z.IsEquals(point.Z);
 		}
 
 		/// <summary>
@@ -108,7 +108,7 @@
 		/// <returns><c>true</c>se sono uguali</returns>
 		public bool IsEquals(Point3D point, double tolerance)
 		{
-			return MathUtils.IsEquals(X, point.X, tolerance) && MathUtils.IsEquals(Y, point.Y, tolerance) && MathUtils.IsEquals(Z, point.Z, tolerance);
+			return X.IsEquals(point.X, tolerance) && Y.IsEquals(point.Y, tolerance) && Z.IsEquals(point.Z, tolerance);
 		}
 
 		/// <summary>
@@ -214,8 +214,6 @@
 		/// <returns></returns>
 		public Vector3D ToVector() => new Vector3D(X, Y, Z);
 
-
-
 		/// <summary>
 		/// Distanza tra punti al quadrato
 		/// </summary>
@@ -294,6 +292,14 @@
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Differenza dei due oggetti.</returns>
 		public static Vector3D operator -(Point3D a, Point3D b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+
+		/// <summary>
+		/// Operatore -
+		/// </summary>
+		/// <param name="a">Primo oggetto</param>
+		/// <param name="b">Secondo oggetto</param>
+		/// <returns>Differenza dei due oggetti.</returns>
+		public static Point3D operator -(Point3D a, Vector3D b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
 		/// <summary>
 		/// Cambia segno a tutte le componenti
