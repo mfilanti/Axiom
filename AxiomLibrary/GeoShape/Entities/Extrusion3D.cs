@@ -1,6 +1,7 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
 using Axiom.GeoShape.Elements;
+using Axiom.GeoShape.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +34,7 @@ namespace Axiom.GeoShape.Entities
 		/// <summary>
 		/// Rappresenta la figura piana da estrudere
 		/// </summary>
-		public Figure3D Shape { get; set; }
+		public Shape2D Shape { get; set; }
 
 		/// <summary>
 		/// Direzione di estrusione
@@ -69,7 +70,7 @@ namespace Axiom.GeoShape.Entities
 		public Extrusion3D()
 			: base()
 		{
-			Shape = new Figure3D();
+			Shape = new Shape2DCustom();
 			ExtrusionDirection = Vector3D.UnitZ;
 			StartCuts = new List<Plane3D>();
 			EndCuts = new List<Plane3D>();
@@ -85,7 +86,7 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="length"></param>
 		/// <param name="startCuts"></param>
 		/// <param name="endCuts"></param>
-		public Extrusion3D(Figure3D profile, Vector3D extrusionDirection, double length, List<Plane3D> startCuts, List<Plane3D> endCuts, string lengthFormula)
+		public Extrusion3D(Shape2D profile, Vector3D extrusionDirection, double length, List<Plane3D> startCuts, List<Plane3D> endCuts, string lengthFormula)
 			: this()
 		{
 			Shape = profile.Clone();
@@ -98,6 +99,10 @@ namespace Axiom.GeoShape.Entities
 			if (startCuts != null) StartCuts = startCuts;
 			if (endCuts != null) EndCuts = endCuts;
 
+			foreach (var item in Shape.Parameters)
+			{
+				_parameters.Add(item.Name, item);
+			}
 		}
 
 
@@ -111,7 +116,7 @@ namespace Axiom.GeoShape.Entities
 		public override Entity3D Clone()
 		{
 			Extrusion3D result = new Extrusion3D(Shape.Clone(), ExtrusionDirection, Length,
-												 new List<Plane3D>(StartCuts), new List<Plane3D>(EndCuts), LengthFormula);
+												 [.. StartCuts], [.. EndCuts], LengthFormula);
 			CloneTo(result);
 			return result;
 		}
@@ -123,7 +128,7 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			Figure3D profile1 = Shape.Clone();
+			Figure3D profile1 = Shape.GetFigure();
 			Figure3D profile2 = profile1.Clone();
 			profile2.Move(Length * ExtrusionDirection);
 			RTMatrix matrix = ParentRTMatrix.Multiply(RTMatrix);

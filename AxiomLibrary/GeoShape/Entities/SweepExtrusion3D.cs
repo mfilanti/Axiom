@@ -1,6 +1,7 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
 using Axiom.GeoShape.Elements;
+using Axiom.GeoShape.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +29,7 @@ namespace Axiom.GeoShape.Entities
 		/// <summary>
 		/// Rappresenta la figura piana da estrudere
 		/// </summary>
-		public Figure3D Shape { get; set; }
+		public Shape2D Shape { get; set; }
 
 		/// <summary>
 		/// Percorso di estrusione (dovrà essere continuo). 
@@ -55,7 +56,7 @@ namespace Axiom.GeoShape.Entities
 		public SweepExtrusion3D()
 			: base()
 		{
-			Shape = new();
+			Shape = new Shape2DCustom();
 			ExtrusionPath = new();
 			StartCuts = [];
 			EndCuts = [];
@@ -69,7 +70,7 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="extrusionPath"></param>
 		/// <param name="startCuts"></param>
 		/// <param name="endCuts"></param>
-		public SweepExtrusion3D(Figure3D profile, Figure3D extrusionPath, List<Plane3D> startCuts, List<Plane3D> endCuts)
+		public SweepExtrusion3D(Shape2D profile, Figure3D extrusionPath, List<Plane3D> startCuts, List<Plane3D> endCuts)
 			: base()
 		{
 			Shape = profile.Clone();

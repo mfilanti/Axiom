@@ -1,6 +1,7 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
 using Axiom.GeoShape.Elements;
+using Axiom.GeoShape.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Axiom.GeoShape.Entities
 		/// <summary>
 		/// Rappresenta la figura del piano
 		/// </summary>
-		public Figure3D Shape { get; set; }
+		public Shape2D Shape { get; set; }
 
 		/// <summary>
 		/// Texture che verrà disegnata dentro lo Shape. 
@@ -44,7 +45,7 @@ namespace Axiom.GeoShape.Entities
 		public PlanarFace3D()
 			: base()
 		{
-			Shape = new();
+			Shape = new Shape2DCustom();
 			Texture = null;
 		}
 
@@ -52,7 +53,7 @@ namespace Axiom.GeoShape.Entities
 		/// Costruttore. 
 		/// </summary>
 		/// <param name="profile"></param>
-		public PlanarFace3D(Figure3D customProfile)
+		public PlanarFace3D(Shape2D customProfile)
 			: base()
 		{
 			Shape = customProfile.Clone();
@@ -83,7 +84,7 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			Figure3D profile = Shape.Clone();
+			Figure3D profile = Shape.GetFigure();
 			RTMatrix matrix = ParentRTMatrix.Multiply(RTMatrix);
 			profile.ApplyRT(matrix);
 			AABBox3D result = profile.GetABBox();

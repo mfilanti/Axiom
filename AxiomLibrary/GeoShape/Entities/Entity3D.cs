@@ -185,6 +185,11 @@ namespace Axiom.GeoShape.Entities
 			entity.RotXFormula = RotXFormula;
 			entity.RotYFormula = RotYFormula;
 			entity.RotZFormula = RotZFormula;
+			entity._parameters.Clear();
+			foreach (var item in _parameters)
+			{
+				entity._parameters.Add(item.Key, item.Value.Clone());
+			}
 		}
 
 		/// <summary>

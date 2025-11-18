@@ -50,6 +50,15 @@ namespace Axiom.GeoShape
 			Formula = formula;
 			Value = value;
 		}
+
+		/// <summary>
+		/// Esegue una copia
+		/// </summary>
+		/// <returns></returns>
+		public Parameter Clone()
+		{
+			return new Parameter(Name, ApplyLinearUom, Formula, Value);
+		}
 		#endregion
 
 		#region Methods

@@ -1,6 +1,7 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
 using Axiom.GeoShape.Elements;
+using Axiom.GeoShape.Shapes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,17 +19,39 @@ namespace Axiom.GeoShape.Entities
 	/// - una Figure2D che rappresenta la sezione di rivoluzione (nel quadrante YZ)
 	/// - una matrice che ne determina l'orientamento e la posizione nello spazio (ereditata da Entity3D)
 	/// </summary>
-	public class Revolution3D:Entity3D
+	public class Revolution3D : Entity3D
 	{
 		#region Properties
+		private Shape2D _shape;
 		/// <summary>
 		/// Profilo. 
 		/// Rappresenta la sezione nel piano YZ. 
 		/// Deve essere una figura continua. 
 		/// </summary>
-		public Figure3D Shape { get; set; }
+		public Shape2D Shape
+		{
+			get => _shape;
+			set
+			{
+				if (_shape is not null)
+				{
+					foreach (var item in _shape.Parameters)
+					{
+						_parameters.Remove(item.Name);
+					}
+				}
+				_shape = value;
+				if (_shape == null)
+				{
+					foreach (var item in _shape.Parameters)
+					{
+						_parameters.Add(item.Name, item);
+					}
+				}
+			}
+		}
 
-		#endregion 
+		#endregion
 
 		#region Ctor
 		/// <summary>
@@ -37,14 +60,14 @@ namespace Axiom.GeoShape.Entities
 		public Revolution3D()
 			: base()
 		{
-			Shape = new Figure3D();
+			Shape = new Shape2DCustom();
 		}
 
 		/// <summary>
 		/// Costruttore
 		/// </summary>
 		/// <param name="section"></param>
-		public Revolution3D(Figure3D section)
+		public Revolution3D(Shape2D section)
 			: base()
 		{
 			Shape = section.Clone();
@@ -73,21 +96,21 @@ namespace Axiom.GeoShape.Entities
 		public override AABBox3D GetAABBox()
 		{
 			Figure3D figure = new Figure3D();
-			foreach (Curve3D curve in Shape)
+			foreach (Curve3D curve in Shape.GetFigure())
 			{
 				List<Point3D> points = new List<Point3D>();
 				if (curve is Line3D line)
 				{
-					points.Add(new (line.PStart.X, 0, line.PStart.Y));
-					points.Add(new (line.PEnd.X, 0, line.PEnd.Y));
+					points.Add(new(line.PStart.X, 0, line.PStart.Y));
+					points.Add(new(line.PEnd.X, 0, line.PEnd.Y));
 				}
 				else
 				{
 					AABBox3D box = curve.GetABBox();
-					points.Add(new (box.MaxPoint.X, 0, box.MaxPoint.Y));
-					points.Add(new (box.MaxPoint.X, 0, box.MinPoint.Y));
-					points.Add(new (box.MinPoint.X, 0, box.MinPoint.Y));
-					points.Add(new (box.MinPoint.X, 0, box.MaxPoint.Y));
+					points.Add(new(box.MaxPoint.X, 0, box.MaxPoint.Y));
+					points.Add(new(box.MaxPoint.X, 0, box.MinPoint.Y));
+					points.Add(new(box.MinPoint.X, 0, box.MinPoint.Y));
+					points.Add(new(box.MinPoint.X, 0, box.MaxPoint.Y));
 				}
 				foreach (Point3D point in points)
 				{
@@ -104,6 +127,6 @@ namespace Axiom.GeoShape.Entities
 			AABBox3D result = figure.GetABBox();
 			return result;
 		}
-		#endregion 
+		#endregion
 	}
 }

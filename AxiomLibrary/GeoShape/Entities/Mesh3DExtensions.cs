@@ -301,7 +301,7 @@ namespace Axiom.GeoShape.Entities
 		public static Mesh3D FromRevolution3D(Revolution3D revolution, double maxError)
 		{
 			int slices = 0;
-			AABBox3D box = revolution.Shape.GetABBox();
+			AABBox3D box = revolution.Shape.GetFigure().GetABBox();
 			double maxRadius = Math.Max(Math.Abs(box.MaxPoint.X), Math.Abs(box.MinPoint.X));
 			if (maxError < maxRadius)
 			{
@@ -335,7 +335,7 @@ namespace Axiom.GeoShape.Entities
 			Mesh3D result = null;
 			if (revolution != null && slices >= 3)
 			{
-				Figure3D figure = revolution.Shape.Clone();
+				Figure3D figure = revolution.Shape.GetFigure();
 				figure.Reduce(true, true);
 				if (figure.Count > 0)
 				{

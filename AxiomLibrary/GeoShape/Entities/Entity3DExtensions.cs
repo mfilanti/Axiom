@@ -175,7 +175,7 @@ namespace Axiom.GeoShape.Entities
 			Mesh3D result = null;
 			if (extrusion != null)
 			{
-				Figure3D figure = extrusion.Shape.Clone();
+				Figure3D figure = extrusion.Shape.GetFigure();
 				figure.IsClosed();
 				figure.Reduce(true, false);
 				if (figure.Count > 0)
@@ -552,7 +552,7 @@ namespace Axiom.GeoShape.Entities
 			Mesh3D result = null;
 			if (sweep != null)
 			{
-				Figure3D section = sweep.Shape.Clone();
+				Figure3D section = sweep.Shape.GetFigure();
 				section.IsClosed();
 				section.Reduce(true, false);
 				if (section.Count > 0)
@@ -1003,7 +1003,7 @@ namespace Axiom.GeoShape.Entities
 		public static Mesh3D FromRevolution3D(Revolution3D revolution, double maxError)
 		{
 			int slices = 0;
-			AABBox3D box = revolution.Shape.GetABBox();
+			AABBox3D box = revolution.Shape.GetFigure().GetABBox();
 			double maxRadius = Math.Max(Math.Abs(box.MaxPoint.X), Math.Abs(box.MinPoint.X));
 			if (maxError < maxRadius)
 			{
@@ -1037,7 +1037,7 @@ namespace Axiom.GeoShape.Entities
 			Mesh3D result = null;
 			if (revolution != null && slices >= 3)
 			{
-				Figure3D figure = revolution.Shape.Clone();
+				Figure3D figure = revolution.Shape.GetFigure();
 				figure.Reduce(true, true);
 				if (figure.Count > 0)
 				{
@@ -1100,7 +1100,7 @@ namespace Axiom.GeoShape.Entities
 			Mesh3D result = null;
 			if (planarFace != null)
 			{
-				Figure3D figure = planarFace.Shape.Clone();
+				Figure3D figure = planarFace.Shape.GetFigure();
 				figure.Reduce(true, true);
 				if (figure.Count > 0)
 				{
