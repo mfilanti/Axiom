@@ -1386,6 +1386,72 @@ namespace Axiom.GeoShape.Curves
 		}
 
 		/// <summary>
+		/// Trova tutte le autointersezioni e genera una Figure2D equivalente
+		/// spezzando tutte le linee nel punto di intersezione
+		/// </summary>
+		/// <param name="offsets">Dizionario che ha come chiave la linea,
+		/// e come valore una lista ordinata di distanze da StartPoint (espresse in percentuale 0-1)</param>
+		/// <returns></returns>
+		public Figure3D SubdivideCrossCurve(out Dictionary<Line3D, List<double>> offsets)
+		{
+			Figure3D result = new Figure3D();
+			offsets = new Dictionary<Line3D, List<double>>();
+			for (int i = 0; i < this.Count - 1; i++)
+			{
+				for (int j = i + 1; j < this.Count; j++)
+				{
+					Line3D line1 = (Line3D)this[i];
+					Line3D line2 = (Line3D)this[j];
+					if (!offsets.ContainsKey(line1))
+					{
+						offsets.Add(line1, new List<double>());
+						offsets[line1].Add(0);
+						offsets[line1].Add(1);
+					}
+					if (!offsets.ContainsKey(line2))
+					{
+						offsets.Add(line2, new List<double>());
+						offsets[line2].Add(0);
+						offsets[line2].Add(1);
+					}
+
+					double u1, u2;
+					if (line1.Intersection(line2, out u1, out u2))
+					{
+						offsets[line1].Add(u1);
+						offsets[line2].Add(u2);
+					}
+				}
+			}
+
+			foreach (KeyValuePair<Line3D, List<double>> pair in offsets)
+			{
+				Line3D line = pair.Key;
+				List<double> offsetsDouble = pair.Value;
+				offsetsDouble.Sort();
+				double length = line.Length;
+				double precOffsetLength = 0;
+				for (int i = 1; i < offsetsDouble.Count; i++)
+				{
+					double offsetLength = offsetsDouble[i] * length;
+
+					if ((offsetLength - precOffsetLength).IsEquals(0, MathUtils.FineTolerance))
+					{
+						offsetsDouble.RemoveAt(i);
+						i--;
+					}
+					else
+					{
+						Line3D trim = (Line3D)line.Trim(precOffsetLength, offsetLength);
+						result.Add(trim);
+						precOffsetLength = offsetLength;
+					}
+				}
+			}
+			return result;
+		}
+
+		/// <summary>
 		/// Divide tutte le curve sovrapposte con altre nel punto di sovrapposizione (per ora solo linee e archi). 
 		/// Modifica la figura originale.
 		/// </summary>

@@ -107,6 +107,19 @@ namespace Axiom.GeoMath
 				result = 360 - result;
 			return result;
 		}
+
+		/// <summary>
+		/// Rounda il valore al numero di decimali specificato e lo converte in stringa
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="decimals"></param>
+		/// <returns></returns>
+		public static string RoundToString(this double value, int decimals)
+		{
+			if (decimals < 0) decimals = 0;
+			value = Math.Round(value, decimals);
+			return value.ToString("###########0.############", System.Globalization.CultureInfo.InvariantCulture);
+		}
 		#endregion
 
 		#region Points Extensions

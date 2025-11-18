@@ -29,6 +29,14 @@ namespace Axiom.GeoShape.Elements
 		/// <summary>
 		/// Costruttore
 		/// </summary>
+		public Ray3D()
+		{
+			Location = Point3D.Zero;
+			Direction = Vector3D.UnitZ;
+		}
+		/// <summary>
+		/// Costruttore
+		/// </summary>
 		/// <param name="location"></param>
 		/// <param name="direction"></param>
 		public Ray3D(Point3D location, Vector3D direction)

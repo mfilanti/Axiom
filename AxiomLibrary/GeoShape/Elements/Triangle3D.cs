@@ -59,9 +59,21 @@ namespace Axiom.GeoShape.Elements
 		/// Terzo punto
 		/// </summary>
 		public Point3D P3 { get; set; }
-		#endregion 
+		#endregion
 
 		#region CONSTRUCTORS
+		/// <summary>
+		/// Costruttore
+		/// </summary>
+		/// <param name="p1"></param>
+		/// <param name="p2"></param>
+		/// <param name="p3"></param>
+		public Triangle3D()
+		{
+			P1 = Point3D.Zero;
+			P2 = Point3D.Zero;
+			P3 = Point3D.Zero;
+		}
 		/// <summary>
 		/// Costruttore
 		/// </summary>
