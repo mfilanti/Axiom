@@ -22,6 +22,7 @@ namespace Axiom.GeoShape.Entities
 		protected Dictionary<string, Parameter> _parameters = new();
 
 		#endregion
+
 		#region Properties
 		/// <summary>
 		/// Identificativo entità
@@ -166,8 +167,7 @@ namespace Axiom.GeoShape.Entities
 		}
 		#endregion
 
-
-		#region PUBLIC METHODS
+		#region Methods
 		/// <summary>
 		/// Clona l'entità
 		/// </summary>
@@ -346,7 +346,7 @@ namespace Axiom.GeoShape.Entities
 			RTMatrix.SetRotation(xRadAngle, yRadAngle, zRadAngle);
 		}
 
-		#endregion PUBLIC METHODS
+		#endregion 
 
 		#region ICloneable Members
 

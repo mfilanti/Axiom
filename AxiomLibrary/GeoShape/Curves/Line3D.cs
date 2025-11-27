@@ -72,6 +72,19 @@ namespace Axiom.GeoShape.Curves
 		/// </summary>
 		/// <param name="x1"></param>
 		/// <param name="y1"></param>
+		/// <param name="x2"></param>
+		/// <param name="y2"></param>
+		public Line3D(double x1, double y1, double x2, double y2)
+		{
+			PStart = new Point3D(x1, y1);
+			PEnd = new Point3D(x2, y2);
+		}
+
+		/// <summary>
+		/// Costruttore
+		/// </summary>
+		/// <param name="x1"></param>
+		/// <param name="y1"></param>
 		/// <param name="z1"></param>
 		/// <param name="x2"></param>
 		/// <param name="y2"></param>

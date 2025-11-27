@@ -209,6 +209,20 @@ namespace Axiom.GeoShape.Curves
 		}
 
 		/// <summary>
+		/// Crea un poligono a partire dalla figura. 
+		/// Da per scontato che si tratta di un loop chiuso.
+		/// </summary>
+		/// <returns></returns>
+		public Polygon3D ToPolygon()
+		{
+			List<Point3D> points = new List<Point3D>();
+			foreach (Curve3D curve in this)
+				points.Add(curve.StartPoint);
+
+			return new Polygon3D(points);
+		}
+
+		/// <summary>
 		/// Accoda una figura
 		/// </summary>
 		/// <param name="figure"></param>
@@ -458,7 +472,7 @@ namespace Axiom.GeoShape.Curves
 			for (int i = 0; i < figureClone.Count; i++)
 			{
 				Curve3D actualCurve = figureClone[i];
-				if (GeoMathExtensions.IsEquals(actualCurve.Length, 0, tolerance))
+				if (MathExtensions.IsEquals(actualCurve.Length, 0, tolerance))
 				{
 					figureClone.RemoveAt(i);
 					i--;
@@ -1592,7 +1606,7 @@ namespace Axiom.GeoShape.Curves
 						line1.Evaluate(0, out dir1);
 						line2.Evaluate(0, out dir2);
 						if ((line1.PEnd.IsEquals(line2.PStart, tolerance)) &&
-							(GeoMathExtensions.IsEquals(line1.DistancePerp(line2.PEnd), 0, tolerance)) &&
+							(MathExtensions.IsEquals(line1.DistancePerp(line2.PEnd), 0, tolerance)) &&
 							(dir1.IsEquals(dir2)))
 						{
 							line1.PEnd = line2.PEnd;
@@ -1987,7 +2001,6 @@ namespace Axiom.GeoShape.Curves
 		#endregion ONLY3D
 
 		#endregion 
-
 
 		#region ICloneable Members
 

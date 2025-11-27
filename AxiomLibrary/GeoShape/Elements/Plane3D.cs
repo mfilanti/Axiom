@@ -547,7 +547,7 @@ namespace Axiom.GeoShape.Elements
 				{
 					foreach (Point3D point in points)
 					{
-						if (GeoMathExtensions.IsEquals(result.Distance(point), 0, 0.05) == false)
+						if (MathExtensions.IsEquals(result.Distance(point), 0, 0.05) == false)
 						{
 							result = Plane3D.ZeroPlane;
 							break;

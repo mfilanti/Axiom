@@ -37,5 +37,23 @@ namespace Axiom.GeoShape
 		/// Descrizione
 		/// </summary>
 		public string Description { get; set; } = string.Empty;
+
+		/// <summary>
+		/// Crea un nuova istanza con gli stessi valore
+		/// </summary>
+		public Variable Clone()
+		{
+			Variable variable = new Variable
+			{
+				Name = Name,
+				Value = Value,
+				Formula = Formula,
+				ApplyUomFactor = ApplyUomFactor,
+				ReadOnly = ReadOnly,
+				Description = Description
+			};
+			return variable;
+				
+		}
 	}
 }

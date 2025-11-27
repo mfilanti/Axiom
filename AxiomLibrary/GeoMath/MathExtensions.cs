@@ -9,7 +9,7 @@ namespace Axiom.GeoMath
 	/// <summary>
 	/// Estensioni matematiche per la geometria
 	/// </summary>
-	public static class GeoMathExtensions
+	public static class MathExtensions
 	{
 		#region Double Extensions
 		/// <summary>

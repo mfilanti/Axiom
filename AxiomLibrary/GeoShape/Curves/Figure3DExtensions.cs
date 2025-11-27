@@ -237,5 +237,186 @@ namespace Axiom.GeoShape.Curves
 			return result;
 		}
 
+		/// <summary>
+		/// Approssima una Figure3D in una serie di linee (passo lineare). 
+		/// adaptToEnd: indica se adattare il passo per passi uguali e finire alla punto di end. 
+		/// maxStep: indica se adattare lo step considerando quello passato come massimo (true) 
+		/// o come minimo (false)
+		/// </summary>
+		/// <returns></returns>
+		public static Figure3D ApproxFigure(this Figure3D figure, bool lineApprox, bool arcApprox, bool ellipseApprox,
+									 double lineStep, double arcStep, double ellipseStep,
+									 bool adaptToEnd, bool maxStep)
+		{
+			Figure3D result = new Figure3D();
+			for (int i = 0; i < figure.Count; i++)
+			{
+				Curve3D curve2 = figure[i];
+				if (curve2 is Line3D)
+				{
+					if (lineApprox == false)
+					{
+						result.Add(curve2.Clone());
+					}
+					else
+					{
+						double length = curve2.Length;
+
+						Point3D startPoint = curve2.StartPoint;
+						Point3D endPoint;
+						double step = lineStep;
+						if (adaptToEnd)
+						{
+							if (length % step > 0.1)
+							{
+								int count = (int)(length / step);
+								if (maxStep) count++;
+								step = length / count;
+							}
+							// Accorcio appositamente la fine del ciclo
+							length = length - (step / 2);
+						}
+
+						for (double offSet = step; offSet < length; offSet += step)
+						{
+							endPoint = curve2.EvaluateAbs(offSet);
+							result.Add(new Line3D(startPoint, endPoint));
+							startPoint = endPoint;
+						}
+						// Aggiungo l'ultimo punto se non ci sono già
+						endPoint = curve2.EndPoint;
+						if (startPoint.IsEquals(endPoint) == false)
+							result.Add(new Line3D(startPoint, endPoint));
+					}
+				}
+				else if (curve2 is Arc3D arc)
+				{
+					if (arcApprox == false)
+					{
+						result.Add(curve2.Clone());
+					}
+					else
+					{
+						double length = arc.Length;
+						Point3D startPoint = arc.StartPoint;
+						Point3D endPoint;
+						double step = arcStep;
+						if (adaptToEnd)
+						{
+							if (length % step > 0.1)
+							{
+								int count = (int)(length / step);
+								if (maxStep) count++;
+								step = length / count;
+							}
+							// Accorcio appositamente la fine del ciclo
+							length = length - (step / 2);
+						}
+
+						for (double offset = step; offset < length; offset += step)
+						{
+							endPoint = arc.EvaluateAbs(offset);
+							result.Add(new Line3D(startPoint, endPoint));
+							startPoint = endPoint;
+						}
+						// Aggiungo l'ultimo punto se non ci sono già
+						endPoint = curve2.EndPoint;
+						if (startPoint.IsEquals(endPoint) == false)
+							result.Add(new Line3D(startPoint, endPoint));
+
+					}
+				}
+				else if (curve2 is Helix3D helix)
+				{
+					if (arcApprox == false)
+					{
+						result.Add(curve2.Clone());
+					}
+					else
+					{
+						double length = helix.Length;
+						Point3D startPoint = helix.StartPoint;
+						Point3D endPoint;
+						double step = arcStep;
+						if (adaptToEnd)
+						{
+							if (length % step > 0.1)
+							{
+								int count = (int)(length / step);
+								if (maxStep) count++;
+								step = length / count;
+							}
+							// Accorcio appositamente la fine del ciclo
+							length = length - (step / 2);
+						}
+
+						for (double offset = step; offset < length; offset += step)
+						{
+							endPoint = helix.EvaluateAbs(offset);
+							result.Add(new Line3D(startPoint, endPoint));
+							startPoint = endPoint;
+						}
+						// Aggiungo l'ultimo punto se non ci sono già
+						endPoint = curve2.EndPoint;
+						if (startPoint.IsEquals(endPoint) == false)
+							result.Add(new Line3D(startPoint, endPoint));
+
+					}
+				}
+				else if (curve2 is Ellipse3D ellipse)
+				{
+					if (ellipseApprox == false)
+					{
+						result.Add(curve2.Clone());
+					}
+					else
+					{
+						// Valuto con l'angolo perchè è l'unico evaluate corretto per l'ellisse
+						// Gli altri evaluate fanno sempre delle approssimazioni 
+						// (non c'è legame dimostrato tra lunghezza e un angolo qualsiasi)
+						double angStep = ellipseStep / ellipse.A;
+						double spanAngle = ellipse.SpanAngle;
+						Point3D startPoint = ellipse.EvaluateAngle(0);
+						Point3D endPoint;
+						double step = angStep;
+						if (adaptToEnd)
+						{
+							if (spanAngle % step > 0.1)
+							{
+								int count = (int)(spanAngle / step);
+								if (maxStep) count++;
+								step = spanAngle / count;
+							}
+							// Accorcio appositamente la fine del ciclo
+							spanAngle = spanAngle - (step / 2);
+						}
+
+						for (double angOffset = step; angOffset < spanAngle; angOffset += step)
+						{
+							endPoint = ellipse.EvaluateAngle(angOffset);
+							result.Add(new Line3D(startPoint, endPoint));
+							startPoint = endPoint;
+						}
+						// Aggiungo l'ultimo punto se non ci sono già
+						endPoint = curve2.EndPoint;
+						if (startPoint.IsEquals(endPoint) == false)
+							result.Add(new Line3D(startPoint, endPoint));
+					}
+				}
+				else if (curve2 is Spline3D spline)
+				{
+					List<Point3D> points = [.. spline.Points];
+					if (spline.Closed)
+						points.Add(points[0]);
+
+					result.AddFigure(new Figure3D(points));
+				}
+				else
+				{
+					throw new Exception("Not exist case for this class: " + curve2.GetType().ToString());
+				}
+			}
+			return result;
+		}
 	}
 }

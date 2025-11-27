@@ -106,7 +106,7 @@ namespace Axiom.GeoShape.Entities
 		public override AABBox3D GetAABBox()
 		{
 			// TODO
-			Figure3D profile1 =Shape.Clone();
+			Figure3D profile1 = Shape.GetFigure().Clone();
 			profile1.Move((Vector3D)ExtrusionPath.StartPoint);
 			Figure3D profile2 = profile1.Clone();
 			profile2.Move((Vector3D)ExtrusionPath.EndPoint);

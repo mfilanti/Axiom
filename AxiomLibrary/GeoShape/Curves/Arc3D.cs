@@ -73,19 +73,19 @@ namespace Axiom.GeoShape.Curves
 
 		/// <summary>
 		/// Punto di start. 
-		
+
 		/// </summary>
 		public override Point3D StartPoint => Evaluate(0);
 
 		/// <summary>
 		/// Punto di end. 
-		
+
 		/// </summary>
 		public override Point3D EndPoint => Evaluate(1);
 
 		/// <summary>
 		/// Tangente di start. 
-		
+
 		/// </summary>
 		public override Vector3D StartTangent
 		{
@@ -98,7 +98,7 @@ namespace Axiom.GeoShape.Curves
 
 		/// <summary>
 		/// Tangente di end. 
-		
+
 		/// </summary>
 		public override Vector3D EndTangent
 		{
@@ -116,13 +116,13 @@ namespace Axiom.GeoShape.Curves
 
 		/// <summary>
 		/// Punto medio dell'arco. 
-		
+
 		/// </summary>
 		public Point3D MiddlePoint => Evaluate(0.5);
 
 		/// <summary>
 		/// L'angolo del punto medio (in radianti). 
-		
+
 		/// </summary>
 		public double MidAngle
 		{
@@ -144,7 +144,7 @@ namespace Axiom.GeoShape.Curves
 
 		/// <summary>
 		/// Angolo interno all'arco (in radianti). 
-		
+
 		/// </summary>
 		public double SpanAngle
 		{
@@ -174,25 +174,19 @@ namespace Axiom.GeoShape.Curves
 		/// <summary>
 		/// Costruttore di default
 		/// </summary>
-		public Arc3D()
+		public Arc3D() : this(new Point3D(), 0, 0, 0, true, RTMatrix.Identity)
 		{
-			Center = new Point3D();
-			Radius = 0;
-			StartAngle = 0;
-			EndAngle = 0;
-			CounterClockWise = true;
-			RMatrix = RTMatrix.Identity;
 		}
 
 		/// <summary>
-		/// Costruttore
+		/// Centro, raggio, angolo iniziale, angolo finale, verso di percorrenza, matrice
 		/// </summary>
-		/// <param name="center"></param>
-		/// <param name="radius"></param>
-		/// <param name="startAngle"></param>
-		/// <param name="endAngle"></param>
-		/// <param name="counterClockWise"></param>
-		/// <param name="rMatrix"></param>
+		/// <param name="center">Centro</param>
+		/// <param name="radius">Raggio</param>
+		/// <param name="startAngle">Angolo iniziale (rad)</param>
+		/// <param name="endAngle">Angolo finale (rad)</param>
+		/// <param name="counterClockWise">Verso di percorrenza</param>
+		/// <param name="rMatrix">Matrice</param>
 		public Arc3D(Point3D center, double radius, double startRadAngle, double endRadAngle, bool counterClockWise, RTMatrix rMatrix)
 		{
 			Center = center;
@@ -204,29 +198,38 @@ namespace Axiom.GeoShape.Curves
 		}
 
 		/// <summary>
-		/// Costruttore
+		/// Centro, raggio, angolo iniziale, angolo finale, verso di percorrenza, matrice
 		/// </summary>
-		/// <param name="start"></param>
-		/// <param name="middle"></param>
-		/// <param name="end"></param>
-		public Arc3D(Point3D start, Point3D middle, Point3D end)
+		/// <param name="center">Centro</param>
+		/// <param name="radius">Raggio</param>
+		/// <param name="startAngle">Angolo iniziale (rad)</param>
+		/// <param name="endAngle">Angolo finale (rad)</param>
+		/// <param name="counterClockWise">Verso di percorrenza</param>
+		/// <param name="rMatrix">Matrice</param>
+		public Arc3D(Point3D center, double radius, double startRadAngle, double endRadAngle, bool counterClockWise):
+			this(center,radius,startRadAngle,endRadAngle,counterClockWise,RTMatrix.Identity)
 		{
-			Center = new Point3D();
-			Radius = 0;
-			StartAngle = 0;
-			EndAngle = 0;
-			CounterClockWise = true;
-			RMatrix = RTMatrix.Identity;
+			
+		}
+
+		/// <summary>
+		/// Tre punti
+		/// </summary>
+		/// <param name="start">Punto iniziale</param>
+		/// <param name="middle">Punto medio</param>
+		/// <param name="end">Punto finale</param>
+		public Arc3D(Point3D start, Point3D middle, Point3D end):this()
+		{
 			Set3Points(start, middle, end);
 		}
 
 		/// <summary>
-		/// Costruttore
+		/// Punto iniziale, finale, centro
 		/// </summary>
-		/// <param name="start"></param>
-		/// <param name="end"></param>
-		/// <param name="center"></param>
-		/// <param name="counterClockWise"></param>
+		/// <param name="start">Punto iniziale</param>
+		/// <param name="end">PUnto finale</param>
+		/// <param name="center">Centro</param>
+		/// <param name="counterClockWise">Verso di percorrenza</param>
 		public Arc3D(Point3D start, Point3D end, Point3D center, bool counterClockWise)
 		{
 			RMatrix = RTMatrix.FromNormal((start - center).Cross(end - center));
@@ -238,11 +241,11 @@ namespace Axiom.GeoShape.Curves
 		}
 
 		/// <summary>
-		/// Costruttore
+		/// Inizio, Fine, tangente
 		/// </summary>
-		/// <param name="start"></param>
-		/// <param name="end"></param>
-		/// <param name="startTangent"></param>
+		/// <param name="start">PUnto iniziale</param>
+		/// <param name="end">Punto finale</param>
+		/// <param name="startTangent">Tangente nel punto iniziale</param>
 		public Arc3D(Point3D start, Point3D end, Vector3D startTangent)
 		{
 			Vector3D vES = end - start;
@@ -685,7 +688,7 @@ namespace Axiom.GeoShape.Curves
 			Point3D pCenter2 = new Point3D(Center.X, Center.Y);
 			double xAngle, yAngle, zAngle;
 			RMatrix.ToEulerAnglesXYZ(true, out xAngle, out yAngle, out zAngle);
-			if (GeoMathExtensions.IsEquals(xAngle % Math.PI, 0) && GeoMathExtensions.IsEquals(yAngle % Math.PI, 0))
+			if (MathExtensions.IsEquals(xAngle % Math.PI, 0) && MathExtensions.IsEquals(yAngle % Math.PI, 0))
 				result = new Arc3D(StartPoint, MiddlePoint, EndPoint);
 			else
 				result = null;

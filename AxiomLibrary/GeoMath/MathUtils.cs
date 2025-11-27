@@ -26,6 +26,19 @@ namespace Axiom.GeoMath
 		/// </summary>
 		public const double FineTolerance = 0.00001;
 
+		/// <summary>
+		/// Conversione di un angolo da gradi a radianti
+		/// </summary>
+		/// <param name="a">Valore dell'angolo espresso in gradi</param>
+		/// <returns>Il valore dell'angolo espresso in radianti</returns>
+		public static double DegreeToRad(double a) => a * DegToRad;
+
+		/// <summary>
+		/// Conversione di un angolo da radianti a gradi
+		/// </summary>
+		/// <param name="a">Il valore dell'angolo espresso in radianti</param>
+		/// <returns>Valore dell'angolo espresso in gradi</returns>
+		public static double RadToDegree(double a) => a * RadToDeg;
 
 		/// <summary>
 		/// Esegue lo swap di due variabili di tipo generico.

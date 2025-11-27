@@ -1,4 +1,7 @@
-﻿using Axiom.GeoShape.Curves;
+﻿using Axiom.GeoMath;
+using Axiom.GeoShape.Curves;
+using Axiom.GeoShape.Elements;
+using Axiom.GeoShape.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,15 +15,15 @@ namespace Axiom.GeoShape.Shapes
 	/// <summary>
 	/// Entity che rappresenta una figura 2D.
 	/// </summary>
-	public abstract class Shape2D : ICloneable
+	public abstract class Shape2D : Entity3D, ICloneable
 	{
 		#region fields
 		/// <summary>
 		/// Lista dei parametri di forma dello Shape2D
 		/// </summary>
-		private List<Parameter> _geometricParameters = new();
-
+		protected Dictionary<string, Parameter> _geometricParameters = new();
 		#endregion
+
 		#region Properties
 
 		/// <summary>
@@ -35,7 +38,7 @@ namespace Axiom.GeoShape.Shapes
 
 		#endregion
 
-		#region CONSTRUCTORS
+		#region Costructor
 		/// <summary>
 		/// Costruttore di default comune alle sottoclassi
 		/// </summary>
@@ -58,7 +61,7 @@ namespace Axiom.GeoShape.Shapes
 		/// <summary>
 		/// Parametri geometrici dello shape
 		/// </summary>
-		public IEnumerable<Parameter> Parameters => _geometricParameters;
+		public IEnumerable<Parameter> Parameters => _geometricParameters.Values;
 		#endregion PUBLIC PROPERTIES
 
 		#region PUBLIC METHODS
@@ -86,7 +89,7 @@ namespace Axiom.GeoShape.Shapes
 			shape._geometricParameters.Clear();
 			foreach (var item in _geometricParameters)
 			{
-				shape._geometricParameters.Add(item.Clone());
+				shape._geometricParameters.Add(item.Key, item.Value.Clone());
 			}
 		}
 
@@ -94,8 +97,48 @@ namespace Axiom.GeoShape.Shapes
 		/// Clona lo Shape2D
 		/// </summary>
 		/// <returns></returns>
-		public abstract Shape2D Clone();
+		public abstract override Shape2D Clone();
 
+		/// <summary>
+		/// Box orientato
+		/// </summary>
+		/// <returns></returns>
+		public override AABBox3D GetAABBox()
+		{
+			var abox = GetFigure().GetABBox();
+			return new AABBox3D(abox.MinPoint, abox.MaxPoint);
+		}
+
+		/// <summary>
+		/// Controlla se la figura è antioraria. 
+		/// Se la figura è aperta la chiude per controllare il verso. 
+		/// Se la figura è una linea, allora controlla solo la tangente (true se t.X>0 se circa zero guarda t.Y)
+		/// </summary>
+		/// <returns></returns>
+		public bool IsCounterClockWise()
+		{
+			bool result = false;
+			Figure3D clone = GetFigure();
+			clone.Reduce(true, false);
+			if (clone.Count == 1 && clone[0] is Line3D)
+			{
+				Vector3D tangent = clone[0].StartTangent;
+				if (tangent.X.IsEquals(0))
+					result = tangent.Y > 0;
+				else
+					result = tangent.X > 0;
+			}
+			else
+			{
+				Figure3D figureApprox = clone.ApproxFigure(false, true, true, 2, 2, 2, false, false);
+				if (figureApprox.IsClosed() == false)
+					figureApprox.Add(new Line3D(figureApprox.EndPoint, figureApprox.StartPoint));
+
+				Polygon3D figurePolygon = figureApprox.ToPolygon();
+				result = figurePolygon.IsCounterClockWise();
+			}
+			return result;
+		}
 		#endregion
 
 		#region ICloneable Members

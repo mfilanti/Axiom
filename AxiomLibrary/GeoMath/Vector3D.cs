@@ -295,7 +295,7 @@ namespace Axiom.GeoMath
 		{
 			Vector3D v1 = Normalize();
 			Vector3D v2 = vector.Normalize();
-			bool result = GeoMathExtensions.IsEquals(Math.Abs(v1.Dot(v2)), 1, tolerance);
+			bool result = MathExtensions.IsEquals(Math.Abs(v1.Dot(v2)), 1, tolerance);
 			return result;
 		}
 
@@ -334,6 +334,17 @@ namespace Axiom.GeoMath
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Determina l'angolo INTERNO tra this e il vettore passato come parametro.
+		/// Restituisce un angolo in radianti compreso tra 0 e + PI (N.B. angolo interno)
+		/// </summary>
+		public double Angle()
+		{
+			Vector3D a = Normalize();
+			Vector3D b = Vector3D.UnitZ.Normalize();
+			return Math.Atan2(a.Cross(b).Length, a.Dot(b));
 		}
 
 		/// <summary>

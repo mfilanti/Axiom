@@ -7,13 +7,12 @@ using System.Xml.Serialization;
 namespace Axiom.GeoShape.Elements
 {
 	/// <summary>
-	/// Box 3D Axis Aligned
+	/// Box 3D Allineato agli assi
 	/// </summary>
-	/// <summary>
-	/// Axis Aligned Bounding Box 3D. 
+	/// <remark>
 	/// E' un parallelepipedo con gli assi allineati a X, Y e Z. 
 	/// Generalmente rappresenta il minimo parallelepipedo che contiene un entità.
-	/// </summary>
+	/// </remark>
 	public class AABBox3D : ICloneable
 	{
 		#region Fields
