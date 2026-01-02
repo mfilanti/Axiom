@@ -56,7 +56,7 @@ namespace Axiom.GeoShape.Entities
 		public PlanarFace3D(Shape2D customProfile)
 			: base()
 		{
-			Shape = customProfile.Clone();
+			Shape = customProfile.CloneShape();
 			Texture = null;
 		}
 
@@ -70,7 +70,7 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override Entity3D Clone()
 		{
-			PlanarFace3D result = new PlanarFace3D(Shape.Clone());
+			PlanarFace3D result = new PlanarFace3D(Shape.CloneShape());
 			if (Texture != null)
 				result.Texture = new List<byte>(Texture).ToArray();
 

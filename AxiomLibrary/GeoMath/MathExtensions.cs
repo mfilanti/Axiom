@@ -129,7 +129,7 @@ namespace Axiom.GeoMath
 		/// </summary>
 		/// <param name="point"></param>
 		/// <returns></returns>
-		public static bool IsNotNull(this Point3D point) => point is not null;
+		public static bool IsNotNull(this Point3D point) => point != null;
 
 		/// <summary>
 		/// Indica se il punto è nullo

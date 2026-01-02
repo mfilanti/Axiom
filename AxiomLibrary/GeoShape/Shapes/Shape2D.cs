@@ -94,10 +94,16 @@ namespace Axiom.GeoShape.Shapes
 		}
 
 		/// <summary>
+		/// Metodo di copia
+		/// </summary>
+		/// <returns></returns>
+        public override Entity3D Clone() => CloneShape();
+
+		/// <summary>
 		/// Clona lo Shape2D
 		/// </summary>
 		/// <returns></returns>
-		public abstract override Shape2D Clone();
+		public abstract  Shape2D CloneShape();
 
 		/// <summary>
 		/// Box orientato

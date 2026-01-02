@@ -1,4 +1,6 @@
-﻿namespace Axiom.GeoMath
+﻿using System;
+
+namespace Axiom.GeoMath
 {
 	/// <summary>
 	/// Punto 3D
@@ -275,7 +277,7 @@
 		/// <param name="a">Primo oggetto</param>
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Somma dei due oggetti.</returns>
-		public static Point3D operator +(Point3D a, Point3D b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		public static Point3D operator +(Point3D a, Point3D b) => new Point3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
 		/// <summary>
 		/// Operatore +
@@ -283,7 +285,7 @@
 		/// <param name="a">Primo oggetto</param>
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Somma dei due oggetti.</returns>
-		public static Point3D operator +(Point3D a, Vector3D b) => new(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		public static Point3D operator +(Point3D a, Vector3D b) => new Point3D (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
 		/// <summary>
 		/// Operatore -
@@ -291,7 +293,7 @@
 		/// <param name="a">Primo oggetto</param>
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Differenza dei due oggetti.</returns>
-		public static Vector3D operator -(Point3D a, Point3D b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+		public static Vector3D operator -(Point3D a, Point3D b) => new Vector3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
 		/// <summary>
 		/// Operatore -
@@ -299,14 +301,14 @@
 		/// <param name="a">Primo oggetto</param>
 		/// <param name="b">Secondo oggetto</param>
 		/// <returns>Differenza dei due oggetti.</returns>
-		public static Point3D operator -(Point3D a, Vector3D b) => new(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+		public static Point3D operator -(Point3D a, Vector3D b) => new Point3D( a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
 		/// <summary>
 		/// Cambia segno a tutte le componenti
 		/// </summary>
 		/// <param name="left"></param>
 		/// <returns></returns>
-		public static Point3D operator -(Point3D left) => new(-left.X, -left.Y, -left.Z);
+		public static Point3D operator -(Point3D left) => new Point3D(-left.X, -left.Y, -left.Z);
 
 		/// <summary>
 		/// Operatore *
@@ -314,14 +316,14 @@
 		/// <param name="a">Oggetto</param>
 		/// <param name="scalar">Scalare</param>
 		/// <returns>Moltiplicazione dell'oggetto per lo scalare.</returns>
-		public static Point3D operator *(Point3D a, double scalar) => new(a.X * scalar, a.Y * scalar, a.Z * scalar);
+		public static Point3D operator *(Point3D a, double scalar) => new Point3D(a.X * scalar, a.Y * scalar, a.Z * scalar);
 		/// <summary>
 		/// Operatore *
 		/// </summary>
 		/// <param name="a">Oggetto</param>
 		/// <param name="scalar">Scalare</param>
 		/// <returns>Moltiplicazione dell'oggetto per lo scalare.</returns>
-		public static Point3D operator *(double scalar, Point3D a) => new(a.X * scalar, a.Y * scalar, a.Z * scalar);
+		public static Point3D operator *(double scalar, Point3D a) => new Point3D(a.X * scalar, a.Y * scalar, a.Z * scalar);
 
 		/// <summary>
 		/// Operatore /
@@ -329,7 +331,7 @@
 		/// <param name="a">Oggetto</param>
 		/// <param name="scalar">Scalare</param>
 		/// <returns>Divisione dell'oggetto per lo scalare.</returns>
-		public static Point3D operator /(Point3D a, double scalar) => new(a.X / scalar, a.Y / scalar, a.Z / scalar);
+		public static Point3D operator /(Point3D a, double scalar) => new Point3D(a.X / scalar, a.Y / scalar, a.Z / scalar);
 
 		/// <summary>
 		/// Confronto strettamente maggiore

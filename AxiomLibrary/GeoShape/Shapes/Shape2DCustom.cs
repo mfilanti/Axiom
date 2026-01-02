@@ -86,7 +86,7 @@ namespace Axiom.GeoShape.Shapes
 		/// Clona lo Shape2D
 		/// </summary>
 		/// <returns></returns>
-		public override Shape2D Clone()
+		public override Shape2D CloneShape()
 		{
 			Shape2D result = new Shape2DCustom(Figure.Clone());
 			CloneTo(result);

@@ -73,7 +73,7 @@ namespace Axiom.GeoShape.Entities
 		public SweepExtrusion3D(Shape2D profile, Figure3D extrusionPath, List<Plane3D> startCuts, List<Plane3D> endCuts)
 			: base()
 		{
-			Shape = profile.Clone();
+			Shape = profile.CloneShape();
 			ExtrusionPath = extrusionPath.Clone();
 			StartCuts = [];
 			EndCuts = [];
@@ -93,7 +93,7 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override Entity3D Clone()
 		{
-			SweepExtrusion3D result = new SweepExtrusion3D(Shape.Clone(), ExtrusionPath, new List<Plane3D>(StartCuts), new List<Plane3D>(EndCuts));
+			SweepExtrusion3D result = new SweepExtrusion3D(Shape.CloneShape(), ExtrusionPath, new List<Plane3D>(StartCuts), new List<Plane3D>(EndCuts));
 			CloneTo(result);
 			return result;
 		}

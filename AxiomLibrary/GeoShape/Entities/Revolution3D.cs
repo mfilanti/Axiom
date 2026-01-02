@@ -70,7 +70,7 @@ namespace Axiom.GeoShape.Entities
 		public Revolution3D(Shape2D section)
 			: base()
 		{
-			Shape = section.Clone();
+			Shape = section.CloneShape();
 		}
 
 		#endregion CONSTRUCTORS
@@ -82,7 +82,7 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override Entity3D Clone()
 		{
-			Revolution3D result = new Revolution3D(Shape.Clone());
+			Revolution3D result = new Revolution3D(Shape.CloneShape());
 			CloneTo(result);
 			return result;
 		}

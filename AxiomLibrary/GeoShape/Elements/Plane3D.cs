@@ -1,5 +1,7 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
+using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace Axiom.GeoShape.Elements

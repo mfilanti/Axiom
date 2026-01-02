@@ -1,6 +1,8 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
 using Axiom.GeoShape.Elements;
+using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Xml.Serialization;
 

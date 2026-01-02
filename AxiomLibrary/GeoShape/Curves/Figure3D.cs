@@ -1,6 +1,9 @@
 ﻿using Axiom.GeoMath;
 using Axiom.GeoShape.Elements;
 using Axiom.GeoShape.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Axiom.GeoShape.Curves
 {

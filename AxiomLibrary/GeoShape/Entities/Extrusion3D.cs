@@ -89,7 +89,7 @@ namespace Axiom.GeoShape.Entities
 		public Extrusion3D(Shape2D profile, Vector3D extrusionDirection, double length, List<Plane3D> startCuts, List<Plane3D> endCuts, string lengthFormula)
 			: this()
 		{
-			Shape = profile.Clone();
+			Shape = profile.CloneShape();
 			ExtrusionDirection = new(extrusionDirection);
 			Length = length;
 			LengthFormula = lengthFormula;
@@ -115,7 +115,7 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override Entity3D Clone()
 		{
-			Extrusion3D result = new Extrusion3D(Shape.Clone(), ExtrusionDirection, Length,
+			Extrusion3D result = new Extrusion3D(Shape.CloneShape(), ExtrusionDirection, Length,
 												 [.. StartCuts], [.. EndCuts], LengthFormula);
 			CloneTo(result);
 			return result;
