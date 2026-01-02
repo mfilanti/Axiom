@@ -293,11 +293,12 @@ namespace Axiom.GeoShape
 			Entities.Add(entity.Id, entity);
 		}
 
-		/// <summary>
-		/// Clona il nodo
-		/// </summary>
-		/// <returns></returns>
-		public virtual Node3D Clone()
+
+        /// <summary>
+        /// Clona il nodo
+        /// </summary>
+        /// <returns></returns>
+        public virtual Node3D Clone()
 		{
 			Node3D result = new Node3D(_Id);
 			CloneTo(result);
