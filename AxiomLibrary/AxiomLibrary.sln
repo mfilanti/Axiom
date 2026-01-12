@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36623.8
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11222.15 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoMath", "GeoMath\GeoMath.csproj", "{04736537-166F-4CEA-863F-FA49B5EEC5CF}"
 EndProject
@@ -15,6 +15,12 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoShape", "GeoShape\GeoShape.csproj", "{585CCA58-1CFB-4B42-A54A-2FD4188945A4}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GeoShapeTest", "GeoShapeTest\GeoShapeTest.csproj", "{59B5AB77-6D15-464C-841A-2190890C5A72}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Library", "Library", "{5437034E-125B-437A-B7DB-021287D48315}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Testing", "Testing", "{C5CC2402-BB30-4A3E-A9B5-F9385D9D036A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AxiomUtilities", "AxiomUtilities\AxiomUtilities.csproj", "{8E134189-153A-4F62-8282-9A0DC22B841A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,9 +44,20 @@ Global
 		{59B5AB77-6D15-464C-841A-2190890C5A72}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{59B5AB77-6D15-464C-841A-2190890C5A72}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{59B5AB77-6D15-464C-841A-2190890C5A72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E134189-153A-4F62-8282-9A0DC22B841A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E134189-153A-4F62-8282-9A0DC22B841A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E134189-153A-4F62-8282-9A0DC22B841A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E134189-153A-4F62-8282-9A0DC22B841A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{04736537-166F-4CEA-863F-FA49B5EEC5CF} = {5437034E-125B-437A-B7DB-021287D48315}
+		{00522EA3-2C3C-40DA-827A-FEBA63C8807E} = {C5CC2402-BB30-4A3E-A9B5-F9385D9D036A}
+		{585CCA58-1CFB-4B42-A54A-2FD4188945A4} = {5437034E-125B-437A-B7DB-021287D48315}
+		{59B5AB77-6D15-464C-841A-2190890C5A72} = {C5CC2402-BB30-4A3E-A9B5-F9385D9D036A}
+		{8E134189-153A-4F62-8282-9A0DC22B841A} = {5437034E-125B-437A-B7DB-021287D48315}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {741BC52A-E9F9-4854-919C-BF4F10CFE42D}

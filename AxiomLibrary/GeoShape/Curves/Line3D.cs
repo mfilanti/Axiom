@@ -154,8 +154,8 @@ namespace Axiom.GeoShape.Curves
 			}
 			else
 			{
-				double distStart = point.Distance(this.StartPoint);
-				double distEnd = point.Distance(this.EndPoint);
+				double distStart = point.Distance(StartPoint);
+				double distEnd = point.Distance(EndPoint);
 				result = distStart <= distEnd ? distStart : distEnd;
 			}
 

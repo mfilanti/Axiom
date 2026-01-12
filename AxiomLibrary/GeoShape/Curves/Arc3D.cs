@@ -304,8 +304,7 @@ namespace Axiom.GeoShape.Curves
 
 		#endregion CONSTRUCTORS
 
-
-		#region PUBLIC METHODS
+		#region Public Methods
 		/// <summary>
 		/// Clona la curva
 		/// </summary>

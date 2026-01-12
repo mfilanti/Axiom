@@ -59,21 +59,18 @@ namespace Axiom.GeoShape.Elements
 			return false;
 		}
 
-		/// <summary>
-		/// <inheritdoc/>
-		/// </summary>
-		public override int GetHashCode()
-		{
-			return base.GetHashCode();
-		}
-		#endregion
-		#region PUBLIC METHODS
-		/// <summary>
-		/// Confronta i due raggi considerando la tolleranza uguale a MathUtils.Tolerance
-		/// </summary>
-		/// <param name="ray"></param>
-		/// <returns></returns>
-		public bool IsEquals(Ray3D ray) => Location.IsEquals(ray.Location) && Direction.IsEquals(ray.Direction);
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public override int GetHashCode() => base.GetHashCode();
+        #endregion
+        #region PUBLIC METHODS
+        /// <summary>
+        /// Confronta i due raggi considerando la tolleranza uguale a MathUtils.Tolerance
+        /// </summary>
+        /// <param name="ray"></param>
+        /// <returns></returns>
+        public bool IsEquals(Ray3D ray) => Location.IsEquals(ray.Location) && Direction.IsEquals(ray.Direction);
 
 		/// <summary>
 		/// Confronta i due raggi considerando la tolleranza indicata

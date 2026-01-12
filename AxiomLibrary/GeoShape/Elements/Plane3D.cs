@@ -66,6 +66,7 @@ namespace Axiom.GeoShape.Elements
 			Location = location;
 		}
 		#endregion
+
 		#region Overrides
 		
 		/// <summary>
@@ -89,6 +90,7 @@ namespace Axiom.GeoShape.Elements
 			return base.GetHashCode();
 		}
 		#endregion
+
 		#region Methods
 		/// <summary>
 		/// Reimposta l'asse X in maniera arbitraria, mantenendo fissa la normale. 

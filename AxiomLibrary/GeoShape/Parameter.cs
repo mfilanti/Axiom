@@ -51,22 +51,11 @@ namespace Axiom.GeoShape
 			Value = value;
 		}
 
-		/// <summary>
-		/// Esegue una copia
-		/// </summary>
-		/// <returns></returns>
-		public Parameter Clone()
-		{
-			return new Parameter(Name, ApplyLinearUom, Formula, Value);
-		}
-		#endregion
-
-		#region Methods
-
-		#endregion
-
-
-
-
-	}
+        /// <summary>
+        /// Esegue una copia
+        /// </summary>
+        /// <returns></returns>
+        public Parameter Clone() => new Parameter(Name, ApplyLinearUom, Formula, Value);
+        #endregion
+    }
 }

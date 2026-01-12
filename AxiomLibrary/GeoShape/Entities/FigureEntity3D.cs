@@ -55,7 +55,7 @@ namespace Axiom.GeoShape.Entities
 		public override Entity3D Clone()
 		{
 			FigureEntity3D result = new FigureEntity3D(Figure.Clone());
-			this.CloneTo(result);
+			CloneTo(result);
 			return result;
 		}
 
@@ -65,8 +65,8 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			Figure3D clone = this.Figure.Clone();
-			clone.ApplyRT(this.WorldMatrix);
+			Figure3D clone = Figure.Clone();
+			clone.ApplyRT(WorldMatrix);
 
 			AABBox3D result = clone.GetABBox();
 			return result;

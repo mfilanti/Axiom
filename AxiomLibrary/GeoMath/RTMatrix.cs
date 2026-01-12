@@ -178,6 +178,7 @@ namespace Axiom.GeoMath
 		[DataMember]
 		private double _m41, _m42, _m43, _m44;
 		#endregion
+
 		#region Serialized Properties
 		// Proprietà compatta per serializzazione
 		[JsonPropertyName("values")]
@@ -202,6 +203,7 @@ namespace Axiom.GeoMath
 			}
 		}
 		#endregion
+		
 		#region Properties
 		/// <summary>
 		/// Traslazione X
@@ -283,7 +285,7 @@ namespace Axiom.GeoMath
 		[JsonIgnore]
 		public Vector3D XVector
 		{
-			get => this.GetVector(0); set => this.SetVector(0, value);
+			get => GetVector(0); set => SetVector(0, value);
 		}
 
 		/// <summary>
@@ -293,7 +295,7 @@ namespace Axiom.GeoMath
 		[JsonIgnore]
 		public Vector3D YVector
 		{
-			get => this.GetVector(1); set => this.SetVector(1, value);
+			get => GetVector(1); set => SetVector(1, value);
 		}
 
 		/// <summary>
@@ -303,7 +305,7 @@ namespace Axiom.GeoMath
 		[JsonIgnore]
 		public Vector3D ZVector
 		{
-			get => this.GetVector(2); set => this.SetVector(2, value);
+			get => GetVector(2); set => SetVector(2, value);
 		}
 		#endregion
 
@@ -381,7 +383,7 @@ namespace Axiom.GeoMath
 		{
 			get
 			{
-				return this[row * 4 + col];
+                return this[row * 4 + col];
 			}
 			set
 			{
@@ -513,9 +515,9 @@ namespace Axiom.GeoMath
 		/// <summary>
 		/// Set delle colonne della sottomatrice 3x3
 		/// </summary>
-		/// <param name="xAxis"></param>
-		/// <param name="yAxis"></param>
-		/// <param name="zAxis"></param>
+		/// <param name="xAxis">Asse X</param>
+		/// <param name="yAxis">Asse Y</param>
+		/// <param name="zAxis">Asse Z</param>
 		public void SetFromAxes(Vector3D xAxis, Vector3D yAxis, Vector3D zAxis)
 		{
 			_m11 = xAxis.X;
@@ -532,9 +534,9 @@ namespace Axiom.GeoMath
 		/// <summary>
 		/// Setta la rotazione mantenendo la traslazione
 		/// </summary>
-		/// <param name="xRadAngle"></param>
-		/// <param name="yRadAngle"></param>
-		/// <param name="zRadAngle"></param>
+		/// <param name="xRadAngle">Rotazione attorno asse X</param>
+		/// <param name="yRadAngle">Rotazione attorno asse Y</param>
+		/// <param name="zRadAngle">Rotazione attorno asse Z</param>
 		public void SetRotation(double xRadAngle, double yRadAngle, double zRadAngle)
 		{
 			Vector3D trasl = Translation;
@@ -577,20 +579,17 @@ namespace Axiom.GeoMath
 			return r;
 		}
 
-		/// <summary>
-		/// Esegue una copia della classe
-		/// </summary>
-		/// <returns>Copia della classe</returns>
-		public RTMatrix Clone()
-		{
-			return new RTMatrix(this);
-		}
+        /// <summary>
+        /// Esegue una copia della classe
+        /// </summary>
+        /// <returns>Copia della classe</returns>
+        public RTMatrix Clone() => new RTMatrix(this);
 
-		/// <summary>
-		/// Metodo per clonare i valori in una matrice target
-		/// </summary>
-		/// <param name="target">target</param>
-		public void CloneTo(RTMatrix target)
+        /// <summary>
+        /// Metodo per clonare i valori in una matrice target
+        /// </summary>
+        /// <param name="target">target</param>
+        public void CloneTo(RTMatrix target)
 		{
 			if (target is null)
 				throw new ArgumentNullException(nameof(target));
@@ -619,6 +618,11 @@ namespace Axiom.GeoMath
 			return false;
 		}
 
+		/// <summary>
+		/// Ugualianza
+		/// </summary>
+		/// <param name="obj"></param>
+		/// <returns></returns>
 		public override bool Equals(object obj)
 		{
 			if (obj is RTMatrix)
@@ -638,92 +642,70 @@ namespace Axiom.GeoMath
 
 			return hashCode;
 		}
-		#endregion
+        #endregion
 
-		#region Operations
-		/// <summary>
-		/// Somma elemento per elemento
-		/// </summary>
-		/// <param name="matrix"></param>
-		/// <returns></returns>
-		public RTMatrix Add(RTMatrix matrix)
-		{
-			return this + matrix;
-		}
+        #region Operations
+        /// <summary>
+        /// Somma elemento per elemento
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <returns></returns>
+        public RTMatrix Add(RTMatrix matrix) => this + matrix;
 
-		/// <summary>
-		/// Sottrazione elemento per elemento
-		/// </summary>
-		/// <param name="matrix"></param>
-		/// <returns></returns>
-		public RTMatrix Subtract(RTMatrix matrix)
-		{
-			return this - matrix;
-		}
+        /// <summary>
+        /// Sottrazione elemento per elemento
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <returns></returns>
+        public RTMatrix Subtract(RTMatrix matrix) => this - matrix;
 
-		/// <summary>
-		/// Negazione elemento per elemento
-		/// </summary>
-		/// <returns></returns>
-		public RTMatrix Negate()
-		{
-			return -this;
-		}
+        /// <summary>
+        /// Negazione elemento per elemento
+        /// </summary>
+        /// <returns></returns>
+        public RTMatrix Negate() => -this;
 
+        #endregion
 
-		#endregion
+        #region Multiply
 
-		#region Multiply
+        /// <summary>
+        /// Moltiplicazione matrice-matrice
+        /// </summary>
+        /// <param name="matrix"></param>
+        /// <returns></returns>
+        public RTMatrix Multiply(RTMatrix matrix) => this * matrix;
 
-		/// <summary>
-		/// Moltiplicazione matrice-matrice
-		/// </summary>
-		/// <param name="matrix"></param>
-		/// <returns></returns>
-		public RTMatrix Multiply(RTMatrix matrix)
-		{
-			return this * matrix;
-		}
+        /// <summary>
+        /// Applicazione della matrice a un punto 3D
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public Point3D Multiply(Point3D point) => this * point;
 
-		/// <summary>
-		/// Applicazione della matrice a un punto 3D
-		/// </summary>
-		/// <param name="point"></param>
-		/// <returns></returns>
-		public Point3D Multiply(Point3D point)
-		{
-			return this * point;
-		}
+        /// <summary>
+        /// Applicazione della matrice a un vettore 3D
+        /// </summary>
+        /// <param name="vector"></param>
+        /// <returns></returns>
+        public Vector3D Multiply(Vector3D vector) => this * vector;
 
-		/// <summary>
-		/// Applicazione della matrice a un vettore 3D
-		/// </summary>
-		/// <param name="vector"></param>
-		/// <returns></returns>
-		public Vector3D Multiply(Vector3D vector)
-		{
-			return this * vector;
-		}
+        /// <summary>
+        /// Moltiplicazione per uno scalare
+        /// </summary>
+        /// <param name="vector"></param>
+        /// <returns></returns>
+        public RTMatrix Multiply(double scalar) => this * scalar;
 
-		/// <summary>
-		/// Moltiplicazione per uno scalare
-		/// </summary>
-		/// <param name="vector"></param>
-		/// <returns></returns>
-		public RTMatrix Multiply(double scalar)
-		{
-			return this * scalar;
-		}
+        #endregion
 
-		#endregion
+        #region Public Methods
 
-		#region Public Methods
-
-		/// <summary>
-		/// Inversa
-		/// </summary>
-		/// <returns></returns>
-		public RTMatrix Inverse()
+        /// <summary>
+        /// Inversa
+        /// </summary>
+        /// <returns></returns>
+        public RTMatrix Inverse()
 		{
 			var det = Determinant;
 			if (det == 0)
@@ -735,7 +717,7 @@ namespace Axiom.GeoMath
 
 
 		/// <summary>
-		/// Inversa per matrici che contengono solo roto traslazioni (molto performante). 
+		/// Inversa per matrici che contengono solo roto traslazioni. 
 		/// </summary>
 		/// <returns>Matrice inversa</returns>
 		public RTMatrix InverseRT()
@@ -895,25 +877,20 @@ namespace Axiom.GeoMath
 				xRadAngle = Math.Atan2(sX, cX);
 			}
 		}
-		#endregion
 
-		#region Private Methods
-		/// <summary>
-		/// Get del vettore della colonna i-esima
-		/// </summary>
-		/// <param name="col"></param>
-		/// <returns></returns>
-		public Vector3D GetVector(int col)
-		{
-			return new Vector3D(this[0, col], this[1, col], this[2, col]);
-		}
+        /// <summary>
+        /// Get del vettore della colonna i-esima
+        /// </summary>
+        /// <param name="col"></param>
+        /// <returns></returns>
+        public Vector3D GetVector(int col) => new Vector3D(this[0, col], this[1, col], this[2, col]);
 
-		/// <summary>
-		/// Set del vettore della colonna i-esima
-		/// </summary>
-		/// <param name="col"></param>
-		/// <param name="vector"></param>
-		private void SetVector(int col, Vector3D vector)
+        /// <summary>
+        /// Set del vettore della colonna i-esima
+        /// </summary>
+        /// <param name="col"></param>
+        /// <param name="vector"></param>
+        private void SetVector(int col, Vector3D vector)
 		{
 			this[0, col] = vector.X;
 			this[1, col] = vector.Y;
@@ -1133,21 +1110,18 @@ namespace Axiom.GeoMath
 			return false;
 		}
 
-		/// <summary>
-		/// Disuguaglianza esatta elemento per elemento
-		/// </summary>
-		/// <param name="left">Matrice sinistra</param>
-		/// <param name="right">Matrice destra</param>
-		/// <returns><c>true</c> Disuguaglianza esatta</returns>
-		public static bool operator !=(RTMatrix left, RTMatrix right)
-		{
-			return !(left == right);
-		}
+        /// <summary>
+        /// Disuguaglianza esatta elemento per elemento
+        /// </summary>
+        /// <param name="left">Matrice sinistra</param>
+        /// <param name="right">Matrice destra</param>
+        /// <returns><c>true</c> Disuguaglianza esatta</returns>
+        public static bool operator !=(RTMatrix left, RTMatrix right) => !(left == right);
 
-		#endregion OPERATORS
+        #endregion OPERATORS
 
-		#region PRIVATE METHODS
-		private RTMatrix Adjoint()
+        #region PRIVATE METHODS
+        private RTMatrix Adjoint()
 		{
 			double val0 = _m22 * (_m33 * _m44 - _m43 * _m34) - _m23 * (_m32 * _m44 - _m42 * _m34) + _m24 * (_m32 * _m43 - _m42 * _m33);
 			double val1 = -(_m12 * (_m33 * _m44 - _m43 * _m34) - _m13 * (_m32 * _m44 - _m42 * _m34) + _m14 * (_m32 * _m43 - _m42 * _m33));
@@ -1168,7 +1142,7 @@ namespace Axiom.GeoMath
 
 			return new RTMatrix(val0, val1, val2, val3, val4, val5, val6, val7, val8, val9, val10, val11, val12, val13, val14, val15);
 		}
-		#endregion PRIVATE METHODS
+		#endregion 
 
 		#region Overloads di Object
 

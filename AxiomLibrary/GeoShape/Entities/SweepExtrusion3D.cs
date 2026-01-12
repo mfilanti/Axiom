@@ -77,16 +77,13 @@ namespace Axiom.GeoShape.Entities
 			ExtrusionPath = extrusionPath.Clone();
 			StartCuts = [];
 			EndCuts = [];
-			if (startCuts != null)
-				StartCuts = startCuts;
-
-			if (endCuts != null)
-				EndCuts = endCuts;
+			if (startCuts != null) StartCuts = startCuts;
+			if (endCuts != null) EndCuts = endCuts;
 		}
 
-		#endregion CONSTRUCTORS
+		#endregion
 
-		#region PUBLIC METHODS
+		#region Public Methods
 		/// <summary>
 		/// Clona lo SweepExtrusion3D
 		/// </summary>
@@ -100,12 +97,10 @@ namespace Axiom.GeoShape.Entities
 
 		/// <summary>
 		/// Restituisce l'AABBox corrispondente. 
-		/// N.B. Calcolo molto approssimato: da rifare
 		/// </summary>
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			// TODO
 			Figure3D profile1 = Shape.GetFigure().Clone();
 			profile1.Move((Vector3D)ExtrusionPath.StartPoint);
 			Figure3D profile2 = profile1.Clone();

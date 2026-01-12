@@ -1413,9 +1413,9 @@ namespace Axiom.GeoShape.Curves
 		{
 			Figure3D result = new Figure3D();
 			offsets = new Dictionary<Line3D, List<double>>();
-			for (int i = 0; i < this.Count - 1; i++)
+			for (int i = 0; i < Count - 1; i++)
 			{
-				for (int j = i + 1; j < this.Count; j++)
+				for (int j = i + 1; j < Count; j++)
 				{
 					Line3D line1 = (Line3D)this[i];
 					Line3D line2 = (Line3D)this[j];

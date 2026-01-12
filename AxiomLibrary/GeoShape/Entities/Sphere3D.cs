@@ -22,7 +22,7 @@ namespace Axiom.GeoShape.Entities
 	public class Sphere3D : Entity3D
 	{
 		private const string RADIUS = "radius";
-		#region PUBLIC FIELDS
+		#region Properties
 		/// <summary>
 		/// Raggio
 		/// </summary>
@@ -32,7 +32,7 @@ namespace Axiom.GeoShape.Entities
 		/// Formula raggio
 		/// </summary>
 		public string RadiusFormula { get => _parameters[RADIUS].Formula; set => _parameters[RADIUS].Formula = value; }
-		#endregion PUBLIC METHODS
+		#endregion
 
 		#region CONSTRUCTORS
 		/// <summary>
@@ -72,8 +72,8 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override Entity3D Clone()
 		{
-			Sphere3D result = new Sphere3D(this.Radius, this.RadiusFormula);
-			this.CloneTo(result);
+			Sphere3D result = new Sphere3D(Radius, RadiusFormula);
+			CloneTo(result);
 			return result;
 		}
 
@@ -83,29 +83,33 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			Point3D minPoint = new Point3D(-this.Radius, -this.Radius, -this.Radius);
-			Point3D maxPoint = new Point3D(this.Radius, this.Radius, this.Radius);
-			RTMatrix matrix = ParentRTMatrix.Multiply(this.RTMatrix);
+			Point3D minPoint = new Point3D(-Radius, -Radius, -Radius);
+			Point3D maxPoint = new Point3D(Radius, Radius, Radius);
+			RTMatrix matrix = ParentRTMatrix.Multiply(RTMatrix);
 			minPoint += matrix.Translation;
 			maxPoint += matrix.Translation;
-			AABBox3D result = new AABBox3D(minPoint, maxPoint);
-
-			return result;
+			return new AABBox3D(minPoint, maxPoint);
 		}
 
-		//Calculate the intersection of a ray and a sphere
-		//The line segment is defined from p1 to p2
-		//The sphere is of radius r and centered at sc
-		//There are potentially two points of intersection given by
-		//p = p1 + mu1 (p2 - p1)
-		//p = p1 + mu2 (p2 - p1)
-		//Return FALSE if the ray doesn't intersect the sphere.
-		// http://local.wasp.uwa.edu.au/~pbourke/geometry/sphereline/
+
+		/// <summary>
+		///Calculate the intersection of a ray and a sphere
+		///The line segment is defined from p1 to p2
+		///The sphere is of radius r and centered at sc
+		///There are potentially two points of intersection given by
+		///p = p1 + mu1 (p2 - p1)
+		///p = p1 + mu2 (p2 - p1)
+		///http://local.wasp.uwa.edu.au/~pbourke/geometry/sphereline/
+		/// </summary>
+		/// <param name="line">Linea</param>
+		/// <param name="mu1"></param>
+		/// <param name="mu2"></param>
+		/// <returns>Return FALSE if the ray doesn't intersect the sphere.</returns>
 		public bool Intersect(Line3D line, out double mu1, out double mu2)
 		{
 			bool result;
-			Vector3D sc = this.RTMatrix.Translation;
-			double r = this.Radius;
+			Vector3D sc = RTMatrix.Translation;
+			double r = Radius;
 			Vector3D p1 = (Vector3D)line.StartPoint;
 			Vector3D p2 = (Vector3D)line.EndPoint;
 

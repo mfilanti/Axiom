@@ -20,7 +20,7 @@ namespace Axiom.GeoShape.Elements
 	}
 
 	/// <summary>
-	/// Classe poligono 2D (CHIUSO).
+	/// Classe poligono 3D (CHIUSO).
 	/// Mantiene un insieme di punti che rappresentano i vertici del poligono. 
 	/// Almeno 3 vertici. 
 	/// N.B. L'ultimo punto non va inserito uguale al primo. O almeno non è necessario. 

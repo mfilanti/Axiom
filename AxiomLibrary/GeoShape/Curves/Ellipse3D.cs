@@ -49,23 +49,23 @@ namespace Axiom.GeoShape.Curves
 		/// (N.B. Esiste il parametro CounterClockWise che indica il verso dell'ellisse)
 		/// </summary>
 		public double StartAngle
-		{
-			get { return _startAngle; }
-			set
-			{
-				if (value.IsEquals(2 * Math.PI) == true)
-				{
-					_startAngle = 2 * Math.PI;
-				}
-				else
-				{
-					_startAngle = value % (2 * Math.PI);
-					if (_startAngle < 0)
-						_startAngle += 2 * Math.PI;
-				}
-			}
-		}
-		private double _startAngle;
+        {
+            get => _startAngle;
+            set
+            {
+                if (value.IsEquals(2 * Math.PI) == true)
+                {
+                    _startAngle = 2 * Math.PI;
+                }
+                else
+                {
+                    _startAngle = value % (2 * Math.PI);
+                    if (_startAngle < 0)
+                        _startAngle += 2 * Math.PI;
+                }
+            }
+        }
+        private double _startAngle;
 
 		/// <summary>
 		/// Angolo di fine in radianti.

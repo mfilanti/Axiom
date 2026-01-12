@@ -125,20 +125,19 @@ namespace Axiom.GeoMath
 
 		/// <summary>
 		/// Indica se il punto è colineare con altri due punti in 2D.
+		///  Calcolo il determinante equivalente al doppio dell'area del triangolo
 		/// </summary>
 		/// <param name="point2">Secondo punto</param>
 		/// <param name="point3">Terzo punto</param>
 		/// <returns><c>true</c> sono collineari</returns>
 		public bool AreColinear2D(Point3D point2, Point3D point3)
 		{
-			// Calcolo il determinante equivalente al doppio dell'area del triangolo
 			double area2 = X * (point2.Y - point3.Y) + point2.X * (point3.Y - Y) + point3.X * (Y - point2.Y);
-
 			return Math.Abs(area2) < MathUtils.FineTolerance;
 		}
 
 		/// <summary>
-		/// Indica se il punto è colineare con altri due punti in 2D.
+		/// Indica se il punto è colineare con altri due punti in 3D.
 		/// </summary>
 		/// <param name="point2">Secondo punto</param>
 		/// <param name="point3">Terzo punto</param>
@@ -166,9 +165,6 @@ namespace Axiom.GeoMath
 				   Math.Abs(crossY) < MathUtils.FineTolerance &&
 				   Math.Abs(crossZ) < MathUtils.FineTolerance;
 		}
-
-
-
 		#endregion
 
 		#region EqualityOverrides
@@ -201,39 +197,32 @@ namespace Axiom.GeoMath
 			return HashCode.Combine(hashX, hashY, hashZ);
 		}
 
-		/// <summary>
-		/// Indica che il punto è NaN.
-		/// </summary>
-		/// <returns></returns>
-		public bool IsNan()
-		{
-			return double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z);
-		}
+        /// <summary>
+        /// Indica che il punto è NaN.
+        /// </summary>
+        /// <returns></returns>
+        public bool IsNan() => double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z);
 
-		/// <summary>
-		/// Trasforma il punto in un vettore.
-		/// </summary>
-		/// <returns></returns>
-		public Vector3D ToVector() => new Vector3D(X, Y, Z);
+        /// <summary>
+        /// Trasforma il punto in un vettore.
+        /// </summary>
+        /// <returns></returns>
+        public Vector3D ToVector() => new Vector3D(X, Y, Z);
 
-		/// <summary>
-		/// Distanza tra punti al quadrato
-		/// </summary>
-		/// <param name="point"></param>
-		/// <returns></returns>
-		public double DistanceSqr(Point3D point)
-		{
-			return Math.Pow(this.X - point.X, 2) + Math.Pow(this.Y - point.Y, 2) + Math.Pow(this.Z - point.Z, 2);
-		}
-		#endregion
+        /// <summary>
+        /// Distanza tra punti al quadrato
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public double DistanceSqr(Point3D point) => Math.Pow(X - point.X, 2) + Math.Pow(Y - point.Y, 2) + Math.Pow(Z - point.Z, 2);
+        #endregion
 
-		#region Operators
-		/// <summary>
-		/// Implicit conversion from Vector3D to Point3D .
-		/// </summary>
-		/// <param name="vector3D">Vettore</param>
-		public static implicit operator Point3D(Vector3D vector3D) => new Point3D(vector3D.X, vector3D.Y, vector3D.Z);
-
+        #region Operators
+        /// <summary>
+        /// Implicit conversion from Vector3D to Point3D .
+        /// </summary>
+        /// <param name="vector3D">Vettore</param>
+        public static implicit operator Point3D(Vector3D vector3D) => new Point3D(vector3D.X, vector3D.Y, vector3D.Z);
 
 		/// <summary>
 		/// Operatore ==

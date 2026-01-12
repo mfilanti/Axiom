@@ -152,9 +152,9 @@ namespace Axiom.GeoMath
 
 
 		/// <summary>
-		/// Ugauale a un altro vettore, con tolleranza.
+		/// Uguale a un altro vettore, con tolleranza.
 		/// </summary>
-		/// <param name="other"></param>
+		/// <param name="other">Vettore di verifica</param>
 		/// <returns></returns>
 		public bool IsEquals(Vector3D other)
 		{
@@ -262,36 +262,33 @@ namespace Axiom.GeoMath
 		{
 			Vector3D result;
 
-			if (this.IsEquals(Vector3D.NegativeUnitX))
+			if (IsEquals(Vector3D.NegativeUnitX))
 				result = Vector3D.NegativeUnitY;
-			else if (this.IsEquals(Vector3D.UnitX))
+			else if (IsEquals(Vector3D.UnitX))
 				result = Vector3D.UnitY;
 			else
-				result = (this.Cross(Vector3D.UnitX)).Cross(this).Normalize();
+				result = (Cross(Vector3D.UnitX)).Cross(this).Normalize();
 
 			return result;
 		}
 
-		/// <summary>
-		/// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
-		/// Con tolleranza pari a MathUtils.Tolerance.
-		/// </summary>
-		/// <param name="vector"></param>
-		/// <param name="tolerance"></param>
-		/// <returns></returns>
-		public bool IsParallel(Vector3D vector)
-		{
-			return IsParallel(vector, MathUtils.FineTolerance);
-		}
+        /// <summary>
+        /// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
+        /// Con tolleranza pari a MathUtils.Tolerance.
+        /// </summary>
+        /// <param name="vector"></param>
+        /// <param name="tolerance"></param>
+        /// <returns></returns>
+        public bool IsParallel(Vector3D vector) => IsParallel(vector, MathUtils.FineTolerance);
 
-		/// <summary>
-		/// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
-		/// Con tolleranza indicata.
-		/// </summary>
-		/// <param name="vector"></param>
-		/// <param name="tolerance"></param>
-		/// <returns></returns>
-		public bool IsParallel(Vector3D vector, double tolerance)
+        /// <summary>
+        /// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
+        /// Con tolleranza indicata.
+        /// </summary>
+        /// <param name="vector"></param>
+        /// <param name="tolerance"></param>
+        /// <returns></returns>
+        public bool IsParallel(Vector3D vector, double tolerance)
 		{
 			Vector3D v1 = Normalize();
 			Vector3D v2 = vector.Normalize();
@@ -301,7 +298,7 @@ namespace Axiom.GeoMath
 
 		/// <summary>
 		/// Restituisce la interpolazione sferica lineare. 
-		/// Se i due vettori sono identici restituisce this. 
+		/// Se i due vettori sono identici restituisce  
 		/// Se sono opposti ci sarebbero infiniti piani su cui ruotare, in questo caso considera il piano 
 		/// individuato dal parametro normal (che altrimenti non viene considerato). 
 		/// Il parametro t deve essere compreso tra 0 e 1.
@@ -321,7 +318,7 @@ namespace Axiom.GeoMath
 			// Se il dot è 1 allora i due vettori sono uguali
 			if (d < 1)
 			{
-				Vector3D planeNormal = this.Cross(destination).Normalize();
+				Vector3D planeNormal = Cross(destination).Normalize();
 				// Se sono opposti considera il parametro normal
 				if (d.IsEquals(-1))
 					planeNormal = normal;
@@ -329,7 +326,7 @@ namespace Axiom.GeoMath
 				if (planeNormal.IsEquals(Vector3D.Zero) == false)
 				{
 					double angle = destination.Angle(this, planeNormal);
-					result = this.Rotate(planeNormal, t * angle);
+					result = Rotate(planeNormal, t * angle);
 				}
 			}
 
@@ -343,7 +340,7 @@ namespace Axiom.GeoMath
 		public double Angle()
 		{
 			Vector3D a = Normalize();
-			Vector3D b = Vector3D.UnitZ.Normalize();
+			Vector3D b = Vector3D.UnitZ;
 			return Math.Atan2(a.Cross(b).Length, a.Dot(b));
 		}
 
@@ -370,7 +367,7 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public double Angle(Vector3D refX, Vector3D refZ)
 		{
-			Vector3D a = this.Normalize();
+			Vector3D a = Normalize();
 			Vector3D b = refX.Normalize();
 			Vector3D cross = a.Cross(b);
 			double result = Math.Atan2(cross.Length, a.Dot(b));

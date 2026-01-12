@@ -18,10 +18,7 @@ namespace Axiom.GeoShape.Shapes
 	public abstract class Shape2D : Entity3D, ICloneable
 	{
 		#region fields
-		/// <summary>
-		/// Lista dei parametri di forma dello Shape2D
-		/// </summary>
-		protected Dictionary<string, Parameter> _geometricParameters = new();
+		
 		#endregion
 
 		#region Properties
@@ -36,6 +33,18 @@ namespace Axiom.GeoShape.Shapes
 		/// </summary>
 		public bool MirrorY { get; set; }
 
+		/// <summary>
+		/// Indica se può essere svuotato
+		/// </summary>
+		public abstract bool CanEmpty
+		{
+			get;
+		}
+
+		/// <summary>
+		/// Parametri geometrici dello shape
+		/// </summary>
+		public IEnumerable<Parameter> Parameters => _parameters.Values;
 		#endregion
 
 		#region Costructor
@@ -49,22 +58,7 @@ namespace Axiom.GeoShape.Shapes
 		}
 		#endregion CONSTRUCTORS
 
-		#region PUBLIC PROPERTIES
-		/// <summary>
-		/// Indica se può essere svuotato
-		/// </summary>
-		public abstract bool CanEmpty
-		{
-			get;
-		}
-
-		/// <summary>
-		/// Parametri geometrici dello shape
-		/// </summary>
-		public IEnumerable<Parameter> Parameters => _geometricParameters.Values;
-		#endregion PUBLIC PROPERTIES
-
-		#region PUBLIC METHODS
+		#region Methods
 
 		/// <summary>
 		/// Restituisce la figura dello shape
@@ -86,10 +80,10 @@ namespace Axiom.GeoShape.Shapes
 		{
 			shape.InverseVersus = InverseVersus;
 			shape.MirrorY = MirrorY;
-			shape._geometricParameters.Clear();
-			foreach (var item in _geometricParameters)
+			shape._parameters.Clear();
+			foreach (var item in _parameters)
 			{
-				shape._geometricParameters.Add(item.Key, item.Value.Clone());
+				shape._parameters.Add(item.Key, item.Value.Clone());
 			}
 		}
 
@@ -148,7 +142,10 @@ namespace Axiom.GeoShape.Shapes
 		#endregion
 
 		#region ICloneable Members
-
+		/// <summary>
+		/// Esegue la copia dell'oggetto
+		/// </summary>
+		/// <returns></returns>
 		object ICloneable.Clone()
 		{
 			return Clone();
