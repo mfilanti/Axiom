@@ -1,15 +1,19 @@
 ﻿using Axiom.Cosmos.Dynamics;
+using Axiom.Cosmos.Utils;
+using Axiom.GeoMath;
+using Axiom.GeoShape.Elements;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Axiom.Cosmos.Models
 {
 	public class Galaxy
 	{
 		#region Fields
-
+		private const double G = 6.67430e-11;
 		#endregion
 
 		#region Properties
@@ -39,7 +43,11 @@ namespace Axiom.Cosmos.Models
 			Console.WriteLine($"Galaxy: {Name}, Stars: {Stars.Count}");
 		}
 
-        internal void AddStar(Star star)
+		/// <summary>
+		/// Aggiunge una stella alla galassia
+		/// </summary>
+		/// <param name="star"></param>
+		public void AddStar(Star star)
         {
             Stars.Add(star);	
 		}
@@ -73,6 +81,55 @@ namespace Axiom.Cosmos.Models
 			foreach (var body in bodies)
 				if (body.Motion is VelocityVerletMotion verlet)
 					verlet.CompleteStep(body.Dynamics, deltaTime);
+		}
+
+		public void Step2(double deltaTime)
+		{
+			// 1. Recupero di tutti i corpi celesti nella gerarchia
+			var bodies = this.GetAllBodies().ToList();
+			if (bodies.Count == 0) return;
+
+			// 2. COSTRUZIONE DELL'OCTREE
+			// Calcoliamo il box che contiene l'intero "universo" corrente
+			AABBox3D galaxyBounds = AABBox3D.FromPoints(bodies.Select(b => (Point3D)b.Translation));
+
+			// Espandiamo leggermente il box per evitare errori di precisione ai bordi
+			galaxyBounds.Enlarge(1.1);
+
+			CosmosOctreeNode rootNode = new CosmosOctreeNode(galaxyBounds);
+			foreach (var body in bodies)
+			{
+				rootNode.Insert(body);
+			}
+
+			// 3. CALCOLO ACCELERAZIONI (Utilizzando l'algoritmo Barnes-Hut)
+			// Usiamo Parallel.ForEach per massimizzare le prestazioni su Unity/Desktop
+			if (GravityField != null)
+			{
+				Parallel.ForEach(bodies, body =>
+				{
+					// L'Octree ora decide se calcolare la forza di ogni corpo 
+					// o usare il Centro di Massa per i gruppi lontani
+					body.Dynamics.Acceleration = rootNode.GetAcceleration(body, G);
+
+				});
+			}
+
+			// 4. INTEGRAZIONE DEL MOTO (Velocity Verlet o altro)
+			// Primo step: Posizione e velocità intermedia
+			foreach (var body in bodies)
+			{
+				body.Motion?.Integrate(body, body.Dynamics, deltaTime);
+			}
+
+			// 5. AGGIORNAMENTO MATRICI 3D (Per Unity)
+			// Dopo aver mosso i corpi, aggiorniamo la struttura Node3D 
+			// per riflettere le nuove WorldMatrix
+			foreach (var star in Stars)
+			{
+				// La ricorsione di Node3D aggiorna i figli (pianeti, lune, navicelle)
+				star.Update(new(),out _);
+			}
 		}
 		#endregion
 	}

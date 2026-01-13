@@ -253,6 +253,25 @@ namespace Axiom.GeoShape.Elements
 		}
 
 		/// <summary>
+		/// Ingrandisce il bbox delle quantità indicate. 
+		/// Il singolo offset viene applicato 2 volte in ciascuna direzione (sx/dx, ...).
+		/// </summary>
+		/// <param name="scaleFactor">Scala</param>
+		public void Enlarge(double scaleFactor)
+		{
+			// Calcoliamo quanto è grande il box ora
+			double sizeX = MaxPoint.X - MinPoint.X;
+			double sizeY = MaxPoint.Y - MinPoint.Y;
+			double sizeZ = MaxPoint.Z - MinPoint.Z;
+
+			// L'offset è la metà della differenza di dimensione desiderata
+			double offsetX = (sizeX * scaleFactor - sizeX) / 2.0;
+			double offsetY = (sizeY * scaleFactor - sizeY) / 2.0;
+			double offsetZ = (sizeZ * scaleFactor - sizeZ) / 2.0;
+			Enlarge(offsetX, offsetY, offsetZ);
+		}
+
+		/// <summary>
 		/// Controlla se this si interseca anche parzialmente con un altro AABBox3D. 
 		/// True se A contiene B, se B contiene A e se uno spigolo è contenuto nell'altro. 
 		/// False se sono separati.
