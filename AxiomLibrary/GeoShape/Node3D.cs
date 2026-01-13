@@ -25,6 +25,7 @@ namespace Axiom.GeoShape
         private const string RotY_Formula = "RotY";
         private const string RotZ_Formula = "RotZ";
         #endregion
+
         #region Fields
         /// <summary>
         /// Parametri specifici della sottoclasse
