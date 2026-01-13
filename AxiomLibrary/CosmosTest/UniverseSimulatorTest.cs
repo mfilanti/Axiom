@@ -10,15 +10,15 @@ namespace CosmosTest
 		[TestMethod]
 		public void TestGalaxy()
 		{
-			Galaxy galaxy = GalaxyFactory.CreateSampleGalaxy();
-			Assert.AreEqual("Milky Way", galaxy.Name);
+			Galaxy galaxy = GalaxyFactory.CreateSolarSystem();
+			Assert.AreEqual("Solar System", galaxy.Name);
 		}
 
 		[TestMethod]
 		public void TestSimulator()
 		{
 			// ARRANGE
-			Galaxy galaxy = GalaxyFactory.CreateSampleGalaxy();
+			Galaxy galaxy = GalaxyFactory.CreateSolarSystem();
 			double dt = 60.0; // 60 secondi di simulazione
 
 			var star = galaxy.Stars.First();
@@ -32,7 +32,7 @@ namespace CosmosTest
 			// ASSERT
 
 			// 1. Il nome della galassia è corretto
-			Assert.AreEqual("Milky Way", galaxy.Name);
+			Assert.AreEqual("Solar System", galaxy.Name);
 
 			// 2. Il pianeta si è mosso (orbita)
 			Assert.AreNotEqual(
@@ -49,16 +49,16 @@ namespace CosmosTest
 		[TestMethod]
 		public void TestHierarchyPropagation()
 		{
-			Galaxy galaxy = GalaxyFactory.CreateSampleGalaxy();
+			Galaxy galaxy = GalaxyFactory.CreateSolarSystem();
 			double dt = 3600.0; // 1 ora
 
 			var star = galaxy.Stars.First();
-			var planet = star.GetSubNodes().OfType<Planet>().First();
+			var planet = star.GetSubNodes().OfType<Planet>().FirstOrDefault(p=>p.Name == "Earth");
 			var moon = planet.GetSubNodes().OfType<Moon>().First();
 
 			Vector3D initialMoonWorld = moon.WorldMatrix.Translation;
 
-			galaxy.Step(dt);
+			galaxy.UpdatePhysics(dt);
 
 			Vector3D finalMoonWorld = moon.WorldMatrix.Translation;
 
@@ -68,7 +68,7 @@ namespace CosmosTest
 		[TestMethod]
 		public void TestGlobalGravityAffectsOrbit()
 		{
-			Galaxy galaxy = GalaxyFactory.CreateSampleGalaxy();
+			Galaxy galaxy = GalaxyFactory.CreateSolarSystem();
 			double dt = 60.0;
 
 			var earth = galaxy
@@ -88,14 +88,14 @@ namespace CosmosTest
 		[TestMethod]
 		public void TestSimulator2()
 		{
-			Galaxy galaxy = GalaxyFactory.CreateSampleGalaxy();
+			Galaxy galaxy = GalaxyFactory.CreateSolarSystem();
 
 			double dt = 60; // 1 minuto
 
 			for (int i = 0; i < 10_000; i++)
 				galaxy.Step(dt);
 
-			Assert.AreEqual("Milky Way", galaxy.Name);
+			Assert.AreEqual("Solar System", galaxy.Name);
 		}
 	}
 }

@@ -41,7 +41,7 @@ namespace CosmosTest
 			double deltaTime = 3600; // 1 ora di simulazione
 
 			// ACT
-			galaxy.Step2(deltaTime);
+			galaxy.UpdatePhysics(deltaTime);
 
 			// ASSERT
 			// Verifichiamo che la posizione X sia cambiata (il pianeta si è mosso nell'orbita)
@@ -77,7 +77,7 @@ namespace CosmosTest
 			// ACT
 			try
 			{
-				galaxy.Step2(1.0);
+				galaxy.UpdatePhysics(1.0);
 			}
 			catch (Exception ex)
 			{
@@ -106,7 +106,7 @@ namespace CosmosTest
 			galaxy.AddStar(star2);
 
 			// ACT
-			galaxy.Step2(0.1);
+			galaxy.UpdatePhysics(0.1);
 
 			// ASSERT
 			// Se lo step completa senza errori di "Point out of bounds" nell'Octree, 

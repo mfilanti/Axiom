@@ -1,4 +1,5 @@
 ﻿using Axiom.Cosmos.Dynamics;
+using Axiom.Cosmos.Starships;
 using Axiom.Cosmos.Utils;
 using Axiom.GeoMath;
 using Axiom.GeoShape.Elements;
@@ -13,7 +14,7 @@ namespace Axiom.Cosmos.Models
 	public class Galaxy
 	{
 		#region Fields
-		private const double G = 6.67430e-11;
+		public const double G = 6.67430e-11;
 		#endregion
 
 		#region Properties
@@ -31,6 +32,11 @@ namespace Axiom.Cosmos.Models
 		/// Gravità della galassia
 		/// </summary>
 		public IGravityField GravityField { get; set; }
+
+		/// <summary>
+		/// Navicelle dei giocatori presenti nella galassia
+		/// </summary>
+		public List<Starship> ActiveShips { get; set; } = new List<Starship>();
 		#endregion
 
 		#region Constructors
@@ -81,17 +87,24 @@ namespace Axiom.Cosmos.Models
 			foreach (var body in bodies)
 				if (body.Motion is VelocityVerletMotion verlet)
 					verlet.CompleteStep(body.Dynamics, deltaTime);
+
+			
 		}
 
-		public void Step2(double deltaTime)
+		/// <summary>
+		/// Aggiorna la fisica della galassia utilizzando un Octree per l'ottimizzazione
+		/// </summary>
+		/// <param name="deltaTime">Delta di tempo</param>
+		/// <returns></returns>
+		public CosmosOctreeNode UpdatePhysics(double deltaTime)
 		{
 			// 1. Recupero di tutti i corpi celesti nella gerarchia
 			var bodies = this.GetAllBodies().ToList();
-			if (bodies.Count == 0) return;
+			if (bodies.Count == 0) return null;
 
 			// 2. COSTRUZIONE DELL'OCTREE
 			// Calcoliamo il box che contiene l'intero "universo" corrente
-			AABBox3D galaxyBounds = AABBox3D.FromPoints(bodies.Select(b => (Point3D)b.Translation));
+			AABBox3D galaxyBounds = AABBox3D.FromPoints(bodies.Select(b => (Point3D)b.WorldMatrix.Translation));
 
 			// Espandiamo leggermente il box per evitare errori di precisione ai bordi
 			galaxyBounds.Enlarge(1.1);
@@ -114,6 +127,21 @@ namespace Axiom.Cosmos.Models
 
 				});
 			}
+			// 3. FISICA DELLE NAVI (Logica separata)
+			foreach (var ship in ActiveShips)
+			{
+				// La nave interroga l'Octree per la gravità
+				Vector3D gravityAcc = rootNode.GetAcceleration(ship, G);
+
+				// Aggiunge la spinta dei motori (Thrust)
+				Vector3D engineAcc = ship.GetThrustForce() / ship.Mass;
+
+				// Applica l'accelerazione totale
+				ship.Dynamics.Acceleration = gravityAcc + engineAcc;
+
+				// Integra il movimento
+				ship.Motion?.Integrate(ship, ship.Dynamics, deltaTime);
+			}
 
 			// 4. INTEGRAZIONE DEL MOTO (Velocity Verlet o altro)
 			// Primo step: Posizione e velocità intermedia
@@ -130,6 +158,7 @@ namespace Axiom.Cosmos.Models
 				// La ricorsione di Node3D aggiorna i figli (pianeti, lune, navicelle)
 				star.Update(new(),out _);
 			}
+			return rootNode;
 		}
 		#endregion
 	}

@@ -1,4 +1,5 @@
 ﻿using Axiom.Cosmos.Dynamics;
+using Axiom.Cosmos.Dynamics.Abstracts;
 using Axiom.GeoMath;
 using Axiom.GeoShape;
 using System;
@@ -7,7 +8,7 @@ using System.Text;
 
 namespace Axiom.Cosmos.Models
 {
-	public abstract class CelestialBody : Node3D
+	public abstract class CelestialBody : Node3D, IDynamicEntity
 	{
 		#region Fields
 
@@ -38,6 +39,11 @@ namespace Axiom.Cosmos.Models
 		/// Modello di moto del corpo celeste
 		/// </summary>
 		public IMotionModel Motion { get; set; }
+
+		/// <summary>
+		/// Posizione assoluta
+		/// </summary>
+		public Vector3D AbsolutePosition => WorldMatrix.Translation;
 		#endregion
 
 		#region Constructors

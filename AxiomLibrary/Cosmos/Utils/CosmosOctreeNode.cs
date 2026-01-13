@@ -1,4 +1,5 @@
-﻿using Axiom.Cosmos.Models;
+﻿using Axiom.Cosmos.Dynamics.Abstracts;
+using Axiom.Cosmos.Models;
 using Axiom.GeoMath;
 using Axiom.GeoShape.Elements;
 using System;
@@ -61,7 +62,7 @@ namespace Axiom.Cosmos.Utils
 		{
 			// 1. Controllo se il corpo è fisicamente dentro il box
 			// (Assumiamo che body.Position sia un Vector3D o Point3D)
-			if (!Contains(Boundary, body.Translation)) return;
+			if (!Contains(Boundary, body.AbsolutePosition)) return;
 
 			// 2. Aggiornamento Centro di Massa e Massa Totale del nodo
 			UpdateMassProperties(body);
@@ -87,7 +88,7 @@ namespace Axiom.Cosmos.Utils
 		{
 			double newTotalMass = TotalMass + body.Mass;
 			// Calcolo del nuovo centro di massa: (m1*r1 + m2*r2) / (m1+m2)
-			CenterOfMass = (CenterOfMass * TotalMass + body.Translation * body.Mass) / newTotalMass;
+			CenterOfMass = (CenterOfMass * TotalMass + body.WorldMatrix.Translation * body.Mass) / newTotalMass;
 			TotalMass = newTotalMass;
 		}
 
@@ -128,7 +129,7 @@ namespace Axiom.Cosmos.Utils
 		/// <summary>
 		/// Calcola l'accelerazione gravitazionale esercitata su un corpo navigando l'albero.
 		/// </summary>
-		public Vector3D GetAcceleration(CelestialBody target, double G)
+		public Vector3D GetAcceleration(IDynamicEntity target, double G)
 		{
 			Vector3D acceleration = Vector3D.Zero;
 
@@ -138,13 +139,13 @@ namespace Axiom.Cosmos.Utils
 				foreach (var body in _bodies)
 				{
 					if (body == target) continue;
-					acceleration += ComputeNewtonForce(target, body.Translation, body.Mass, G);
+					acceleration += ComputeNewtonForce(target, body.WorldMatrix.Translation, body.Mass, G);
 				}
 			}
 			else
 			{
 				// Algoritmo Barnes-Hut: Verifica se il nodo è abbastanza lontano da essere trattato come punto unico
-				double distance = (target.Translation-CenterOfMass).Length;
+				double distance = (target.AbsolutePosition - CenterOfMass).Length;
 				double size = Boundary.MaxPoint.X - Boundary.MinPoint.X;
 
 				if (size / distance < Theta)
@@ -165,9 +166,9 @@ namespace Axiom.Cosmos.Utils
 			return acceleration;
 		}
 
-		private Vector3D ComputeNewtonForce(CelestialBody target, Vector3D sourcePos, double sourceMass, double G)
+		private Vector3D ComputeNewtonForce(IDynamicEntity target, Vector3D sourcePos, double sourceMass, double G)
 		{
-			Vector3D direction = sourcePos - target.Translation;
+			Vector3D direction = sourcePos - target.AbsolutePosition;
 			double distanceSq = direction.LengthSquared;
 			if (distanceSq < 1e-6) return Vector3D.Zero; // Evita divisioni per zero
 
