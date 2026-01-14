@@ -1,5 +1,4 @@
 ﻿using Axiom.Cosmos.Dynamics;
-using Axiom.Cosmos.Dynamics.Abstracts;
 using Axiom.GeoMath;
 using Axiom.GeoShape;
 using System;
@@ -8,7 +7,7 @@ using System.Text;
 
 namespace Axiom.Cosmos.Models
 {
-	public abstract class CelestialBody : Node3D, IDynamicEntity
+	public abstract class CelestialBody : Node3D, IPointWeighted
 	{
 		#region Fields
 
@@ -43,7 +42,13 @@ namespace Axiom.Cosmos.Models
 		/// <summary>
 		/// Posizione assoluta
 		/// </summary>
-		public Vector3D AbsolutePosition => WorldMatrix.Translation;
+
+        public Vector3D Position => WorldMatrix.Translation;
+
+		/// <summary>
+		/// Peso del corpo celeste (in fisica è la Massa)
+		/// </summary>
+		public double Weight => Mass;
 		#endregion
 
 		#region Constructors

@@ -1,6 +1,4 @@
 ﻿using Axiom.GeoMath;
-using Axiom.GeoShape.Curves;
-using Axiom.GeoShape.Entities;
 using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
@@ -139,25 +137,6 @@ namespace Axiom.GeoShape.Elements
 		public double Volume => LX * LY * LZ;
 
 		/// <summary>
-		/// Restituisce la figura che rappresenta gli edge del box
-		/// </summary>
-		[XmlIgnore]
-		public Figure3D Figure
-		{
-			get
-			{
-				Figure3D result = new Figure3D();
-				result.AddPolygon(MinPoint, XmaxYminZminPoint, XmaxYmaxZminPoint, XminYmaxZminPoint, MinPoint);
-				result.AddPolygon(XminYminZmaxPoint, XmaxYminZmaxPoint, MaxPoint, XminYmaxZmaxPoint, XminYminZmaxPoint);
-				result.AddPolygon(MinPoint, XminYminZmaxPoint);
-				result.AddPolygon(XmaxYminZminPoint, XmaxYminZmaxPoint);
-				result.AddPolygon(XmaxYmaxZminPoint, MaxPoint);
-				result.AddPolygon(XminYmaxZminPoint, XminYmaxZmaxPoint);
-				return result;
-			}
-		}
-
-		/// <summary>
 		/// Punto minimo
 		/// </summary>
 		public Point3D MinPoint { get; set; }
@@ -277,7 +256,7 @@ namespace Axiom.GeoShape.Elements
 		/// False se sono separati.
 		/// </summary>
 		/// <param name="bBox"></param>
-		/// <returns></returns>
+		/// <returns>true intersecato, false non intersecato</returns>
 		public bool Intersect(AABBox3D bBox) =>
 			!(bBox.MaxPoint.X < MinPoint.X || bBox.MaxPoint.Y < MinPoint.Y || bBox.MaxPoint.Z < MinPoint.Z ||
 			bBox.MinPoint.X > MaxPoint.X || bBox.MinPoint.Y > MaxPoint.Y || bBox.MinPoint.Z > MaxPoint.Z);
@@ -289,7 +268,7 @@ namespace Axiom.GeoShape.Elements
 		/// Restituisce l'eventuale BBox intersezione come parametro di uscita.
 		/// </summary>
 		/// <param name="bBox"></param>
-		/// <returns></returns>
+		/// <returns>true intersecato, false non intersecato</returns>
 		public bool Intersect(AABBox3D bBox, out AABBox3D intersection)
 		{
 			bool result = true;
@@ -314,6 +293,31 @@ namespace Axiom.GeoShape.Elements
 			}
 
 			return result;
+		}
+
+		/// <summary>
+		/// Intersezione con una sfera
+		/// </summary>
+		/// <param name="sphereCenter">Centro della sfera</param>
+		/// <param name="radius">Raggio</param>
+		/// <returns>true intersecato, false non intersecato</returns>
+		public bool IntersectsSphere(Point3D sphereCenter, double radius)
+		{
+			// Troviamo il punto più vicino al centro della sfera all'interno del box (Clamping)
+			double closestX = Math.Max(MinPoint.X, Math.Min(sphereCenter.X, MaxPoint.X));
+			double closestY = Math.Max(MinPoint.Y, Math.Min(sphereCenter.Y, MaxPoint.Y));
+			double closestZ = Math.Max(MinPoint.Z, Math.Min(sphereCenter.Z, MaxPoint.Z));
+
+			// Calcoliamo la distanza tra il centro della sfera e questo punto più vicino
+			double distanceX = sphereCenter.X - closestX;
+			double distanceY = sphereCenter.Y - closestY;
+			double distanceZ = sphereCenter.Z - closestZ;
+
+			// Usiamo il quadrato della distanza per evitare il calcolo costoso della radice quadrata (Math.Sqrt)
+			double distanceSquared = (distanceX * distanceX) + (distanceY * distanceY) + (distanceZ * distanceZ);
+
+			// Se la distanza quadrata è minore del raggio al quadrato, c'è intersezione
+			return distanceSquared <= (radius * radius);
 		}
 
 		/// <summary>
@@ -346,82 +350,7 @@ namespace Axiom.GeoShape.Elements
 		/// <returns></returns>
 		public bool ApproxEquals(AABBox3D box, double tolerance) => MinPoint.IsEquals(box.MinPoint, tolerance) && MaxPoint.IsEquals(box.MaxPoint, tolerance);
 
-		/// <summary>
-		/// Crea e restituisce un OBBox corrispondente
-		/// </summary>
-		/// <returns></returns>
-		public OBBox3D GetOBBOX()
-		{
-			double lX = MaxPoint.X - MinPoint.X;
-			double lY = MaxPoint.Y - MinPoint.Y;
-			double lZ = MaxPoint.Z - MinPoint.Z;
-			OBBox3D result = new OBBox3D(lX, lY, lZ);
-			result.RTMatrix.Translation = (Vector3D)Center;
-
-			return result;
-		}
-
-		/// <summary>
-		/// Intersezione con una linea 3D. 
-		/// p1 e p2 indicano la percentuale lungo la linea 3D. 
-		/// plane1 e plane2 sono i piani con cui p1 e p2 hanno avuto intersezione.
-		/// </summary>
-		/// <param name="line"></param>
-		/// <param name="p1"></param>
-		/// <param name="p2"></param>
-		/// <returns></returns>
-		public bool IntersectionLine(Line3D line, out double p1, out double p2, out Plane3D plane1, out Plane3D plane2)
-		{
-			bool result = false;
-
-			p1 = p2 = 0;
-			OBBox3D oBBox = GetOBBOX();
-			Point3D point1 = Point3D.NullPoint;
-			Point3D point2 = Point3D.NullPoint;
-			plane1 = Plane3D.ZeroPlane;
-			plane2 = Plane3D.ZeroPlane;
-
-			// per ogni piano
-			foreach (BoxFace face in Enum.GetValues(typeof(BoxFace)))
-			{
-				Plane3D plane;
-				oBBox.GetPlane(face, out plane);
-
-				// trova l'intersezione
-				Point3D intersectionPoint;
-				bool isInside;
-				bool intersect = plane.IntersectLine(line, out isInside, out intersectionPoint);
-				// se la linea non è parallela al piano
-				if (intersect)
-				{
-					AABBox3D enlargedBox = Clone();
-					enlargedBox.Enlarge(MathUtils.FineTolerance, MathUtils.FineTolerance, MathUtils.FineTolerance);
-
-					if (enlargedBox.Contains(intersectionPoint))
-					{
-						// trovato punto di intersezione;
-						result = true;
-						if (point1.IsNull())
-						{
-							point1 = intersectionPoint;
-							plane1 = plane;
-						}
-						else if (point2.IsNull())
-						{
-							point2 = intersectionPoint;
-							plane2 = plane;
-						}
-					}
-				}
-			}
-			if (result == true)
-			{
-				line.IsOnCurve(point1, 0.5, out p1);
-				line.IsOnCurve(point2, 0.5, out p2);
-			}
-
-			return result;
-		}
+		
 
 		/// <summary>
 		/// Indica se si tratta di un NullAABBox

@@ -1,5 +1,4 @@
 ﻿using Axiom.Cosmos.Dynamics;
-using Axiom.Cosmos.Dynamics.Abstracts;
 using Axiom.Cosmos.Models;
 using Axiom.GeoMath;
 using Axiom.GeoShape;
@@ -10,7 +9,7 @@ using System.Xml.Linq;
 
 namespace Axiom.Cosmos.Starships
 {
-	public class Starship : Node3D, IDynamicEntity
+	public class Starship : Node3D, IPointWeighted
 	{
 		#region Fields
 
@@ -60,7 +59,11 @@ namespace Axiom.Cosmos.Starships
 		/// <summary>
 		/// Posizione assoluta
 		/// </summary>
-		public Vector3D AbsolutePosition => WorldMatrix.Translation;
+		public Vector3D Position => WorldMatrix.Translation;
+		/// <summary>
+		/// Peso della nave (uguale alla massa in assenza di gravità)
+		/// </summary>
+		public double Weight => Mass;
 
 		#endregion
 
