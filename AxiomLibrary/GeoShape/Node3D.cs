@@ -485,6 +485,17 @@ namespace Axiom.GeoShape
 		/// Viene chiamato l'update ricorsivamente di tutti i sottonodi. 
 		/// Restituisce true o false indicando se ci sono stati errori (true: ok, false: errori)
 		/// </summary>
+		public void UpdateRTMatrix()
+		{
+			Update(new(), out _);
+		}
+
+		/// <summary>
+		/// Effettua l'update di tutti i valori, valutando le eventuali formule del nodo e delle 
+		/// Entity3D associate. 
+		/// Viene chiamato l'update ricorsivamente di tutti i sottonodi. 
+		/// Restituisce true o false indicando se ci sono stati errori (true: ok, false: errori)
+		/// </summary>
 		/// <param name="variables">Variabili del padre</param>
 		/// <param name="secondaryVariables">Variabili secondarie del padre</param>
 		/// <param name="errorDescription">Restituisce un messaggio con la descrizione dell'eventuale errore</param>

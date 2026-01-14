@@ -71,6 +71,7 @@ namespace Axiom.Cosmos.Starships
 
 		public Starship(string name, double mass) : base()
 		{
+			Id = Guid.NewGuid().ToString();
 			Name = name;
 			Mass = mass;
 			Motion = new VelocityVerletMotion(); // O un modello più "arcade"
@@ -96,6 +97,18 @@ namespace Axiom.Cosmos.Starships
 			// Direzione Forward estratta dalla matrice di rotazione del Node3D
 			Vector3D forward = WorldMatrix.ZVector;
 			return forward * (MaxThrust * CurrentThrottle);
+		}
+
+		// All'interno della logica di movimento della nave
+		public void ApplyLinearDamping(double dt)
+		{
+			double dampingFactor = 0.95; // Perde il 5% di velocità al secondo
+
+			// Se non stiamo accelerando o se vogliamo un feeling "frenato"
+			if (CurrentThrottle < 0.1)
+			{
+				Dynamics.Velocity *= Math.Pow(dampingFactor, dt);
+			}
 		}
 		#endregion
 

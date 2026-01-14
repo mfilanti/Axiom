@@ -1,6 +1,8 @@
 ﻿using Axiom.Cosmos.Dynamics;
 using Axiom.Cosmos.Models;
 using Axiom.Cosmos.Starships;
+using Axiom.Cosmos.StartshipsControls;
+using Axiom.Cosmos.Utils;
 using Axiom.GeoMath;
 using System;
 using System.Collections.Generic;
@@ -11,60 +13,77 @@ namespace Axiom.Cosmos.Simulation
 {
 	public sealed class SpaceSimulation
 	{
-		// Il contesto astronomico (Pianeti, Stelle, Octree)
-		public Universe Universe { get; set; }
+		#region Fields
+		/// <summary>
+		/// Lista di piloti e relative navi
+		/// </summary>
+		private readonly List<ShipPilot> _pilots = new();
+		/// <summary>
+		/// Engine di fisica celeste
+		/// </summary>
+		private readonly CosmosPhysicsEngine _physics = new();
+		/// <summary>
+		/// Universo in simulazione
+		/// </summary>
+		private Universe _universe;
+		/// <summary>
+		/// Galassia corrente in simulazione
+		/// </summary>
+		private Galaxy _currentGalaxy;
 
-		// Il contesto astronomico (Pianeti, Stelle, Octree)
-		public Galaxy CurrentGalaxy { get; set; }
+		#endregion
 
-		// Gli attori dinamici (Navi del giocatore, NPC, proiettili)
-		public List<Starship> ActiveShips { get; set; } = new List<Starship>();
+		#region Properties
 
-		public SpaceSimulation(Universe universe)
-		{
-			Universe = universe;
-			CurrentGalaxy = universe.Galaxies.FirstOrDefault(); // Per ora usiamo la prima galassia
-		}
+		#endregion
 
-		public void AddShip(Starship ship)
-		{
-			if (!ActiveShips.Contains(ship))
-				ActiveShips.Add(ship);
-		}
+		#region Constructors
 
+		#endregion
+
+		#region Methods
+		/// <summary>
+		/// Aggiorna la simulazione spaziale
+		/// </summary>
+		/// <param name="deltaTime"></param>
 		public void Update(double deltaTime)
 		{
-			if (CurrentGalaxy == null) return;
+			if (_currentGalaxy == null) return;
 
-			// 1. Chiediamo alla galassia di aggiornare i suoi pianeti
-			// Passiamo un deltaTime per la fisica celeste
-			// 2. Otteniamo l'Octree della galassia per calcolare la gravità sulle navi
-			var gravityField = CurrentGalaxy.UpdatePhysics(deltaTime);
+			// 1. Fisica Celeste
+			var gravityField = _currentGalaxy.UpdatePhysics(deltaTime);
 
-			// 3. Aggiorniamo le navi separatamente
-			foreach (var ship in ActiveShips)
+			// 2. Loop Navi
+			foreach (var pilot in _pilots)
 			{
-				// A. Calcolo Gravità (La nave interroga l'Octree della Galassia)
-				Vector3D gravityAcc = gravityField.GetAcceleration(ship, Galaxy.G);
+				// A. Prima l'input (orienta la nave)
+				pilot.ProcessInput(deltaTime);
 
-				// B. Calcolo Spinta Motori (Thrust)
-				// F = m * a  =>  a = F / m
-				Vector3D engineForce = ship.GetEngineForce();
-				Vector3D engineAcc = engineForce / ship.Mass;
+				// B. Poi la fisica (muove la nave)
+				_physics.ApplyShipPhysics(pilot.Ship, gravityField, deltaTime);
 
-				// C. Somma delle Accelerazioni
-				ship.Dynamics.Acceleration = gravityAcc + engineAcc;
-
-				// D. Integrazione del Moto (Velocity Verlet o Eulero)
-				// Usiamo il modello di moto assegnato alla nave
-				ship.Motion?.Integrate(ship, ship.Dynamics, deltaTime);
-			}
-
-			// 4. SINCRONIZZAZIONE MATRICI (Per il rendering in Unity)
-			foreach (var ship in ActiveShips)
-			{
-				ship.Update(new(), out _);
+				// C. Infine sincronizza
+				pilot.Ship.UpdateRTMatrix();
 			}
 		}
+
+
+		/// <summary>
+		/// Aggiunge una nave alla simulazione con il relativo pilota
+		/// </summary>
+		/// <param name="ship"></param>
+		/// <param name="input"></param>
+		public void AddShip(Starship ship, IInputProvider input)
+			=> _pilots.Add(new ShipPilot(ship, input));
+
+		#endregion
+
+		#region Constructors
+		public SpaceSimulation(Universe universe)
+		{
+			_universe = universe;
+			_currentGalaxy = universe.Galaxies.FirstOrDefault(); // Per ora usiamo la prima galassia
+		}
+		#endregion
 	}
 }

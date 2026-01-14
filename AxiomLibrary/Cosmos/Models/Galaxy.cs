@@ -156,7 +156,7 @@ namespace Axiom.Cosmos.Models
 			foreach (var star in Stars)
 			{
 				// La ricorsione di Node3D aggiorna i figli (pianeti, lune, navicelle)
-				star.Update(new(),out _);
+				star.UpdateRTMatrix();
 			}
 			return rootNode;
 		}

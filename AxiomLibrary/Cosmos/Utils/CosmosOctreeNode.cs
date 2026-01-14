@@ -9,21 +9,43 @@ namespace Axiom.Cosmos.Utils
 {
 	public class CosmosOctreeNode
 	{
+		#region Fields
+		/// <summary>
+		/// OctreeNode interno generico per la gestione dei corpi celesti.
+		/// </summary>
 		private readonly OctreeNode<CelestialBody> _internalNode;
-		private const double Theta = 0.5; // Soglia Barnes-Hut
+		/// <summary>
+		/// Soglia di approssimazione per l'algoritmo Barnes-Hut.
+		/// </summary>
+		private const double Theta = 0.5;
+		#endregion
 
-        public double TotalWeight =>_internalNode.TotalWeight;
+		#region Properties
+
+		/// <summary>
+		/// Peso totale dei corpi celesti in questo nodo.
+		/// </summary>
+		public double TotalWeight => _internalNode.TotalWeight;
+		/// <summary>
+		/// Posizione del centro di massa (baricentro pesato) dei corpi celesti in questo nodo.
+		/// </summary>
 		public Vector3D WeightedCenter => _internalNode.WeightedCenter;
+		/// <summary>
+		/// Foglia (senza figli).
+		/// </summary>
+		public bool? IsLeaf => _internalNode.IsLeaf;
+		#endregion
 
-        public bool? IsLeaf => _internalNode.IsLeaf;
-
+		#region Constructors
 		public CosmosOctreeNode(AABBox3D boundary)
 		{
 			_internalNode = new OctreeNode<CelestialBody>(boundary);
 		}
+		#endregion
 
-		// --- RADAR: Ricerca Spaziale ---
+		#region Methods
 		/// <summary>
+		///  --- RADAR: Ricerca Spaziale ---
 		/// Restituisce tutti i corpi celesti entro un raggio specificato.
 		/// Utilissimo per sensori navicella o collisioni.
 		/// </summary>
@@ -34,21 +56,19 @@ namespace Axiom.Cosmos.Utils
 			return results;
 		}
 
-		public void Insert(CelestialBody body)
-		{
-			_internalNode.Insert(body);
-		}
+        /// <summary>
+        /// Inserisce un corpo celeste nell'Octree.
+        /// </summary>
+        /// <param name="body"></param>
+        public void Insert(CelestialBody body) => _internalNode.Insert(body);
 
-		/// <summary>
-		/// Calcola l'accelerazione gravitazionale integrando la logica Barnes-Hut 
-		/// sopra l'Octree generico.
-		/// </summary>
-		public Vector3D GetAcceleration(IPointWeighted target, double G)
-		{
-			return CalculateRecursiveAcceleration(_internalNode, target, G);
-		}
+        /// <summary>
+        /// Calcola l'accelerazione gravitazionale integrando la logica Barnes-Hut 
+        /// sopra l'Octree generico.
+        /// </summary>
+        public Vector3D GetAcceleration(IPointWeighted target, double G) => CalculateRecursiveAcceleration(_internalNode, target, G);
 
-		private Vector3D CalculateRecursiveAcceleration(OctreeNode<CelestialBody> node, IPointWeighted target, double G)
+        private Vector3D CalculateRecursiveAcceleration(OctreeNode<CelestialBody> node, IPointWeighted target, double G)
 		{
 			Vector3D acceleration = Vector3D.Zero;
 
@@ -93,5 +113,8 @@ namespace Axiom.Cosmos.Utils
 
 			return direction.Normalize() * (G * mass / distSq);
 		}
+
+		#endregion
+
 	}
 }
