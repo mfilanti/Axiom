@@ -51,7 +51,7 @@ namespace Axiom.GeoShape.Elements
 		/// <param name="points"></param>
 		public Polygon3D(IEnumerable<Point3D> points)
 		{
-			Vertices = [.. points];
+			Vertices = new List<Point3D>(points);
 		}
 		#endregion
 

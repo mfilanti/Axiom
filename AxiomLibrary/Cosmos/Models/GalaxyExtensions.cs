@@ -9,11 +9,11 @@ namespace Axiom.Cosmos.Models
 	{
 		public static IEnumerable<CelestialBody> GetAllBodies(this Galaxy galaxy)
 		{
-			foreach (var star in galaxy.Stars)
+			foreach (var node in galaxy.Nodes.Values)
 			{
-				yield return star;
+				if (node is CelestialBody celestialBody) yield return celestialBody;
 
-				foreach (var body in GetChildrenRecursive(star))
+				foreach (var body in GetChildrenRecursive(node))
 					yield return body;
 			}
 		}
@@ -22,13 +22,10 @@ namespace Axiom.Cosmos.Models
 		{
 			foreach (var child in node.Nodes.Values)
 			{
-				if (child is CelestialBody body)
-				{
-					yield return body;
+				if (child is CelestialBody body) yield return body;
 
-					foreach (var sub in GetChildrenRecursive(child))
-						yield return sub;
-				}
+				foreach (var sub in GetChildrenRecursive(child))
+					yield return sub;
 			}
 		}
 	}

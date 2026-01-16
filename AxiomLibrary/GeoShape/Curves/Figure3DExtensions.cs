@@ -406,7 +406,7 @@ namespace Axiom.GeoShape.Curves
 				}
 				else if (curve2 is Spline3D spline)
 				{
-					List<Point3D> points = [.. spline.Points];
+					List<Point3D> points = new List<Point3D>(spline.Points);
 					if (spline.Closed)
 						points.Add(points[0]);
 

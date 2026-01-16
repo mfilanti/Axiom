@@ -35,7 +35,7 @@ namespace Axiom.GeoShape.Elements
 		{
 			Vertex1 = Point3D.NullPoint;
 			Vertex2 = Point3D.NullPoint;
-			TriangleIndexes = [];
+			TriangleIndexes = new List<int>();
 		}
 
 		/// <summary>

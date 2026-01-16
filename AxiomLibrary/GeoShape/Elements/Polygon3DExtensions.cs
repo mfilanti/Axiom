@@ -121,7 +121,7 @@ namespace Axiom.GeoShape.Elements
 			}
 
 			ordered.Reverse();
-			List<Point3D> chPointsBottom = [ordered[0], ordered[1]];
+			List<Point3D> chPointsBottom = new() { ordered[0], ordered[1] };
 			for (int i = 2; i < ordered.Count; i++)
 			{
 				Point3D p = ordered[i];
@@ -146,7 +146,8 @@ namespace Axiom.GeoShape.Elements
 
 			chPointsBottom.RemoveAt(0);
 			chPointsBottom.RemoveAt(chPointsBottom.Count - 1);
-			List<Point3D> allPoints = [.. chPointsTop, .. chPointsBottom];
+			List<Point3D> allPoints = new List<Point3D>(chPointsTop);
+			allPoints.AddRange(chPointsBottom);
 
 			return new(allPoints);
 		}

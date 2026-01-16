@@ -23,7 +23,7 @@ namespace CosmosTest
 			Galaxy galaxy = GalaxyFactory.CreateSolarSystem();
 			double dt = 60.0; // 60 secondi di simulazione
 
-			var star = galaxy.Stars.First();
+			var star = galaxy.Nodes.First().Value;
 			var planet = star.GetSubNodes().OfType<Planet>().First();
 
 			// Posizione iniziale del pianeta (locale al padre)
@@ -54,7 +54,7 @@ namespace CosmosTest
 			Galaxy galaxy = GalaxyFactory.CreateSolarSystem();
 			double dt = 3600.0; // 1 ora
 
-			var star = galaxy.Stars.First();
+			var star = galaxy.Nodes.First().Value;
 			var planet = star.GetSubNodes().OfType<Planet>().FirstOrDefault(p => p.Name == "Earth");
 			var moon = planet.GetSubNodes().OfType<Moon>().First();
 

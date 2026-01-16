@@ -99,12 +99,12 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			Figure3D section =
-			[
+			Figure3D section =new Figure3D()
+			{
 				new Arc3D(new Point3D(OuterRadius, 0), InnerRadius, 0, Math.PI, true, RTMatrix.Identity),
 				new Arc3D(new Point3D(OuterRadius, 0), InnerRadius, Math.PI, 0, true, RTMatrix.Identity),
 				new Arc3D(),
-			];
+			};
 			AABBox3D box2D = section.GetABBox();
 			Point3D minPoint = new Point3D(-box2D.MaxPoint.X, -box2D.MaxPoint.X, box2D.MinPoint.Y);
 			Point3D maxPoint = new Point3D(box2D.MaxPoint.X, box2D.MaxPoint.X, box2D.MaxPoint.Y);

@@ -133,7 +133,7 @@ namespace Axiom.GeoShape.Elements
 		/// Restituisce l'AABBox corrispondente
 		/// </summary>
 		/// <returns></returns>
-		public AABBox3D GetAABBox() => AABBox3D.FromPoints([P1, P2, P3]);
+		public AABBox3D GetAABBox() => AABBox3D.FromPoints(new List<Point3D>() { P1, P2, P3 });
 
 		/// <summary>
 		/// Ruota e trasla il triangolo

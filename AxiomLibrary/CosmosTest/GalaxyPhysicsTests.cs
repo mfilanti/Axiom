@@ -35,7 +35,7 @@ namespace CosmosTest
 			earth.Motion = new VelocityVerletMotion();
 
 			sun.AddNode(earth);
-			galaxy.AddStar(sun);
+			galaxy.AddCelestialBody(sun);
 
 			double initialX = earth.X;
 			double deltaTime = 3600; // 1 ora di simulazione
@@ -61,7 +61,7 @@ namespace CosmosTest
 			var sun = new Star("Central Sun", 1.989e30, 700000, Vector3D.Zero, 1.0);
 			sun.Dynamics = new DynamicsState();
 			sun.Motion = new VelocityVerletMotion();
-			galaxy.AddStar(sun);
+			galaxy.AddCelestialBody(sun);
 
 			// Aggiungiamo 100 asteroidi casuali per testare la stabilità dell'Octree
 			Random rng = new Random(42);
@@ -102,8 +102,8 @@ namespace CosmosTest
 			star1.Dynamics = new DynamicsState(); star1.Motion = new VelocityVerletMotion();
 			star2.Dynamics = new DynamicsState(); star2.Motion = new VelocityVerletMotion();
 
-			galaxy.AddStar(star1);
-			galaxy.AddStar(star2);
+			galaxy.AddCelestialBody(star1);
+			galaxy.AddCelestialBody(star2);
 
 			// ACT
 			galaxy.UpdatePhysics(0.1);
@@ -111,7 +111,7 @@ namespace CosmosTest
 			// ASSERT
 			// Se lo step completa senza errori di "Point out of bounds" nell'Octree, 
 			// significa che l'espansione del box ha funzionato correttamente.
-			Assert.IsNotNull(galaxy.Stars);
+			Assert.IsNotNull(galaxy.Nodes);
 		}
 	}
 }

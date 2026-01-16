@@ -2,6 +2,7 @@
 using Axiom.Cosmos.Starships;
 using Axiom.Cosmos.Utils;
 using Axiom.GeoMath;
+using Axiom.GeoShape;
 using Axiom.GeoShape.Elements;
 using System;
 using System.Collections.Generic;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Axiom.Cosmos.Models
 {
-	public class Galaxy
+	public class Galaxy : Node3D
 	{
 		#region Fields
 		public const double G = 6.67430e-11;
@@ -24,19 +25,10 @@ namespace Axiom.Cosmos.Models
 		public string Name { get; set; }
 
 		/// <summary>
-		/// Stelle presenti nella galassia
-		/// </summary>
-		public List<Star> Stars { get; set; } = new List<Star>();
-
-		/// <summary>
 		/// Gravità della galassia
 		/// </summary>
 		public IGravityField GravityField { get; set; }
 
-		/// <summary>
-		/// Navicelle dei giocatori presenti nella galassia
-		/// </summary>
-		public List<Starship> ActiveShips { get; set; } = new List<Starship>();
 		#endregion
 
 		#region Constructors
@@ -46,19 +38,21 @@ namespace Axiom.Cosmos.Models
 		#region Methods
 		public void DisplayInfo()
 		{
-			Console.WriteLine($"Galaxy: {Name}, Stars: {Stars.Count}");
+			Console.WriteLine($"Galaxy: {Name}, Stars: {Nodes.Count}");
 		}
 
-		/// <summary>
-		/// Aggiunge una stella alla galassia
-		/// </summary>
-		/// <param name="star"></param>
-		public void AddStar(Star star)
-        {
-            Stars.Add(star);	
-		}
+        /// <summary>
+        /// Aggiunge una stella alla galassia
+        /// </summary>
+        /// <param name="star"></param>
+        public void AddCelestialBody(CelestialBody body) => AddNode(body);
 
-		public void Step(double deltaTime)
+
+        /// <summary>
+        /// Aggiorna la fisica della galassia utilizzando il metodo Velocity Verlet
+        /// </summary>
+        /// <param name="deltaTime"></param>
+        public void Step(double deltaTime)
 		{
 			var bodies = this.GetAllBodies().ToList();
 
@@ -127,21 +121,6 @@ namespace Axiom.Cosmos.Models
 
 				});
 			}
-			// 3. FISICA DELLE NAVI (Logica separata)
-			foreach (var ship in ActiveShips)
-			{
-				// La nave interroga l'Octree per la gravità
-				Vector3D gravityAcc = rootNode.GetAcceleration(ship, G);
-
-				// Aggiunge la spinta dei motori (Thrust)
-				Vector3D engineAcc = ship.GetThrustForce() / ship.Mass;
-
-				// Applica l'accelerazione totale
-				ship.Dynamics.Acceleration = gravityAcc + engineAcc;
-
-				// Integra il movimento
-				ship.Motion?.Integrate(ship, ship.Dynamics, deltaTime);
-			}
 
 			// 4. INTEGRAZIONE DEL MOTO (Velocity Verlet o altro)
 			// Primo step: Posizione e velocità intermedia
@@ -150,16 +129,9 @@ namespace Axiom.Cosmos.Models
 				body.Motion?.Integrate(body, body.Dynamics, deltaTime);
 			}
 
-			// 5. AGGIORNAMENTO MATRICI 3D (Per Unity)
-			// Dopo aver mosso i corpi, aggiorniamo la struttura Node3D 
-			// per riflettere le nuove WorldMatrix
-			foreach (var star in Stars)
-			{
-				// La ricorsione di Node3D aggiorna i figli (pianeti, lune, navicelle)
-				star.UpdateRTMatrix();
-			}
 			return rootNode;
 		}
-		#endregion
-	}
+
+        #endregion
+    }
 }

@@ -125,7 +125,7 @@ namespace Axiom.GeoShape.Entities
 		[XmlIgnore()]
 		public List<Parameter> ParametersFormula
 		{
-			get => [.. _parameters.Values];
+			get => _parameters.Values.ToList();
 			set
 			{
 				if (value.Count != _parameters.Count)

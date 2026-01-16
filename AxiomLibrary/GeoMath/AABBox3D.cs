@@ -1,8 +1,6 @@
 ﻿using Axiom.GeoMath;
 using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
-using System.Xml.Serialization;
 
 namespace Axiom.GeoShape.Elements
 {
@@ -57,18 +55,17 @@ namespace Axiom.GeoShape.Elements
 		/// Lista degli 8 punti. 
 		/// Dal punto minimo in senso antiorario (prima Zmin poi Zmax)
 		/// </summary>
-		[XmlIgnore]
-		[JsonIgnore]
-		public List<Point3D> Points => [
-					MinPoint,
-					XmaxYminZminPoint,
-					XmaxYmaxZminPoint,
-					XminYmaxZminPoint,
-					MaxPoint,
-					XminYmaxZmaxPoint,
-					XminYminZmaxPoint,
-					XmaxYminZmaxPoint,
-				];
+		public List<Point3D> Points => new List<Point3D>
+		{
+			MinPoint,
+			XmaxYminZminPoint,
+			XmaxYmaxZminPoint,
+			XminYmaxZminPoint,
+			MaxPoint,
+			XminYmaxZmaxPoint,
+			XminYminZmaxPoint,
+			XmaxYminZmaxPoint,
+		};
 
 		/// <summary>
 		/// Estensione X

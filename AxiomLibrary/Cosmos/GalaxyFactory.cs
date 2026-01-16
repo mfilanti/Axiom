@@ -25,7 +25,7 @@ namespace Axiom.Cosmos
 
 			// Aggiungiamo una stella massiccia ad Andromeda per test
 			var star = new Star("Andromeda Alpha", 5.0e30, 800000000, new Vector3D(2.365e22, 0, 0), 5.0e26);
-			andromeda.AddStar(star);
+			andromeda.AddCelestialBody(star);
 
 			universe.Galaxies.Add(andromeda);
 
@@ -74,7 +74,7 @@ namespace Axiom.Cosmos
 			sun.AddNode(CreatePlanet("Uranus", 8.681e25, 25362000, 2.871e12, sun));
 			sun.AddNode(CreatePlanet("Neptune", 1.024e26, 24622000, 4.495e12, sun));
 
-			solarSystem.AddStar(sun);
+			solarSystem.AddCelestialBody(sun);
 			return solarSystem;
 		}
 

@@ -99,7 +99,7 @@ namespace Axiom.GeoShape.Entities
 		/// </summary>
 		public void SetNormals()
 		{
-			VertexNormals = [];
+			VertexNormals = new List<TriangleNormals>();
 			for (int i = 0; i < Triangles.Count; i++)
 			{
 				Triangle3D triangle = Triangles[i];
@@ -117,10 +117,10 @@ namespace Axiom.GeoShape.Entities
 			Mesh3D result = new Mesh3D
 			{
 				Triangles = new List<Triangle3D>(Triangles),
-				Outline = (Outline is not null)? [.. Outline] : [],
-				VertexNormals = (VertexNormals is not null) ? [.. VertexNormals] : [],
-				SnapEndPoints = (SnapEndPoints is not null) ? [.. SnapEndPoints] : [],
-				SnapMiddlePoints = (SnapMiddlePoints is not null) ? [.. SnapMiddlePoints] : []
+				Outline = (Outline != null) ? new List<Point3D>(Outline) : new List<Point3D>(),
+				VertexNormals = (VertexNormals is not null) ? new List<TriangleNormals>(VertexNormals) : new List<TriangleNormals>(),
+				SnapEndPoints = (SnapEndPoints is not null) ? new List<Point3D>(SnapEndPoints) : new List<Point3D>(),
+				SnapMiddlePoints = (SnapMiddlePoints is not null) ? new List<Point3D>(SnapMiddlePoints) : new List<Point3D>()
 			};
 			CloneTo(result);
 			return result;
@@ -152,13 +152,13 @@ namespace Axiom.GeoShape.Entities
 				}
 
 				if (Outline != null)
-					result.Outline = [.. Outline];
+					result.Outline = new List<Point3D>(Outline);
 
 				if (SnapEndPoints != null)
-					result.SnapEndPoints = [.. SnapEndPoints];
+					result.SnapEndPoints = new List<Point3D>( SnapEndPoints);
 
 				if (SnapMiddlePoints != null)
-					result.SnapMiddlePoints = [.. SnapMiddlePoints];
+					result.SnapMiddlePoints = new List<Point3D>(SnapMiddlePoints);
 
 				base.CloneTo(result);
 			}
@@ -807,7 +807,7 @@ namespace Axiom.GeoShape.Entities
 		{
 			base.CloneTo(mesh);
 			mesh.Triangles = Triangles == null ? null : new List<Triangle3D>(Triangles);
-			mesh.Outline = Outline == null ? null : [.. Outline];
+			mesh.Outline = Outline == null ? null : new List<Point3D>(Outline);
 			mesh.VertexNormals = VertexNormals == null ? null : new List<TriangleNormals>(VertexNormals);
 			mesh.SnapEndPoints = SnapEndPoints == null ? null : new List<Point3D>(SnapEndPoints);
 			mesh.SnapMiddlePoints = SnapMiddlePoints == null ? null : new List<Point3D>(SnapMiddlePoints);

@@ -1,9 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<Import Project="..\SharedBuildProps.xml" />
 	<PropertyGroup>
 		<AssemblyName>Axiom.Utilities</AssemblyName>
 		<RootNamespace>Axiom.Utilities</RootNamespace>
 	</PropertyGroup>
-
 </Project>

@@ -113,19 +113,16 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			List<Point3D> points =
-			[
-				// Faccia sotto
-				new Point3D(-LX / 2, -LY / 2, -LZ / 2),
-				new Point3D(LX / 2, -LY / 2, -LZ / 2),
-				new Point3D(LX / 2, LY / 2, -LZ / 2),
-				new Point3D(-LX / 2, LY / 2, -LZ / 2),
-				// Faccia sopra
-				new Point3D(-LX / 2, -LY / 2, LZ / 2),
-				new Point3D(LX / 2, -LY / 2, LZ / 2),
-				new Point3D(LX / 2, LY / 2, LZ / 2),
-				new Point3D(-LX / 2, LY / 2, LZ / 2),
-			];
+			List<Point3D> points = new List<Point3D>();
+			// Faccia sotto
+			points.Add(new Point3D(-LX / 2, -LY / 2, -LZ / 2));
+			points.Add(new Point3D(LX / 2, -LY / 2, -LZ / 2));
+			points.Add(new Point3D(LX / 2, LY / 2, -LZ / 2));
+			points.Add(new Point3D(-LX / 2, LY / 2, -LZ / 2));
+			points.Add(new Point3D(-LX / 2, -LY / 2, LZ / 2));
+			points.Add(new Point3D(LX / 2, -LY / 2, LZ / 2));
+			points.Add(new Point3D(LX / 2, LY / 2, LZ / 2));
+			points.Add(new Point3D(-LX / 2, LY / 2, LZ / 2));
 
 			RTMatrix matrix = ParentRTMatrix.Multiply(RTMatrix);
 			for (int i = 0; i < points.Count; i++)

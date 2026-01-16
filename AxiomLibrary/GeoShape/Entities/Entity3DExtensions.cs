@@ -743,7 +743,7 @@ namespace Axiom.GeoShape.Entities
 			if (bbox != null)
 			{
 				result = new Mesh3D();
-				result.Outline = [];
+				result.Outline = new List<Point3D>();
 				Point3D p1 = new(-bbox.LX / 2, -bbox.LY / 2, -bbox.LZ / 2);
 				Point3D p2 = new(bbox.LX / 2, -bbox.LY / 2, -bbox.LZ / 2);
 				Point3D p3 = new(bbox.LX / 2, bbox.LY / 2, -bbox.LZ / 2);
@@ -771,13 +771,13 @@ namespace Axiom.GeoShape.Entities
 				result.Triangles.Add(new(p2, p3, p6));
 				result.Triangles.Add(new(p7, p6, p3));
 				// Outline
-				result.Outline.AddRange([p1, p2, p2, p3, p3, p4, p4, p1]);
-				result.Outline.AddRange([p5, p6, p6, p7, p7, p8, p8, p5]);
-				result.Outline.AddRange([p1, p5, p2, p6, p3, p7, p4, p8]);
+				result.Outline.AddRange(new[] { p1, p2, p2, p3, p3, p4, p4, p1 });
+				result.Outline.AddRange(new[] { p5, p6, p6, p7, p7, p8, p8, p5 });
+				result.Outline.AddRange(new[] { p1, p5, p2, p6, p3, p7, p4, p8 });
 
 				#region SnapPoints
-				result.SnapEndPoints = [.. new Point3D[] { p1, p2, p3, p4, p5, p6, p7, p8 }];
-				result.SnapMiddlePoints = [];
+				result.SnapEndPoints = new List<Point3D> { p1, p2, p3, p4, p5, p6, p7, p8 };
+				result.SnapMiddlePoints = new List<Point3D>();
 				Figure3D figure = new Figure3D();
 				figure.AddPolygon(p1, p2, p3, p4, p1);
 				figure.AddPolygon(p5, p6, p7, p8, p5);

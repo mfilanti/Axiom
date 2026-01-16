@@ -39,7 +39,7 @@ namespace Axiom.GeoShape.Entities
 		/// <summary>
 		/// Raggio
 		/// </summary>
-		public double Radius { get => _parameters[RADIUS].Value; set => _parameters[RADIUS].Value = value; } 
+		public double Radius { get => _parameters[RADIUS].Value; set => _parameters[RADIUS].Value = value; }
 
 		/// <summary>
 		/// Altezza (in Z)
@@ -72,7 +72,7 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="radius"></param>
 		/// <param name="height"></param>
 		public Cylinder3D(double radius, double height)
-			: this(radius,height, "","")
+			: this(radius, height, "", "")
 		{
 		}
 
@@ -110,11 +110,11 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public override AABBox3D GetAABBox()
 		{
-			Figure3D profile =
-			[
+			Figure3D profile = new Figure3D()
+			{
 				new Arc3D(Point3D.Zero, Radius, 0, Math.PI, true, RTMatrix.Identity),
 				new Arc3D(Point3D.Zero, Radius, Math.PI, 0, true, RTMatrix.Identity),
-			];
+			};
 			Figure3D profile2 = profile.Clone();
 			profile2.Move(Height * Vector3D.UnitZ);
 			RTMatrix matrix = ParentRTMatrix.Multiply(RTMatrix);
@@ -126,7 +126,7 @@ namespace Axiom.GeoShape.Entities
 			return result;
 		}
 
-		
+
 		#endregion
 
 	}

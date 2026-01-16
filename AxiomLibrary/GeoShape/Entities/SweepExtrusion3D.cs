@@ -58,8 +58,8 @@ namespace Axiom.GeoShape.Entities
 		{
 			Shape = new Shape2DCustom();
 			ExtrusionPath = new();
-			StartCuts = [];
-			EndCuts = [];
+			StartCuts = new List<Plane3D>();
+			EndCuts = new List<Plane3D>();
 		}
 
 		/// <summary>
@@ -75,8 +75,8 @@ namespace Axiom.GeoShape.Entities
 		{
 			Shape = profile.CloneShape();
 			ExtrusionPath = extrusionPath.Clone();
-			StartCuts = [];
-			EndCuts = [];
+			StartCuts = new List<Plane3D>();
+			EndCuts = new List<Plane3D>();
 			if (startCuts != null) StartCuts = startCuts;
 			if (endCuts != null) EndCuts = endCuts;
 		}

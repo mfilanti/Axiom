@@ -37,9 +37,21 @@ namespace Axiom.Cosmos.Simulation
 
 		#endregion
 
-		#region Constructors
 
+		#region Constructors
+		public SpaceSimulation(Universe universe)
+		{
+			_universe = universe;
+			_currentGalaxy = universe.Galaxies.FirstOrDefault(); // Per ora usiamo la prima galassia
+		}
+		public SpaceSimulation()
+		{
+			_universe = new Universe("Universe");
+			_universe.Galaxies.Add(new Galaxy("Milky Way"));
+			_currentGalaxy = _universe.Galaxies.FirstOrDefault(); 
+		}
 		#endregion
+
 
 		#region Methods
 		/// <summary>
@@ -76,14 +88,15 @@ namespace Axiom.Cosmos.Simulation
 		public void AddShip(Starship ship, IInputProvider input)
 			=> _pilots.Add(new ShipPilot(ship, input));
 
-		#endregion
-
-		#region Constructors
-		public SpaceSimulation(Universe universe)
-		{
-			_universe = universe;
-			_currentGalaxy = universe.Galaxies.FirstOrDefault(); // Per ora usiamo la prima galassia
+		/// <summary>
+		/// Aggiunge un corpo celeste alla simulazione
+		/// </summary>
+		/// <param name="planet"></param>
+		public void AddCelestialBody(CelestialBody planet)
+        {
+			_currentGalaxy.AddCelestialBody(planet);
 		}
-		#endregion
+
+        #endregion
 	}
 }

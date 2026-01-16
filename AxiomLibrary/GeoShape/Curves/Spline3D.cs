@@ -2,6 +2,7 @@
 using Axiom.GeoShape.Elements;
 using Axiom.GeoShape.Entities;
 using System.Collections.Generic;
+using System.Numerics;
 using System.Xml.Serialization;
 
 namespace Axiom.GeoShape.Curves
@@ -237,7 +238,7 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="points"></param>
 		public Spline3D(params Point3D[] points)
 		{
-			_points = [.. points];
+			_points = new List<Point3D>(points);
 			Tension = 0.5;
 			Closed = false;
 			FirstExtraPoint = Point3D.NullPoint;
