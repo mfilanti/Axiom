@@ -19,17 +19,12 @@ namespace Axiom.Cosmos.Starships
 		/// <summary>
 		/// Potenza dei motori (Newton)
 		/// </summary>
-		public double MaxThrust { get; set; } = 100000;
+		public double MaxThrust { get; set; } =10e12;
 
 		/// <summary>
 		/// Direzione attuale della spinta (vettore normalizzato)
 		/// </summary>
 		public Vector3D ThrustDirection { get; set; } = new Vector3D(0, 0, 1);
-
-		/// <summary>
-		/// Indica se i motori sono accesi (0.0 a 1.0)
-		/// </summary>
-		public double Throttle { get; set; } = 0;
 
 		/// <summary>
 		/// Nome della nave
@@ -60,6 +55,21 @@ namespace Axiom.Cosmos.Starships
 		/// Posizione assoluta
 		/// </summary>
 		public Vector3D Position => WorldMatrix.Translation;
+
+		/// <summary>
+		/// Vettore Z della matrice di mondo (direzione avanti)
+		/// </summary>
+		public Vector3D ZVector => WorldMatrix.ZVector;
+
+		/// <summary>
+		/// Vettore Y della matrice di mondo (direzione su)
+		/// </summary>
+		public Vector3D YVector => WorldMatrix.YVector;
+
+		/// <summary>
+		/// Vettore Y della matrice di mondo (direzione su)
+		/// </summary>
+		public Vector3D XVector => WorldMatrix.XVector;
 		/// <summary>
 		/// Peso della nave (uguale alla massa in assenza di gravità)
 		/// </summary>
@@ -85,31 +95,12 @@ namespace Axiom.Cosmos.Starships
 		/// </summary>
 		public Vector3D GetThrustForce()
 		{
-			// La spinta segue la rotazione della nave (matrice RT)
-			// Possiamo estrarre la direzione "Forward" dalla WorldMatrix del Node3D
-			Vector3D forward = WorldMatrix.ZVector;// new Vector3D(WorldMatrix.M13, WorldMatrix.M23, WorldMatrix.M33);
-			return forward * (MaxThrust * Throttle);
-		}
-
-
-		public Vector3D GetEngineForce()
-		{
 			// Direzione Forward estratta dalla matrice di rotazione del Node3D
 			Vector3D forward = WorldMatrix.ZVector;
 			return forward * (MaxThrust * CurrentThrottle);
 		}
 
-		// All'interno della logica di movimento della nave
-		public void ApplyLinearDamping(double dt)
-		{
-			double dampingFactor = 0.95; // Perde il 5% di velocità al secondo
-
-			// Se non stiamo accelerando o se vogliamo un feeling "frenato"
-			if (CurrentThrottle < 0.1)
-			{
-				Dynamics.Velocity *= Math.Pow(dampingFactor, dt);
-			}
-		}
+		
 		#endregion
 
 	}

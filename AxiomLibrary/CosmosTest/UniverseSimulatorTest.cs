@@ -1,7 +1,7 @@
-﻿using Axiom.Cosmos;
+﻿using Assets.AxiomCore.Cosmos_Link.Starships;
+using Axiom.Cosmos;
 using Axiom.Cosmos.Models;
 using Axiom.Cosmos.Starships;
-using Axiom.Cosmos.StartshipsControls;
 using Axiom.GeoMath;
 
 namespace CosmosTest
@@ -112,7 +112,7 @@ namespace CosmosTest
 			// Ruotiamo di 90 gradi sull'asse Y (Imbardata a destra)
 			controller.HandleInput(0, Math.PI / 2, 0, 0, 10);
 
-			Vector3D thrustVector = ship.GetEngineForce();
+			Vector3D thrustVector = ship.GetThrustForce();
 
 			// ASSERT
 			// Verifica se il tuo motore è sinistrorso o destrorso

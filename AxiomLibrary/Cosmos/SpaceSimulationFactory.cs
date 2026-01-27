@@ -24,7 +24,7 @@ namespace Axiom.Cosmos
 			};
 			xWing.Motion = new VelocityVerletMotion();
 
-			simulation.AddShip(xWing,null);
+		//	simulation.AddShip(xWing,null);
 			return simulation;
 		}
 	}

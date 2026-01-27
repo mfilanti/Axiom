@@ -85,7 +85,6 @@ namespace CosmosTest
 			}
 
 			// ASSERT
-			Assert.IsTrue(true); // Se arriva qui, l'Octree ha retto
 		}
 
 		[TestMethod]

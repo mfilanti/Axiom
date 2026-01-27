@@ -67,7 +67,7 @@ namespace Axiom.Cosmos.Models
 
 			// 2. primo half-step (posizione)
 			foreach (var body in bodies)
-				body.Motion.Integrate(body, body.Dynamics, deltaTime);
+				body.Motion?.Integrate(body, body.Dynamics, deltaTime);
 
 			// 3. ricalcolo accelerazioni
 			if (GravityField != null)

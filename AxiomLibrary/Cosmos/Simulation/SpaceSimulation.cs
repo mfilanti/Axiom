@@ -1,7 +1,6 @@
 ﻿using Axiom.Cosmos.Dynamics;
 using Axiom.Cosmos.Models;
 using Axiom.Cosmos.Starships;
-using Axiom.Cosmos.StartshipsControls;
 using Axiom.Cosmos.Utils;
 using Axiom.GeoMath;
 using System;
@@ -34,7 +33,9 @@ namespace Axiom.Cosmos.Simulation
 		#endregion
 
 		#region Properties
+		public Universe Universe => _universe;
 
+		public ShipPilot CurrentShip { get; set; }
 		#endregion
 
 
@@ -68,14 +69,7 @@ namespace Axiom.Cosmos.Simulation
 			// 2. Loop Navi
 			foreach (var pilot in _pilots)
 			{
-				// A. Prima l'input (orienta la nave)
-				pilot.ProcessInput(deltaTime);
-
-				// B. Poi la fisica (muove la nave)
-				_physics.ApplyShipPhysics(pilot.Ship, gravityField, deltaTime);
-
-				// C. Infine sincronizza
-				pilot.Ship.UpdateRTMatrix();
+				pilot.UpdatePhysics(gravityField, deltaTime);
 			}
 		}
 
@@ -85,18 +79,22 @@ namespace Axiom.Cosmos.Simulation
 		/// </summary>
 		/// <param name="ship"></param>
 		/// <param name="input"></param>
-		public void AddShip(Starship ship, IInputProvider input)
-			=> _pilots.Add(new ShipPilot(ship, input));
-
-		/// <summary>
-		/// Aggiunge un corpo celeste alla simulazione
-		/// </summary>
-		/// <param name="planet"></param>
-		public void AddCelestialBody(CelestialBody planet)
-        {
-			_currentGalaxy.AddCelestialBody(planet);
+		public ShipPilot AddShip(Starship ship, IInputProvider input)
+		{
+			ShipPilot r = new ShipPilot(ship, input);
+			_pilots.Add(r);
+			if (CurrentShip == null)
+			{
+				CurrentShip = r;
+			}
+			return r;
 		}
+        /// <summary>
+        /// Aggiunge un corpo celeste alla simulazione
+        /// </summary>
+        /// <param name="planet"></param>
+        public void AddCelestialBody(CelestialBody planet) => _currentGalaxy.AddCelestialBody(planet);
 
         #endregion
-	}
+    }
 }

@@ -1,8 +1,5 @@
-﻿using Axiom.Cosmos.Starships;
-using Axiom.Cosmos.StartshipsControls;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Assets.AxiomCore.Cosmos_Link.Starships;
+using Axiom.Cosmos.Starships;
 
 namespace CosmosTest
 {

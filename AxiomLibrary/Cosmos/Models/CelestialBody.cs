@@ -46,20 +46,35 @@ namespace Axiom.Cosmos.Models
         public Vector3D Position => WorldMatrix.Translation;
 
 		/// <summary>
+		/// Vettore Z della matrice di mondo (direzione avanti)
+		/// </summary>
+		public Vector3D ZVector => WorldMatrix.ZVector;
+
+		/// <summary>
+		/// Vettore Y della matrice di mondo (direzione su)
+		/// </summary>
+		public Vector3D YVector => WorldMatrix.YVector;
+
+		/// <summary>
+		/// Vettore X della matrice di mondo (direzione destra)
+		/// </summary>
+		public Vector3D XVector => WorldMatrix.XVector;
+		/// <summary>
 		/// Peso del corpo celeste (in fisica è la Massa)
 		/// </summary>
 		public double Weight => Mass;
-		#endregion
 
-		#region Constructors
-		/// <summary>
-		/// Costruttore del corpo celeste
-		/// </summary>
-		/// <param name="name"></param>
-		/// <param name="mass"></param>
-		/// <param name="radius"></param>
-		/// <param name="position"></param>
-		protected CelestialBody(string name, double mass, double radius, Vector3D position) : base()
+        #endregion
+
+        #region Constructors
+        /// <summary>
+        /// Costruttore del corpo celeste
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="mass"></param>
+        /// <param name="radius"></param>
+        /// <param name="position"></param>
+        protected CelestialBody(string name, double mass, double radius, Vector3D position) : base()
 		{
 			Name = name;
 			Mass = mass;

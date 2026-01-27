@@ -1,4 +1,5 @@
-﻿using Axiom.GeoShape;
+﻿using Axiom.GeoMath;
+using Axiom.GeoShape;
 using System;
 using System.Collections.Generic;
 using System.Text;

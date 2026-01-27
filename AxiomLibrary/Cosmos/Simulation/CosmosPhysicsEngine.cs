@@ -15,8 +15,8 @@ namespace Axiom.Cosmos.Simulation
 		public void ApplyShipPhysics(Starship ship, CosmosOctreeNode gravityField, double dt)
 		{
 			// Gravità + Motore
-			Vector3D gravityAcc = gravityField.GetAcceleration(ship, Galaxy.G);
-			Vector3D engineAcc = ship.GetEngineForce() / ship.Mass;
+			Vector3D gravityAcc = (gravityField == null) ? Vector3D.Zero : gravityField.GetAcceleration(ship, Galaxy.G);
+			Vector3D engineAcc = ship.GetThrustForce() / ship.Mass;
 			ship.Dynamics.Acceleration = gravityAcc + engineAcc;
 
 			// Damping Lineare
