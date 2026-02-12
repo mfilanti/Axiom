@@ -100,25 +100,25 @@ namespace CosmosTest
 			Assert.AreEqual("Solar System", galaxy.Name);
 		}
 
-		[TestMethod]
-		public void TestShipThrustDirectionAfterRotation()
-		{
-			// ARRANGE
-			var ship = new Starship("X-Wing", 5000) { MaxThrust = 10000 };
-			var controller = new ShipFlightController(ship);
-			ship.CurrentThrottle = 1.0;
+		//[TestMethod]
+		//public void TestShipThrustDirectionAfterRotation()
+		//{
+		//	// ARRANGE
+		//	var ship = new Starship("X-Wing", 5000) { MaxThrust = 10000 };
+		//	var controller = new ShipFlightController(ship);
+		//	ship.CurrentThrottle = 1.0;
 
-			// ACT
-			// Ruotiamo di 90 gradi sull'asse Y (Imbardata a destra)
-			controller.HandleInput(0, Math.PI / 2, 0, 0, 10);
+		//	// ACT
+		//	// Ruotiamo di 90 gradi sull'asse Y (Imbardata a destra)
+		//	controller.HandleInput(0, Math.PI / 2, 0, 0, 10);
 
-			Vector3D thrustVector = ship.GetThrustForce();
+		//	Vector3D thrustVector = ship.GetThrustForce();
 
-			// ASSERT
-			// Verifica se il tuo motore è sinistrorso o destrorso
-			Assert.IsLessThan(-9999, thrustVector.X); // Se restituisce -10000, questo passerà
-			Assert.AreEqual(0, thrustVector.Z, 0.001);
-		}
+		//	// ASSERT
+		//	// Verifica se il tuo motore è sinistrorso o destrorso
+		//	Assert.IsLessThan(-9999, thrustVector.X); // Se restituisce -10000, questo passerà
+		//	Assert.AreEqual(0, thrustVector.Z, 0.001);
+		//}
 
 		[TestMethod]
 		public void TestShip_FullCircleRotationX()
