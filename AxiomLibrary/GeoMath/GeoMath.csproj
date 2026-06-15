@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<Import Project="..\SharedBuildProps.xml" />
 	<PropertyGroup>
 		<AssemblyName>Axiom.GeoMath</AssemblyName>
 		<RootNamespace>Axiom.GeoMath</RootNamespace>

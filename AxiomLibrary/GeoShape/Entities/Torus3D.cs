@@ -103,7 +103,6 @@ namespace Axiom.GeoShape.Entities
 			{
 				new Arc3D(new Point3D(OuterRadius, 0), InnerRadius, 0, Math.PI, true, RTMatrix.Identity),
 				new Arc3D(new Point3D(OuterRadius, 0), InnerRadius, Math.PI, 0, true, RTMatrix.Identity),
-				new Arc3D(),
 			};
 			AABBox3D box2D = section.GetABBox();
 			Point3D minPoint = new Point3D(-box2D.MaxPoint.X, -box2D.MaxPoint.X, box2D.MinPoint.Y);

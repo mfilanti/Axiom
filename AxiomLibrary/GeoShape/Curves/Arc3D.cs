@@ -481,9 +481,9 @@ namespace Axiom.GeoShape.Curves
 			points.Add(StartPoint);
 			points.Add(EndPoint);
 			Plane3D plane = new Plane3D(RMatrix.GetVector(2), Center);
-			Vector3D projX = (plane.Project(plane.Location + Vector3D.UnitX) - plane.Location).Normalize();
-			Vector3D projY = (plane.Project(plane.Location + Vector3D.UnitY) - plane.Location).Normalize();
-			Vector3D projZ = (plane.Project(plane.Location + Vector3D.UnitZ) - plane.Location).Normalize();
+			Vector3D projX = (plane.Project(plane.Location + Vector3D.UnitX) - plane.Location);
+			Vector3D projY = (plane.Project(plane.Location + Vector3D.UnitY) - plane.Location);
+			Vector3D projZ = (plane.Project(plane.Location + Vector3D.UnitZ) - plane.Location);
 
 
 			if (projX.IsEquals(Vector3D.Zero) == false)
