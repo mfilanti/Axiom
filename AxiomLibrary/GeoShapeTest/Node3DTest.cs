@@ -98,6 +98,10 @@ public class Node3DTest
             "X del padre non propagata al nipote.");
     }
 
+    // Muta lo stato statico globale Delegates.DelegateEvaluator: non deve girare in parallelo con
+    // altri test che fanno lo stesso (es. Entity3DTest.TestUpdateWithEvaluator), altrimenti si ha una
+    // race (l'evaluator viene azzerato da un test mentre un altro lo invoca -> NullReferenceException).
+    [DoNotParallelize]
     [TestMethod]
     public void TestUpdateWithEvaluator()
     {

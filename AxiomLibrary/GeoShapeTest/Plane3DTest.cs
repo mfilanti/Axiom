@@ -18,7 +18,9 @@ public class Plane3DTest
 
         var custom = new Plane3D(Vector3D.UnitZ, Vector3D.UnitX, new Point3D(0, 0, 1));
         Assert.IsTrue(custom.Equals(custom));
-        Assert.IsFalse(custom.Equals(new Plane3D(Vector3D.UnitZ, Vector3D.UnitX, new Point3D(0, 0, 1))));
+        // Vector3D ha ora semantica a VALORE: due piani con stessa normale/asseX/location sono uguali
+        // (in precedenza Normal/XAxis erano confrontati per riferimento -> istanze distinte diverse).
+        Assert.IsTrue(custom.Equals(new Plane3D(Vector3D.UnitZ, Vector3D.UnitX, new Point3D(0, 0, 1))));
         Assert.IsTrue(custom.Normal.IsEquals(Vector3D.UnitZ));
         Assert.IsTrue(custom.XAxis.IsEquals(Vector3D.UnitX));
         Assert.IsTrue(custom.Location.IsEquals(new Point3D(0, 0, 1)));

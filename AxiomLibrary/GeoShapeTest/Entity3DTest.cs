@@ -14,6 +14,10 @@ public class Entity3DTest
         Assert.ThrowsException<Exception>(() => sphere.ParametersFormula = new List<Parameter>());
     }
 
+    // Muta lo stato statico globale Delegates.DelegateEvaluator: non deve girare in parallelo con
+    // altri test che fanno lo stesso (es. Node3DTest.TestUpdateWithEvaluator), altrimenti si ha una
+    // race (l'evaluator viene azzerato da un test mentre un altro lo invoca -> NullReferenceException).
+    [DoNotParallelize]
     [TestMethod]
     public void TestUpdateWithEvaluator()
     {

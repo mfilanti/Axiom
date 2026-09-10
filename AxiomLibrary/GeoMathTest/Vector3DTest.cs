@@ -23,7 +23,8 @@ public class Vector3DTest
         Assert.AreEqual(1, v[0]);
         Assert.AreEqual(2, v[1]);
         Assert.AreEqual(3, v[2]);
-        v[1] = 5;
+        // Vector3D è immutabile: l'indexer è di sola lettura, per "modificare" si usa With.
+        v = v.WithY(5);
         Assert.AreEqual(5, v.Y);
     }
 
@@ -38,15 +39,14 @@ public class Vector3DTest
         var normalized = v1.Normalize();
         Assert.IsTrue(normalized.Length.IsEquals(1));
 
-        var mutable = new Vector3D(3, 0, 0);
-        var length = mutable.SetNormalize();
-        Assert.AreEqual(3, length);
-        Assert.IsTrue(mutable.IsEquals(Vector3D.UnitX));
+        // Immutabile: si usano Length + NormalizeOrZero al posto di SetNormalize.
+        var v3 = new Vector3D(3, 0, 0);
+        Assert.AreEqual(3, v3.Length);
+        Assert.IsTrue(v3.NormalizeOrZero().IsEquals(Vector3D.UnitX));
 
         var zero = new Vector3D(0, 0, 0);
-        var zeroLength = zero.SetNormalize();
-        Assert.AreEqual(0, zeroLength);
-        Assert.IsTrue(zero.IsEquals(Vector3D.Zero));
+        Assert.AreEqual(0, zero.Length);
+        Assert.IsTrue(zero.NormalizeOrZero().IsEquals(Vector3D.Zero));
     }
 
     [TestMethod]
@@ -84,12 +84,14 @@ public class Vector3DTest
     }
 
     [TestMethod]
-    public void TestSetNegateAndNegate()
+    public void TestNegate()
     {
         var v = new Vector3D(1, -2, 3);
-        v.SetNegate();
-        Assert.IsTrue(v.IsEquals(new Vector3D(-1, 2, -3)));
-        Assert.IsTrue(v.Negate().IsEquals(new Vector3D(1, -2, 3)));
+        var neg = v.Negate();
+        Assert.IsTrue(neg.IsEquals(new Vector3D(-1, 2, -3)));
+        Assert.IsTrue(neg.Negate().IsEquals(new Vector3D(1, -2, 3)));
+        // L'originale è immutato.
+        Assert.IsTrue(v.IsEquals(new Vector3D(1, -2, 3)));
     }
 
     [TestMethod]

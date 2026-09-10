@@ -276,18 +276,12 @@ namespace Axiom.GeoShape.Curves
 			if (CounterClockWise == true)
 			{
 				result = new Point3D(Radius * Math.Cos(StartAngle + offsetRadAngle), Radius * Math.Sin(StartAngle + offsetRadAngle), offsetZ);
-				tangent.X = -Math.Sin(StartAngle + offsetRadAngle);
-				tangent.Y = Math.Cos(StartAngle + offsetRadAngle);
-				tangent.Z = tangentZ;
-				tangent.SetNormalize();
+				tangent = new Vector3D(-Math.Sin(StartAngle + offsetRadAngle), Math.Cos(StartAngle + offsetRadAngle), tangentZ).NormalizeOrZero();
 			}
 			else
 			{
 				result = new Point3D(Radius * Math.Cos(StartAngle - offsetRadAngle), Radius * Math.Sin(StartAngle - offsetRadAngle), offsetZ);
-				tangent.X = Math.Sin(StartAngle - offsetRadAngle);
-				tangent.Y = -Math.Cos(StartAngle - offsetRadAngle);
-				tangent.Z = tangentZ;
-				tangent.SetNormalize();
+				tangent = new Vector3D(Math.Sin(StartAngle - offsetRadAngle), -Math.Cos(StartAngle - offsetRadAngle), tangentZ).NormalizeOrZero();
 			}
 			result = RMatrix * result;
 			result = result + (Vector3D)Center;

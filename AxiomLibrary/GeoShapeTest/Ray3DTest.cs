@@ -16,7 +16,10 @@ public class Ray3DTest
         var other = new Ray3D(new Point3D(1, 2, 3), new Vector3D(0, 1, 0));
         var copy = new Ray3D(other.Location, other.Direction);
         Assert.IsTrue(other.IsEquals(copy));
-        Assert.IsFalse(other.Equals(copy));
+        // Vector3D ha ora semantica a VALORE (readonly struct): due Ray3D con stessa Location e
+        // Direction sono uguali (in precedenza Equals confrontava Direction per riferimento, quindi
+        // due istanze distinte risultavano diverse — comportamento poco corretto).
+        Assert.IsTrue(other.Equals(copy));
         Assert.IsFalse(other.Equals(new object()));
 
         Assert.IsTrue(Ray3D.XRay.Direction.IsEquals(Vector3D.UnitX));
@@ -35,7 +38,8 @@ public class Ray3DTest
         Assert.IsTrue(negated.Direction.IsEquals(Vector3D.UnitX));
 
         Assert.IsTrue(ray != negated);
-        Assert.IsFalse(ray == new Ray3D(ray.Location, ray.Direction));
+        // Semantica a valore: un ray è uguale a un nuovo ray con stessa Location/Direction.
+        Assert.IsTrue(ray == new Ray3D(ray.Location, ray.Direction));
 
         var matrix = RTMatrix.FromTraslation(new Vector3D(1, 0, 0));
         ray.ApplyRT(matrix);

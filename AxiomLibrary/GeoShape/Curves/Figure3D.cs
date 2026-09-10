@@ -1706,9 +1706,9 @@ namespace Axiom.GeoShape.Curves
 
 				perpendicularL = tangent.Cross(normalReference);
 				if (perpendicularL.Length.IsEquals( 0) == false)
-					perpendicularL.SetNormalize();
+					perpendicularL = perpendicularL.NormalizeOrZero();
 				else
-					perpendicularL = tangent.Cross(normalReference.Perpendicular()).Normalize();
+					perpendicularL = tangent.Cross(normalReference.Perpendicular()).NormalizeOrZero();
 
 				tangent = -1 * tangent;
 				perpendicularR = -1 * perpendicularL;

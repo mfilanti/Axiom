@@ -482,12 +482,11 @@ namespace Axiom.GeoShape.Curves
 
 			double tanAngle = EllipseAngleToCircularAngle(angle);
 
-			tangent2.X = -Math.Sin(tanAngle);
-			tangent2.Y = B / A * Math.Cos(tanAngle);
+			tangent2 = new Vector3D(-Math.Sin(tanAngle), B / A * Math.Cos(tanAngle), 0);
 			if (CounterClockWise == false)
-				tangent2.SetNegate();
+				tangent2 = tangent2.Negate();
 
-			tangent2.SetNormalize();
+			tangent2 = tangent2.NormalizeOrZero();
 
 			point = (Point3D)((Vector3D)point).Rotate(Vector3D.UnitZ, RotationA);
 			result = RMatrix.Multiply((Point3D)point);

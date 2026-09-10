@@ -219,8 +219,7 @@ namespace Axiom.GeoShape.Curves
 				PStart.X + offset * (PEnd.X - PStart.X),
 				PStart.Y + offset * (PEnd.Y - PStart.Y),
 				PStart.Z + offset * (PEnd.Z - PStart.Z));
-			tangent = PEnd - PStart;
-			tangent.SetNormalize();
+			tangent = ((Vector3D)(PEnd - PStart)).NormalizeOrZero();
 
 			return result;
 		}
@@ -343,7 +342,8 @@ namespace Axiom.GeoShape.Curves
 			Point3D result;
 			Vector3D vecLine = PEnd - PStart;
 			Vector3D vecPoint = point - PStart;
-			double l = vecLine.SetNormalize();
+			double l = vecLine.Length;
+			vecLine = vecLine.NormalizeOrZero();
 
 			// Segmento di lunghezza nulla: si degrada al punto di start (nessun NaN da 0/0).
 			if (l.IsEquals(0))
