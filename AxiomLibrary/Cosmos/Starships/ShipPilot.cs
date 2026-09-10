@@ -74,7 +74,7 @@ namespace Axiom.Cosmos.Starships
         // All'interno della logica di movimento della nave
         public void ApplyLinearDamping(Starship ship, double dt)
         {
-            double dampingFactor = 0.50; // Perde il 5% di velocità al secondo
+            double dampingFactor = 0.50; // Fattore di decadimento: velocità *= 0.5^dt (si dimezza ogni secondo)
 
             // Se non stiamo accelerando o se vogliamo un feeling "frenato"
             if (ship.CurrentThrottle < 0.1)

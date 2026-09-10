@@ -121,18 +121,21 @@ namespace Axiom.GeoMath
         #region Points Extensions
 
         /// <summary>
-        /// Indica se il punto non è nullo
+        /// Indica se il punto non è nullo. Un punto è considerato "nullo" se il riferimento è null
+        /// oppure se è il sentinella <see cref="Point3D.NullPoint"/> (coordinate NaN).
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static bool IsNotNull(this Point3D point) => point != null;
+        public static bool IsNotNull(this Point3D point) => point != null && !point.IsNan();
 
         /// <summary>
-        /// Indica se il punto è nullo
+        /// Indica se il punto è nullo. Un punto è "nullo" se il riferimento è null oppure se è il
+        /// sentinella <see cref="Point3D.NullPoint"/> (coordinate NaN). Nel codice il "punto nullo"
+        /// è rappresentato proprio da NullPoint, non da un riferimento null.
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static bool IsNull(this Point3D point) => point is null;
+        public static bool IsNull(this Point3D point) => point is null || point.IsNan();
         #endregion
     }
 }

@@ -654,14 +654,44 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public override bool IsOnCurve(Point3D point, double tolerance, out double offset)
 		{
-			RTMatrix inverseRtMatrix = ((RTMatrix)RMatrix).Inverse();
+			offset = 0;
 
-			// Passo tutto al 2d
-			Point3D center2d = (inverseRtMatrix * Center);
-			Point3D point2d = (inverseRtMatrix * point);
-			Arc3D arc2d = new Arc3D(center2d, Radius, StartAngle, EndAngle, CounterClockWise, RTMatrix.Identity);
+			// Se l'arco NON è già nel piano XY (RMatrix ≠ identità), riporto centro e punto nel
+			// sistema locale dell'arco (dove giace nel piano XY) e delego UNA sola volta al caso 2D.
+			// NB: in origine questo metodo delegava SEMPRE (anche con RMatrix identità), generando
+			//     ricorsione infinita e StackOverflow (il calcolo 2D non era implementato).
+			if (!RMatrix.IsEquals(RTMatrix.Identity))
+			{
+				RTMatrix inverseRtMatrix = RMatrix.Inverse();
+				Point3D center2d = inverseRtMatrix * Center;
+				Point3D point2d = inverseRtMatrix * point;
+				Arc3D arc2d = new Arc3D(center2d, Radius, StartAngle, EndAngle, CounterClockWise, RTMatrix.Identity);
+				return arc2d.IsOnCurve(point2d, tolerance, out offset);
+			}
 
-			return arc2d.IsOnCurve(point2d, tolerance, out offset);
+			// Caso 2D (arco nel piano XY a Z = Center.Z): calcolo diretto.
+			Vector3D d = point - Center;
+
+			// Il punto deve giacere nel piano dell'arco e a distanza pari al raggio.
+			if (!MathExtensions.IsEquals(d.Z, 0, tolerance)) return false;
+			double radialDistance = Math.Sqrt(d.X * d.X + d.Y * d.Y);
+			if (!radialDistance.IsEquals(Radius, tolerance)) return false;
+
+			double spanAngle = SpanAngle;
+			if (spanAngle <= 0) return false;
+
+			// Angolo del punto e scostamento dallo StartAngle nel verso dell'arco.
+			double theta = Math.Atan2(d.Y, d.X);
+			double offsetRadAngle = (CounterClockWise ? theta - StartAngle : StartAngle - theta).AngleToRange02PI();
+
+			// Tolleranza angolare derivata dalla tolleranza lineare (arco = raggio * angolo).
+			double angularTolerance = tolerance / Math.Max(Radius, MathUtils.FineTolerance) + tolerance;
+			if (offsetRadAngle > spanAngle + angularTolerance) return false;
+
+			offset = offsetRadAngle / spanAngle;
+			if (offset < 0) offset = 0;
+			if (offset > 1) offset = 1;
+			return true;
 		}
 
 		/// <summary>

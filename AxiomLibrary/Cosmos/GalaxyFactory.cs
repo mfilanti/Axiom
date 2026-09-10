@@ -65,7 +65,7 @@ namespace Axiom.Cosmos
 			sun.AddNode(CreatePlanet("Ceres", 9.39e20, 473000, 413.7e9, sun));
 
 			// Giganti Gassosi
-			var jupiter = CreatePlanet("Jupiter", 1.898e27, 696340000, 778.5e9, sun);
+			var jupiter = CreatePlanet("Jupiter", 1.898e27, 69911000, 778.5e9, sun);
 			jupiter.AddNode(CreateSatellite("Europa", 4.8e22, 1560000, 670900000, jupiter));
 			sun.AddNode(jupiter);
 
@@ -146,12 +146,17 @@ namespace Axiom.Cosmos
 		private static Moon CreateSatellite(string name, double mass, double radius, double distance, CelestialBody parent)
 		{
 			double speed = Math.Sqrt(G * parent.Mass / distance);
+
+			// La simulazione integra nel frame di mondo (inerziale): la velocità del satellite deve
+			// quindi essere assoluta = velocità di mondo del padre + velocità orbitale relativa
+			// (perpendicolare all'offset lungo X, quindi lungo Y).
+			Vector3D parentWorldVelocity = parent.Dynamics?.Velocity ?? Vector3D.Zero;
+
 			var moon = new Moon(name, mass, radius, new Vector3D(distance, 0, 0))
 			{
 				Dynamics = new DynamicsState
 				{
-					// La velocità è relativa al pianeta padre
-					Velocity = new Vector3D(0, speed, 0),
+					Velocity = parentWorldVelocity + new Vector3D(0, speed, 0),
 					Acceleration = Vector3D.Zero
 				},
 				Motion = new VelocityVerletMotion()

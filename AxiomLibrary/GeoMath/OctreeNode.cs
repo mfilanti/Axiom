@@ -13,6 +13,14 @@ namespace Axiom.GeoMath
         /// Numero massimo di voci prima della suddivisione
         /// </summary>
         private const int MaxEntries = 4;
+
+        /// <summary>
+        /// Profondità massima dell'albero. Oltre questo livello un nodo resta foglia e accumula più
+        /// di <see cref="MaxEntries"/> voci, così da evitare la ricorsione infinita quando più di
+        /// <see cref="MaxEntries"/> voci hanno la stessa posizione (o cadono in un box che collassa).
+        /// </summary>
+        private const int MaxDepth = 24;
+
         /// <summary>
         /// Lista delle voci contenute in questo nodo
         /// </summary>
@@ -22,6 +30,11 @@ namespace Axiom.GeoMath
         /// Figli del nodo (8 ottanti)
         /// </summary>
         private OctreeNode<T>[] _children;
+
+        /// <summary>
+        /// Livello di profondità del nodo nell'albero (0 = radice).
+        /// </summary>
+        private readonly int _depth;
 
         #endregion
 
@@ -57,11 +70,16 @@ namespace Axiom.GeoMath
         #endregion
 
         #region Constructors
-        public OctreeNode(AABBox3D boundary)
+        public OctreeNode(AABBox3D boundary) : this(boundary, 0)
+        {
+        }
+
+        private OctreeNode(AABBox3D boundary, int depth)
         {
             Boundary = boundary;
             WeightedCenter = Vector3D.Zero;
             TotalWeight = 0;
+            _depth = depth;
         }
         #endregion
 
@@ -104,7 +122,9 @@ namespace Axiom.GeoMath
             // Aggiornamento del baricentro pesato
             UpdateWeights(entry);
 
-            if (IsLeaf && _entries.Count < MaxEntries)
+            // Foglia con spazio disponibile, oppure profondità massima raggiunta:
+            // accumula la voce qui (evita la ricorsione infinita su voci coincidenti).
+            if (IsLeaf && (_entries.Count < MaxEntries || _depth >= MaxDepth))
             {
                 _entries.Add(entry);
                 return;
@@ -112,7 +132,25 @@ namespace Axiom.GeoMath
 
             if (IsLeaf) Subdivide();
 
-            foreach (var child in _children) child.Insert(entry);
+            // La voce viene inserita in UN SOLO figlio: il primo il cui box la contiene.
+            // Questo evita il doppio inserimento delle voci che giacciono sui piani di
+            // suddivisione (dove più ottanti adiacenti risultano "contenerle").
+            InsertIntoChild(entry);
+        }
+
+        /// <summary>
+        /// Inserisce la voce nel primo figlio il cui box la contiene (assegnazione univoca).
+        /// </summary>
+        private void InsertIntoChild(T entry)
+        {
+            foreach (var child in _children)
+            {
+                if (child.Boundary.Contains(entry.Position))
+                {
+                    child.Insert(entry);
+                    return;
+                }
+            }
         }
 
         private void UpdateWeights(T entry)
@@ -129,6 +167,7 @@ namespace Axiom.GeoMath
         private void Subdivide()
         {
             _children = new OctreeNode<T>[8];
+            int childDepth = _depth + 1;
             // Utilizziamo le proprietà LX, LY, LZ e Center del tuo AABBox3D per dividere
             Point3D min = Boundary.MinPoint;
             Point3D max = Boundary.MaxPoint;
@@ -136,17 +175,18 @@ namespace Axiom.GeoMath
 
             // Costruzione degli 8 figli (Ottanti)
             // Sfruttiamo i punti medi per creare i nuovi AABBox3D
-            _children[0] = new OctreeNode<T>(new AABBox3D(min, mid));
-            _children[1] = new OctreeNode<T>(new AABBox3D(new Point3D(mid.X, min.Y, min.Z), new Point3D(max.X, mid.Y, mid.Z)));
-            _children[2] = new OctreeNode<T>(new AABBox3D(new Point3D(min.X, mid.Y, min.Z), new Point3D(mid.X, max.Y, mid.Z)));
-            _children[3] = new OctreeNode<T>(new AABBox3D(new Point3D(mid.X, mid.Y, min.Z), new Point3D(max.X, max.Y, mid.Z)));
-            _children[4] = new OctreeNode<T>(new AABBox3D(new Point3D(min.X, min.Y, mid.Z), new Point3D(mid.X, mid.Y, max.Z)));
-            _children[5] = new OctreeNode<T>(new AABBox3D(new Point3D(mid.X, min.Y, mid.Z), new Point3D(max.X, mid.Y, max.Z)));
-            _children[6] = new OctreeNode<T>(new AABBox3D(new Point3D(min.X, mid.Y, mid.Z), new Point3D(mid.X, max.Y, max.Z)));
-            _children[7] = new OctreeNode<T>(new AABBox3D(mid, max));
+            _children[0] = new OctreeNode<T>(new AABBox3D(min, mid), childDepth);
+            _children[1] = new OctreeNode<T>(new AABBox3D(new Point3D(mid.X, min.Y, min.Z), new Point3D(max.X, mid.Y, mid.Z)), childDepth);
+            _children[2] = new OctreeNode<T>(new AABBox3D(new Point3D(min.X, mid.Y, min.Z), new Point3D(mid.X, max.Y, mid.Z)), childDepth);
+            _children[3] = new OctreeNode<T>(new AABBox3D(new Point3D(mid.X, mid.Y, min.Z), new Point3D(max.X, max.Y, mid.Z)), childDepth);
+            _children[4] = new OctreeNode<T>(new AABBox3D(new Point3D(min.X, min.Y, mid.Z), new Point3D(mid.X, mid.Y, max.Z)), childDepth);
+            _children[5] = new OctreeNode<T>(new AABBox3D(new Point3D(mid.X, min.Y, mid.Z), new Point3D(max.X, mid.Y, max.Z)), childDepth);
+            _children[6] = new OctreeNode<T>(new AABBox3D(new Point3D(min.X, mid.Y, mid.Z), new Point3D(mid.X, max.Y, max.Z)), childDepth);
+            _children[7] = new OctreeNode<T>(new AABBox3D(mid, max), childDepth);
 
+            // Ridistribuzione delle voci: ciascuna in UN SOLO figlio (assegnazione univoca).
             foreach (var e in _entries)
-                foreach (var child in _children) child.Insert(e);
+                InsertIntoChild(e);
 
             _entries.Clear();
         }

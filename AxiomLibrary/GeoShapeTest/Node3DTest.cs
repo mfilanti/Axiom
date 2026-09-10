@@ -66,6 +66,38 @@ public class Node3DTest
         Assert.IsTrue(cloned.WorldMatrix.IsEquals(node.WorldMatrix));
     }
 
+    /// <summary>
+    /// Regressione BUG-04: spostare un nodo padre tramite Translation / X / Y / Z deve propagare
+    /// la nuova posa ai figli (e ai discendenti), aggiornandone la WorldMatrix.
+    /// </summary>
+    [TestMethod]
+    public void TestTranslationAndXyzPropagateToChildren()
+    {
+        var root = new Node3D("root") { Path = "" };
+        var child = new Node3D("child");
+        root.AddNode(child);
+        var grand = new Node3D("grand");
+        child.AddNode(grand);
+
+        // Stato iniziale: tutto all'origine.
+        Assert.IsTrue(child.WorldMatrix.Translation.IsEquals(Vector3D.Zero));
+        Assert.IsTrue(grand.WorldMatrix.Translation.IsEquals(Vector3D.Zero));
+
+        // Spostamento del padre tramite Translation -> deve propagarsi a figlio e nipote.
+        root.Translation = new Vector3D(10, 20, 30);
+        Assert.IsTrue(child.WorldMatrix.Translation.IsEquals(new Vector3D(10, 20, 30)),
+            "Translation del padre non propagata al figlio.");
+        Assert.IsTrue(grand.WorldMatrix.Translation.IsEquals(new Vector3D(10, 20, 30)),
+            "Translation del padre non propagata al nipote.");
+
+        // Spostamento tramite la singola coordinata X.
+        root.X = 100;
+        Assert.IsTrue(child.WorldMatrix.Translation.IsEquals(new Vector3D(100, 20, 30)),
+            "X del padre non propagata al figlio.");
+        Assert.IsTrue(grand.WorldMatrix.Translation.IsEquals(new Vector3D(100, 20, 30)),
+            "X del padre non propagata al nipote.");
+    }
+
     [TestMethod]
     public void TestUpdateWithEvaluator()
     {

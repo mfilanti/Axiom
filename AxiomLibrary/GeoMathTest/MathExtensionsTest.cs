@@ -50,4 +50,22 @@ public class MathExtensionsTest
         point = new Point3D(1, 2, 3);
         Assert.IsTrue(point.IsNotNull());
     }
+
+    /// <summary>
+    /// Regressione BUG-10: il "punto nullo" nella libreria è il sentinella Point3D.NullPoint
+    /// (coordinate NaN), non un riferimento null. IsNull/IsNotNull devono riconoscerlo.
+    /// In precedenza IsNull controllava solo la nullità del riferimento, quindi trattava il
+    /// sentinella NaN come "non nullo", causando propagazione di NaN (es. Spline3D).
+    /// </summary>
+    [TestMethod]
+    public void TestNullPointSentinelIsRecognizedAsNull()
+    {
+        Point3D nullPoint = Point3D.NullPoint; // (NaN, NaN, NaN)
+        Assert.IsTrue(nullPoint.IsNull(), "Il sentinella NullPoint deve risultare 'nullo'.");
+        Assert.IsFalse(nullPoint.IsNotNull(), "Il sentinella NullPoint non deve risultare 'non nullo'.");
+
+        Point3D realPoint = new Point3D(1, 2, 3);
+        Assert.IsFalse(realPoint.IsNull(), "Un punto valido non deve risultare 'nullo'.");
+        Assert.IsTrue(realPoint.IsNotNull(), "Un punto valido deve risultare 'non nullo'.");
+    }
 }

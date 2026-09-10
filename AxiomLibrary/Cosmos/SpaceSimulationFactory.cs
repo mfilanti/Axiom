@@ -24,7 +24,8 @@ namespace Axiom.Cosmos
 			};
 			xWing.Motion = new VelocityVerletMotion();
 
-		//	simulation.AddShip(xWing,null);
+			// Registra la nave nella simulazione (nessun input provider: la nave subisce solo la gravità).
+			simulation.AddShip(xWing, null);
 			return simulation;
 		}
 	}
