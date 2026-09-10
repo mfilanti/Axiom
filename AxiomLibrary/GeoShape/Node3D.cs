@@ -183,7 +183,7 @@ namespace Axiom.GeoShape
 		[XmlIgnore()]
 		public double X
 		{
-			get => _rtMatrix[0, 3]; set { _rtMatrix[0, 3] = value; PropagateWorldMatrixIfNeeded(); }
+			get => _rtMatrix[0, 3]; set { _rtMatrix = _rtMatrix.WithElement(0, 3, value); PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
@@ -192,7 +192,7 @@ namespace Axiom.GeoShape
 		[XmlIgnore()]
 		public double Y
 		{
-			get => _rtMatrix[1, 3]; set { _rtMatrix[1, 3] = value; PropagateWorldMatrixIfNeeded(); }
+			get => _rtMatrix[1, 3]; set { _rtMatrix = _rtMatrix.WithElement(1, 3, value); PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
@@ -201,7 +201,7 @@ namespace Axiom.GeoShape
 		[XmlIgnore()]
 		public double Z
 		{
-			get => _rtMatrix[2, 3]; set { _rtMatrix[2, 3] = value; PropagateWorldMatrixIfNeeded(); }
+			get => _rtMatrix[2, 3]; set { _rtMatrix = _rtMatrix.WithElement(2, 3, value); PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
@@ -211,7 +211,7 @@ namespace Axiom.GeoShape
 		public Vector3D Translation
 		{
 			get => _rtMatrix.Translation;
-			set { _rtMatrix.Translation = value; PropagateWorldMatrixIfNeeded(); }
+			set { _rtMatrix = _rtMatrix.WithTranslation(value); PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
@@ -395,10 +395,8 @@ namespace Axiom.GeoShape
 		/// <param name="zRadAngle"></param>
 		public void SetRotation(double xRadAngle, double yRadAngle, double zRadAngle)
 		{
-			RTMatrix matrix = _rtMatrix;
 			RotationYSimmetricRange = yRadAngle <= Math.PI / 2 && yRadAngle >= -Math.PI / 2;
-			matrix.SetRotation(xRadAngle, yRadAngle, zRadAngle);
-			RTMatrix = matrix;
+			RTMatrix = _rtMatrix.WithRotation(xRadAngle, yRadAngle, zRadAngle);
 		}
 
 		/// <summary>

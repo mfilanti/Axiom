@@ -283,7 +283,8 @@ namespace Axiom.GeoShape.Entities
 
 			// Calcolo le sottoespressioni comuni, aggiungendo un epsilon per evitare degli errori di calcolo
 			// quando i due contorni sono paralleli ed il loro prodotto vettoriale è (vicino) allo zero
-			RTMatrix absR = RTMatrix.Zero;
+			// Matrice 3x3 di appoggio (RTMatrix è immutabile: si usa un array locale mutabile).
+			double[,] absR = new double[3, 3];
 			for (int i = 0; i < 3; i++)
 				for (int j = 0; j < 3; j++)
 					absR[i, j] = Math.Abs(r[i, j]) + EPSILON;

@@ -413,10 +413,10 @@ namespace Axiom.GeoMath
 				return this;
 
 			RTMatrix matrixA = RTMatrix.FromEulerAnglesXYZ(0, 0, radAngle);
-			RTMatrix matrixB = RTMatrix.Identity;
 			Vector3D locZ = normal;
 			Vector3D locX = locY.Cross(locZ);
-			matrixB.SetFromAxes(locX, locY, locZ);
+			// RTMatrix è immutabile: si costruisce direttamente dagli assi (equivale a Identity + SetFromAxes).
+			RTMatrix matrixB = RTMatrix.FromVectors(locX, locY, locZ);
 			return (matrixB * matrixA * matrixB.Transpose()) * this;
 		}
 

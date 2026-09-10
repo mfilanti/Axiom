@@ -39,7 +39,7 @@ namespace Axiom.GeoShape.Elements
 			double lY = box.MaxPoint.Y - box.MinPoint.Y;
 			double lZ = box.MaxPoint.Z - box.MinPoint.Z;
 			OBBox3D result = new OBBox3D(lX, lY, lZ);
-			result.RTMatrix.Translation = (Vector3D)box.Center;
+			result.RTMatrix = result.RTMatrix.WithTranslation((Vector3D)box.Center);
 			return result;
 		}
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -6,40 +6,95 @@ namespace Axiom.GeoMath
 {
 
     /// <summary>
-    /// Classe matrice di roto-traslazione 4x4
+    /// Matrice di roto-traslazione 4x4 <b>immutabile</b> (readonly struct): gli elementi non cambiano
+    /// dopo la costruzione, tutte le operazioni restituiscono una NUOVA istanza. Per "modificare" un
+    /// elemento/la traslazione/gli assi/la rotazione si usano i metodi <c>With*</c>.
     /// </summary>
+    /// <remarks>
+    /// Essendo uno struct non può essere <c>null</c>; <c>default(RTMatrix)</c> è la matrice nulla
+    /// (<see cref="Zero"/>), come il vecchio costruttore senza parametri.
+    /// </remarks>
     [DataContract]
-    public class RTMatrix
+    public readonly struct RTMatrix : IEquatable<RTMatrix>
     {
+        #region Fields
+        // Prima riga
+        [DataMember] private readonly double _m11, _m12, _m13, _m14;
+        // Seconda riga
+        [DataMember] private readonly double _m21, _m22, _m23, _m24;
+        // Terza riga
+        [DataMember] private readonly double _m31, _m32, _m33, _m34;
+        // quarta riga
+        [DataMember] private readonly double _m41, _m42, _m43, _m44;
+        #endregion
+
+        #region Constructors
+        /// <summary>
+        /// Matrice di rota-traslazione (copia).
+        /// </summary>
+        public RTMatrix(RTMatrix matrix)
+            : this(matrix._m11, matrix._m12, matrix._m13, matrix._m14,
+                  matrix._m21, matrix._m22, matrix._m23, matrix._m24,
+                  matrix._m31, matrix._m32, matrix._m33, matrix._m34,
+                  matrix._m41, matrix._m42, matrix._m43, matrix._m44)
+        {
+        }
+
+        /// <summary>
+        /// Costruttore con i vettori (colonne X, Y, Z + traslazione).
+        /// </summary>
+        public RTMatrix(Vector3D x, Vector3D y, Vector3D z, Vector3D trasl)
+            : this(x.X, y.X, z.X, trasl.X,
+                  x.Y, y.Y, z.Y, trasl.Y,
+                  x.Z, y.Z, z.Z, trasl.Z,
+                  0, 0, 0, 1)
+        {
+        }
+
+        /// <summary>
+        /// Costruttore da array di 16 valori (riga per riga).
+        /// </summary>
+        public RTMatrix(double[] values)
+            : this(values[0], values[1], values[2], values[3],
+                  values[4], values[5], values[6], values[7],
+                  values[8], values[9], values[10], values[11],
+                  values[12], values[13], values[14], values[15])
+        {
+        }
+
+        /// <summary>
+        /// Costruttore con i 16 elementi (riga per riga).
+        /// </summary>
+        public RTMatrix(double m11, double m12, double m13, double m14,
+                        double m21, double m22, double m23, double m24,
+                        double m31, double m32, double m33, double m34,
+                        double m41, double m42, double m43, double m44)
+        {
+            _m11 = m11; _m12 = m12; _m13 = m13; _m14 = m14;
+            _m21 = m21; _m22 = m22; _m23 = m23; _m24 = m24;
+            _m31 = m31; _m32 = m32; _m33 = m33; _m34 = m34;
+            _m41 = m41; _m42 = m42; _m43 = m43; _m44 = m44;
+        }
+        #endregion
+
         #region STATICS
         /// <summary>
         /// Matrice identità
         /// </summary>
-        public static RTMatrix Identity
-        {
-            get { return new RTMatrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1); }
-        }
+        public static RTMatrix Identity => new RTMatrix(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
 
         /// <summary>
         /// Matrice nulla
         /// </summary>
-        public static RTMatrix Zero
-        {
-            get { return new RTMatrix(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0); }
-        }
+        public static RTMatrix Zero => new RTMatrix(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
         /// <summary>
-        /// Dati tre angoli di rotazione rispetto ai tre assi cartesiani. 
-        /// Composizione rotazione Z * Y * X (convenzionale in robotica)
+        /// Dati tre angoli di rotazione rispetto ai tre assi cartesiani.
+        /// Composizione rotazione Z * Y * X (convenzionale in robotica).
         /// Vengono chiamati anche angoli RPY: roll (x), pitch (y), yaw (z).
         /// </summary>
-        /// <param name="xRadAngle">Angolo in radianti (Roll)</param>
-        /// <param name="yRadAngle"></param>
-        /// <param name="zRadAngle"></param>
-        /// <returns></returns>
         public static RTMatrix FromEulerAnglesXYZ(double xRadAngle, double yRadAngle, double zRadAngle)
         {
-
             // Calcolo delle rotazioni elementari
             double cx = Math.Cos(xRadAngle);
             double sx = Math.Sin(xRadAngle);
@@ -61,89 +116,54 @@ namespace Axiom.GeoMath
             double m32 = cy * sx;
             double m33 = cy * cx;
 
-            // Costruzione matrice 4x4 (rototraslazione con traslazione nulla)
-            return new RTMatrix
-            {
-                _m11 = m11,
-                _m12 = m12,
-                _m13 = m13,
-                _m14 = 0,
-                _m21 = m21,
-                _m22 = m22,
-                _m23 = m23,
-                _m24 = 0,
-                _m31 = m31,
-                _m32 = m32,
-                _m33 = m33,
-                _m34 = 0,
-                _m41 = 0,
-                _m42 = 0,
-                _m43 = 0,
-                _m44 = 1
-            };
-
+            return new RTMatrix(m11, m12, m13, 0,
+                                m21, m22, m23, 0,
+                                m31, m32, m33, 0,
+                                0, 0, 0, 1);
         }
 
         /// <summary>
-        /// Dati due angoli di rotazione rispetto agli assi Z X in terna corrente. 
-        /// Che poi equivale ai due angoli in X Z in terna fissa. 
+        /// Dati due angoli di rotazione rispetto agli assi Z X in terna corrente.
+        /// Che poi equivale ai due angoli in X Z in terna fissa.
         /// </summary>
-        /// <param name="zRadAngle"></param>
-        /// <param name="xRadAngle"></param>
-        /// <returns></returns>
         public static RTMatrix FromEulerAnglesZX(double zRadAngle, double xRadAngle)
         {
-            RTMatrix result = RTMatrix.Identity;
-            double cosZ = (double)Math.Cos(zRadAngle);
-            double sinZ = (double)Math.Sin(zRadAngle);
-            double cosX = (double)Math.Cos(xRadAngle);
-            double sinX = (double)Math.Sin(xRadAngle);
-            result._m11 = cosZ;
-            result._m21 = sinZ;
-            result._m12 = -sinZ * cosX;
-            result._m22 = cosZ * cosX;
-            result._m32 = sinX;
-            result._m13 = sinZ * sinX;
-            result._m23 = -cosZ * sinX;
-            result._m33 = cosX;
+            double cosZ = Math.Cos(zRadAngle);
+            double sinZ = Math.Sin(zRadAngle);
+            double cosX = Math.Cos(xRadAngle);
+            double sinX = Math.Sin(xRadAngle);
 
-            return result;
+            return new RTMatrix(cosZ, -sinZ * cosX, sinZ * sinX, 0,
+                                sinZ, cosZ * cosX, -cosZ * sinX, 0,
+                                0, sinX, cosX, 0,
+                                0, 0, 0, 1);
         }
 
         /// <summary>
-        /// Dati 3 vettori 
+        /// Dati 3 vettori (colonne X, Y, Z) e la traslazione.
         /// </summary>
-        /// <returns></returns>
         public static RTMatrix FromVectors(Vector3D x, Vector3D y, Vector3D z, Vector3D trasl) => new(x, y, z, trasl);
 
         /// <summary>
-        /// Dati 3 vettori 
+        /// Dati 3 vettori (colonne X, Y, Z), traslazione nulla.
         /// </summary>
-        /// <returns></returns>
         public static RTMatrix FromVectors(Vector3D x, Vector3D y, Vector3D z) => new(x, y, z, Vector3D.Zero);
-        /// <summary>
-        /// Indetità con traslazione
-        /// </summary>
-        /// <param name="trasl"></param>
-        /// <returns></returns>
-        public static RTMatrix FromTraslation(Vector3D trasl)
-        {
-            RTMatrix result = RTMatrix.Identity;
-            result.Translation = trasl;
-            return result;
-        }
 
         /// <summary>
-        /// Data normale e traslazione. 
-        /// Con vettori x e y ottenuti in maniera arbitraria. 
-        /// Regola: [(this x UnitX) x this] con eccezioni nel caso this sia UnitX o NegativeUnitX.
+        /// Identità con traslazione.
         /// </summary>
-        /// <returns></returns>
+        public static RTMatrix FromTraslation(Vector3D trasl) =>
+            new RTMatrix(1, 0, 0, trasl.X,
+                         0, 1, 0, trasl.Y,
+                         0, 0, 1, trasl.Z,
+                         0, 0, 0, 1);
+
+        /// <summary>
+        /// Data normale e traslazione. Con vettori x e y ottenuti in maniera arbitraria.
+        /// </summary>
         public static RTMatrix FromNormal(Vector3D normal, Vector3D trasl)
         {
             // Normale nulla: nessuna rotazione definita -> solo traslazione (rotazione identità).
-            // TryNormalize evita sia l'eccezione sia l'effetto collaterale sul parametro (in
-            // precedenza SetNormalize mutava il vettore passato).
             if (!normal.TryNormalize(out Vector3D n))
                 return FromTraslation(trasl);
 
@@ -153,52 +173,22 @@ namespace Axiom.GeoMath
         }
 
         /// <summary>
-        /// Data normale e traslazione. 
-        /// Con vettori x e y ottenuti in maniera arbitraria. 
-        /// Regola: [(this x UnitX) x this] con eccezioni nel caso this sia UnitX o NegativeUnitX.
+        /// Data normale (traslazione nulla).
         /// </summary>
-        /// <returns></returns>
         public static RTMatrix FromNormal(Vector3D normal) => FromNormal(normal, Vector3D.Zero);
-
         #endregion STATICS
 
-        #region Fields
-        // Prima riga
-        [DataMember]
-        private double _m11, _m12, _m13, _m14;
-        // Seconda riga
-        [DataMember]
-        private double _m21, _m22, _m23, _m24;
-        // Terza riga
-        [DataMember]
-        private double _m31, _m32, _m33, _m34;
-        // quarta riga
-        [DataMember]
-        private double _m41, _m42, _m43, _m44;
-        #endregion
-
         #region Serialized Properties
-        // Proprietà compatta per serializzazione
-        public double[] Values
+        /// <summary>
+        /// Proprietà compatta (sola lettura) con i 16 valori riga per riga.
+        /// </summary>
+        public double[] Values => new double[]
         {
-            get => new double[]
-            {
-                _m11, _m12, _m13, _m14,
-                _m21, _m22, _m23, _m24,
-                _m31, _m32, _m33, _m34,
-                _m41, _m42, _m43, _m44
-            };
-            set
-            {
-                if (value is { Length: 16 })
-                {
-                    _m11 = value[0]; _m12 = value[1]; _m13 = value[2]; _m14 = value[3];
-                    _m21 = value[4]; _m22 = value[5]; _m23 = value[6]; _m24 = value[7];
-                    _m31 = value[8]; _m32 = value[9]; _m33 = value[10]; _m34 = value[11];
-                    _m41 = value[12]; _m42 = value[13]; _m43 = value[14]; _m44 = value[15];
-                }
-            }
-        }
+            _m11, _m12, _m13, _m14,
+            _m21, _m22, _m23, _m24,
+            _m31, _m32, _m33, _m34,
+            _m41, _m42, _m43, _m44
+        };
         #endregion
 
         #region Properties
@@ -227,7 +217,7 @@ namespace Axiom.GeoMath
                 _m14 * (_m21 * (_m32 * _m43 - _m42 * _m33) - _m22 * (_m31 * _m43 - _m41 * _m33) + _m23 * (_m31 * _m42 - _m41 * _m32));
 
         /// <summary>
-        /// Determinante per matrici affini (molto performante). 
+        /// Determinante per matrici affini (molto performante).
         /// </summary>
         public double DeterminantAffine =>
                     (_m11 * _m22 * _m33) +
@@ -238,359 +228,157 @@ namespace Axiom.GeoMath
                     (_m11 * _m23 * _m32);
 
         /// <summary>
-        ///		Fa il Gets/Sets della parte Scale della matrice
-        ///		|Sx 0  0  0 |
-        ///		| 0 Sy 0  0 |
-        ///		| 0  0 Sz 0 |
-        ///		| 0  0  0 0 |
+        /// Parte Scale della matrice (diagonale), sola lettura.
         /// </summary>
-        public Vector3D Scale
-        {
-            get => new Vector3D(_m11, _m22, _m33);
-            set
-            {
-                _m11 = value.X;
-                _m22 = value.Y;
-                _m33 = value.Z;
-            }
-        }
+        public Vector3D Scale => new Vector3D(_m11, _m22, _m33);
 
         /// <summary>
-        ///	Fa il Gets/Sets della parte Translation della matrice. 
-        ///	Rappresenta la colonna di indice 4.
+        /// Parte Translation della matrice (colonna di indice 4), sola lettura.
+        /// Per impostarla usare <see cref="WithTranslation"/>.
         /// </summary>
-        public Vector3D Translation
-        {
-            get => new Vector3D(_m14, _m24, _m34);
-            set
-            {
-                _m14 = value.X;
-                _m24 = value.Y;
-                _m34 = value.Z;
-            }
-        }
+        public Vector3D Translation => new Vector3D(_m14, _m24, _m34);
 
         /// <summary>
-        /// In una matrice RT, rappresenta la colonna di indice 1
+        /// Colonna di indice 1 (asse X), sola lettura.
         /// </summary>
-        public Vector3D XVector
-        {
-            get => GetVector(0); set => SetVector(0, value);
-        }
+        public Vector3D XVector => GetVector(0);
 
         /// <summary>
-        /// In una matrice RT, rappresenta la colonna di indice 2
+        /// Colonna di indice 2 (asse Y), sola lettura.
         /// </summary>
-        public Vector3D YVector
-        {
-            get => GetVector(1); set => SetVector(1, value);
-        }
+        public Vector3D YVector => GetVector(1);
 
         /// <summary>
-        /// In una matrice RT, rappresenta la colonna di indice 3
+        /// Colonna di indice 3 (asse Z), sola lettura.
         /// </summary>
-        public Vector3D ZVector
-        {
-            get => GetVector(2); set => SetVector(2, value);
-        }
+        public Vector3D ZVector => GetVector(2);
         #endregion
 
-        #region Constructors
+        #region With (immutabilità)
         /// <summary>
-        /// Matrice di rota-traslazione
+        /// Restituisce una copia con l'elemento (index 0-15, riga per riga) modificato.
+        /// Indice fuori range: restituisce la matrice invariata.
         /// </summary>
-        public RTMatrix()
+        public RTMatrix WithElement(int index, double value)
         {
+            if (index < 0 || index > 15)
+                return this;
+            double[] v = Values;
+            v[index] = value;
+            return new RTMatrix(v);
         }
-
-        /// <summary>
-        /// Matrice di rota-traslazione
-        /// </summary>
-        public RTMatrix(RTMatrix matrix)
-            : this(matrix._m11, matrix._m12, matrix._m13, matrix._m14,
-                  matrix._m21, matrix._m22, matrix._m23, matrix._m24,
-                  matrix._m31, matrix._m32, matrix._m33, matrix._m34,
-                  matrix._m41, matrix._m42, matrix._m43, matrix._m44)
-        {
-        }
-
 
         /// <summary>
-        /// Costruttore con i vettori
+        /// Restituisce una copia con l'elemento (riga, colonna) modificato.
         /// </summary>
-        public RTMatrix(Vector3D x, Vector3D y, Vector3D z, Vector3D trasl)
-            : this(x.X, y.X, z.X, trasl.X,
-                  x.Y, y.Y, z.Y, trasl.Y,
-                  x.Z, y.Z, z.Z, trasl.Z,
-                  0, 0, 0, 1)
-        {
-        }
+        public RTMatrix WithElement(int row, int col, double value) => WithElement(row * 4 + col, value);
 
-        // Costruttore alternativo: da array
-        public RTMatrix(double[] values)
-        {
-            _m11 = values[0]; _m12 = values[1]; _m13 = values[2]; _m14 = values[3];
-            _m21 = values[4]; _m22 = values[5]; _m23 = values[6]; _m24 = values[7];
-            _m31 = values[8]; _m32 = values[9]; _m33 = values[10]; _m34 = values[11];
-            _m41 = values[12]; _m42 = values[13]; _m43 = values[14]; _m44 = values[15];
-        }
+        /// <summary>
+        /// Restituisce una copia con la traslazione indicata (colonna 4).
+        /// </summary>
+        public RTMatrix WithTranslation(Vector3D trasl) =>
+            new RTMatrix(_m11, _m12, _m13, trasl.X,
+                         _m21, _m22, _m23, trasl.Y,
+                         _m31, _m32, _m33, trasl.Z,
+                         _m41, _m42, _m43, _m44);
 
-        public RTMatrix(double m11, double m12, double m13, double m14,
-                        double m21, double m22, double m23, double m24,
-                        double m31, double m32, double m33, double m34,
-                        double m41, double m42, double m43, double m44)
-        {
-            _m11 = m11;
-            _m12 = m12;
-            _m13 = m13;
-            _m14 = m14;
-            _m21 = m21;
-            _m22 = m22;
-            _m23 = m23;
-            _m24 = m24;
-            _m31 = m31;
-            _m32 = m32;
-            _m33 = m33;
-            _m34 = m34;
-            _m41 = m41;
-            _m42 = m42;
-            _m43 = m43;
-            _m44 = m44;
-        }
+        /// <summary>
+        /// Restituisce una copia con la sottomatrice 3x3 impostata dalle colonne (assi X, Y, Z),
+        /// mantenendo la traslazione e la quarta riga.
+        /// </summary>
+        public RTMatrix WithAxes(Vector3D xAxis, Vector3D yAxis, Vector3D zAxis) =>
+            new RTMatrix(xAxis.X, yAxis.X, zAxis.X, _m14,
+                         xAxis.Y, yAxis.Y, zAxis.Y, _m24,
+                         xAxis.Z, yAxis.Z, zAxis.Z, _m34,
+                         _m41, _m42, _m43, _m44);
+
+        /// <summary>
+        /// Restituisce una copia con la rotazione (angoli di Eulero X Y Z) indicata, mantenendo la
+        /// traslazione corrente.
+        /// </summary>
+        public RTMatrix WithRotation(double xRadAngle, double yRadAngle, double zRadAngle) =>
+            FromEulerAnglesXYZ(xRadAngle, yRadAngle, zRadAngle).WithTranslation(Translation);
+
+        /// <summary>
+        /// Restituisce una copia con la parte Scale (diagonale m11/m22/m33) indicata.
+        /// </summary>
+        public RTMatrix WithScale(Vector3D scale) =>
+            new RTMatrix(scale.X, _m12, _m13, _m14,
+                         _m21, scale.Y, _m23, _m24,
+                         _m31, _m32, scale.Z, _m34,
+                         _m41, _m42, _m43, _m44);
+
+        /// <summary>
+        /// Restituisce una copia con la colonna col (righe 0-2) impostata al vettore indicato.
+        /// </summary>
+        public RTMatrix WithVector(int col, Vector3D vector) =>
+            WithElement(0, col, vector.X).WithElement(1, col, vector.Y).WithElement(2, col, vector.Z);
         #endregion
 
-        #region Operators
+        #region Indexers
         /// <summary>
-        /// Accesso tramite 2 indici
+        /// Accesso in sola lettura tramite 2 indici (riga, colonna 0-base). Per modificare usare <see cref="WithElement(int,int,double)"/>.
         /// </summary>
-        /// <param name="row">riga 0-base</param>
-        /// <param name="col">colonna 0-base</param>
-        public double this[int row, int col]
-        {
-            get
-            {
-                return this[row * 4 + col];
-            }
-            set
-            {
-                this[row * 4 + col] = value;
-            }
-        }
+        public double this[int row, int col] => this[row * 4 + col];
 
         /// <summary>
-        /// Accesso tramite un indice
+        /// Accesso in sola lettura tramite un indice (0-base). Per modificare usare <see cref="WithElement(int,double)"/>.
         /// </summary>
-        /// <param name="index">indice 0-base</param>
         public double this[int index]
         {
             get
             {
-                double result;
                 switch (index)
                 {
-                    case 0:
-                        result = _m11;
-                        break;
-                    case 1:
-                        result = _m12;
-                        break;
-                    case 2:
-                        result = _m13;
-                        break;
-                    case 3:
-                        result = _m14;
-                        break;
-                    case 4:
-                        result = _m21;
-                        break;
-                    case 5:
-                        result = _m22;
-                        break;
-                    case 6:
-                        result = _m23;
-                        break;
-                    case 7:
-                        result = _m24;
-                        break;
-                    case 8:
-                        result = _m31;
-                        break;
-                    case 9:
-                        result = _m32;
-                        break;
-                    case 10:
-                        result = _m33;
-                        break;
-                    case 11:
-                        result = _m34;
-                        break;
-                    case 12:
-                        result = _m41;
-                        break;
-                    case 13:
-                        result = _m42;
-                        break;
-                    case 14:
-                        result = _m43;
-                        break;
-                    case 15:
-                        result = _m44;
-                        break;
-                    default:
-                        result = 0;
-                        break;
-                }
-                return result;
-            }
-            set
-            {
-                switch (index)
-                {
-                    case 0:
-                        _m11 = value;
-                        break;
-                    case 1:
-                        _m12 = value;
-                        break;
-                    case 2:
-                        _m13 = value;
-                        break;
-                    case 3:
-                        _m14 = value;
-                        break;
-                    case 4:
-                        _m21 = value;
-                        break;
-                    case 5:
-                        _m22 = value;
-                        break;
-                    case 6:
-                        _m23 = value;
-                        break;
-                    case 7:
-                        _m24 = value;
-                        break;
-                    case 8:
-                        _m31 = value;
-                        break;
-                    case 9:
-                        _m32 = value;
-                        break;
-                    case 10:
-                        _m33 = value;
-                        break;
-                    case 11:
-                        _m34 = value;
-                        break;
-                    case 12:
-                        _m41 = value;
-                        break;
-                    case 13:
-                        _m42 = value;
-                        break;
-                    case 14:
-                        _m43 = value;
-                        break;
-                    case 15:
-                        _m44 = value;
-                        break;
+                    case 0: return _m11;
+                    case 1: return _m12;
+                    case 2: return _m13;
+                    case 3: return _m14;
+                    case 4: return _m21;
+                    case 5: return _m22;
+                    case 6: return _m23;
+                    case 7: return _m24;
+                    case 8: return _m31;
+                    case 9: return _m32;
+                    case 10: return _m33;
+                    case 11: return _m34;
+                    case 12: return _m41;
+                    case 13: return _m42;
+                    case 14: return _m43;
+                    case 15: return _m44;
+                    default: return 0;
                 }
             }
         }
-
-        /// <summary>
-        /// Set delle colonne della sottomatrice 3x3
-        /// </summary>
-        /// <param name="xAxis">Asse X</param>
-        /// <param name="yAxis">Asse Y</param>
-        /// <param name="zAxis">Asse Z</param>
-        public void SetFromAxes(Vector3D xAxis, Vector3D yAxis, Vector3D zAxis)
-        {
-            _m11 = xAxis.X;
-            _m21 = xAxis.Y;
-            _m31 = xAxis.Z;
-            _m12 = yAxis.X;
-            _m22 = yAxis.Y;
-            _m32 = yAxis.Z;
-            _m13 = zAxis.X;
-            _m23 = zAxis.Y;
-            _m33 = zAxis.Z;
-        }
-
-        /// <summary>
-        /// Setta la rotazione mantenendo la traslazione
-        /// </summary>
-        /// <param name="xRadAngle">Rotazione attorno asse X</param>
-        /// <param name="yRadAngle">Rotazione attorno asse Y</param>
-        /// <param name="zRadAngle">Rotazione attorno asse Z</param>
-        public void SetRotation(double xRadAngle, double yRadAngle, double zRadAngle)
-        {
-            Vector3D trasl = Translation;
-            var matrix = FromEulerAnglesXYZ(xRadAngle, yRadAngle, zRadAngle);
-            matrix.CloneTo(this);
-            Translation = trasl;
-        }
-
-
         #endregion
 
         #region Methods
+        /// <summary>
+        /// Aggiunge una traslazione x,y,z (restituisce una nuova matrice).
+        /// </summary>
+        public RTMatrix Traslate(double x, double y, double z) =>
+            new RTMatrix(_m11, _m12, _m13, _m14 + x,
+                         _m21, _m22, _m23, _m24 + y,
+                         _m31, _m32, _m33, _m34 + z,
+                         _m41, _m42, _m43, _m44);
 
         /// <summary>
-        /// Aggiunge una traslazione x,y,z
+        /// Indica se la matrice ha qualche valore NaN.
         /// </summary>
-        /// <param name="x">Traslazione X</param>
-        /// <param name="y">Traslazione Y</param>
-        /// <param name="z">Traslazione Z</param>
-        public RTMatrix Traslate(double x, double y, double z)
-        {
-            RTMatrix result = new RTMatrix(this);
-            result._m14 += x;
-            result._m24 += y;
-            result._m34 += z;
-            return result;
-        }
-
-        /// <summary>
-        /// Indica se la matrice ha qualche valore NaN
-        /// </summary>
-        /// <returns>Matrice valida</returns>
-        public bool IsNaN()
-        {
-            var r =
+        public bool IsNaN() =>
                 double.IsNaN(_m11) || double.IsNaN(_m12) || double.IsNaN(_m13) || double.IsNaN(_m14) ||
                 double.IsNaN(_m21) || double.IsNaN(_m22) || double.IsNaN(_m23) || double.IsNaN(_m24) ||
                 double.IsNaN(_m31) || double.IsNaN(_m32) || double.IsNaN(_m33) || double.IsNaN(_m34) ||
                 double.IsNaN(_m41) || double.IsNaN(_m42) || double.IsNaN(_m43) || double.IsNaN(_m44);
-            return r;
-        }
 
         /// <summary>
-        /// Esegue una copia della classe
+        /// Esegue una copia della matrice.
         /// </summary>
-        /// <returns>Copia della classe</returns>
         public RTMatrix Clone() => new RTMatrix(this);
 
         /// <summary>
-        /// Metodo per clonare i valori in una matrice target
+        /// Controlla se due matrici sono uguali con una certa tolleranza.
         /// </summary>
-        /// <param name="target">target</param>
-        public void CloneTo(RTMatrix target)
-        {
-            if (target is null)
-                throw new ArgumentNullException(nameof(target));
-
-            target._m11 = _m11; target._m12 = _m12; target._m13 = _m13; target._m14 = _m14;
-            target._m21 = _m21; target._m22 = _m22; target._m23 = _m23; target._m24 = _m24;
-            target._m31 = _m31; target._m32 = _m32; target._m33 = _m33; target._m34 = _m34;
-            target._m41 = _m41; target._m42 = _m42; target._m43 = _m43; target._m44 = _m44;
-        }
-
-        /// <summary>
-        /// Controlla se due matrici sono uguali con una certa tolleranza
-        /// </summary>
-        /// <param name="obj">seconda matrice</param>
-        /// <returns></returns>
         public bool IsEquals(object obj)
         {
             if (obj is RTMatrix other)
@@ -605,27 +393,23 @@ namespace Axiom.GeoMath
         }
 
         /// <summary>
-        /// Ugualianza
+        /// Uguaglianza esatta (value type).
         /// </summary>
-        /// <param name="obj"></param>
-        /// <returns></returns>
-        public override bool Equals(object obj)
-        {
-            if (obj is RTMatrix)
-                return (this == (RTMatrix)obj);
-            else
-                return false;
-        }
+        public bool Equals(RTMatrix other) => this == other;
+
         /// <summary>
-        /// <inheritdoc/>
+        /// Uguaglianza esatta.
         /// </summary>
-        /// <returns></returns>
+        public override bool Equals(object obj) => obj is RTMatrix other && this == other;
+
+        /// <summary>
+        /// HashCode (coerente con l'uguaglianza esatta ==).
+        /// </summary>
         public override int GetHashCode()
         {
             int hashCode = 0;
             for (int i = 0; i < 16; i++)
                 hashCode ^= this[i].GetHashCode();
-
             return hashCode;
         }
         #endregion
@@ -634,63 +418,45 @@ namespace Axiom.GeoMath
         /// <summary>
         /// Somma elemento per elemento
         /// </summary>
-        /// <param name="matrix"></param>
-        /// <returns></returns>
         public RTMatrix Add(RTMatrix matrix) => this + matrix;
 
         /// <summary>
         /// Sottrazione elemento per elemento
         /// </summary>
-        /// <param name="matrix"></param>
-        /// <returns></returns>
         public RTMatrix Subtract(RTMatrix matrix) => this - matrix;
 
         /// <summary>
         /// Negazione elemento per elemento
         /// </summary>
-        /// <returns></returns>
         public RTMatrix Negate() => -this;
-
         #endregion
 
         #region Multiply
-
         /// <summary>
         /// Moltiplicazione matrice-matrice
         /// </summary>
-        /// <param name="matrix"></param>
-        /// <returns></returns>
         public RTMatrix Multiply(RTMatrix matrix) => this * matrix;
 
         /// <summary>
         /// Applicazione della matrice a un punto 3D
         /// </summary>
-        /// <param name="point"></param>
-        /// <returns></returns>
         public Point3D Multiply(Point3D point) => this * point;
 
         /// <summary>
         /// Applicazione della matrice a un vettore 3D
         /// </summary>
-        /// <param name="vector"></param>
-        /// <returns></returns>
         public Vector3D Multiply(Vector3D vector) => this * vector;
 
         /// <summary>
         /// Moltiplicazione per uno scalare
         /// </summary>
-        /// <param name="vector"></param>
-        /// <returns></returns>
         public RTMatrix Multiply(double scalar) => this * scalar;
-
         #endregion
 
         #region Public Methods
-
         /// <summary>
         /// Inversa
         /// </summary>
-        /// <returns></returns>
         public RTMatrix Inverse()
         {
             var det = Determinant;
@@ -701,70 +467,48 @@ namespace Axiom.GeoMath
             return Adjoint() * (1 / det);
         }
 
-
         /// <summary>
-        /// Inversa per matrici che contengono solo roto traslazioni. 
+        /// Inversa per matrici che contengono solo roto traslazioni.
         /// </summary>
-        /// <returns>Matrice inversa</returns>
         public RTMatrix InverseRT()
         {
-            RTMatrix result = new RTMatrix();
-            result._m11 = _m11;
-            result._m21 = _m12;
-            result._m31 = _m13;
-            result._m41 = 0;
-            result._m12 = _m21;
-            result._m22 = _m22;
-            result._m32 = _m23;
-            result._m42 = 0;
-            result._m13 = _m31;
-            result._m23 = _m32;
-            result._m33 = _m33;
-            result._m43 = 0;
-            result._m14 = -(result._m11 * _m14 + result._m12 * _m24 + result._m13 * _m34);
-            result._m24 = -(result._m21 * _m14 + result._m22 * _m24 + result._m23 * _m34);
-            result._m34 = -(result._m31 * _m14 + result._m32 * _m24 + result._m33 * _m34);
-            result._m44 = 1;
-            return result;
+            // La sottomatrice 3x3 inversa è la trasposta.
+            double r11 = _m11, r12 = _m21, r13 = _m31;
+            double r21 = _m12, r22 = _m22, r23 = _m32;
+            double r31 = _m13, r32 = _m23, r33 = _m33;
+            double r14 = -(r11 * _m14 + r12 * _m24 + r13 * _m34);
+            double r24 = -(r21 * _m14 + r22 * _m24 + r23 * _m34);
+            double r34 = -(r31 * _m14 + r32 * _m24 + r33 * _m34);
+
+            return new RTMatrix(r11, r12, r13, r14,
+                                r21, r22, r23, r24,
+                                r31, r32, r33, r34,
+                                0, 0, 0, 1);
         }
 
         /// <summary>
         /// Trasposta
         /// </summary>
-        /// <returns>Matrice trasposta</returns>
-        public RTMatrix Transpose()
-        {
-            return new RTMatrix(_m11, _m21, _m31, _m41,
-                                _m12, _m22, _m32, _m42,
-                                _m13, _m23, _m33, _m43,
-                                _m14, _m24, _m34, _m44);
-        }
+        public RTMatrix Transpose() =>
+            new RTMatrix(_m11, _m21, _m31, _m41,
+                         _m12, _m22, _m32, _m42,
+                         _m13, _m23, _m33, _m43,
+                         _m14, _m24, _m34, _m44);
+
         /// <summary>
         /// Effettua una trasformazione per ruotare attorno a un asse specificato da un punto e un vettore.
         /// </summary>
-        /// <param name="origin">Origine</param>
-        /// <param name="axisDirection">Direzione asse</param>
-        /// <param name="radAngle"></param>
         public RTMatrix Transform(Point3D origin, Vector3D axisDirection, double radAngle)
         {
-            RTMatrix result = this;
             RTMatrix trasformInverse = RTMatrix.FromNormal(axisDirection, origin.ToVector());
             RTMatrix trasform = trasformInverse.Inverse();
             RTMatrix rotate = RTMatrix.FromEulerAnglesXYZ(0, 0, radAngle);
-            result = trasformInverse * rotate * trasform * this;
-            return result;
+            return trasformInverse * rotate * trasform * this;
         }
+
         /// <summary>
-        /// Restituisce i tre angoli di rotazione rispetto ai tre assi cartesiani. 
-        /// Nell'ordine X, Y, Z. 
-        /// Vengono chiamati anche angoli RPY: roll (x), pitch (y), yaw (z). 
-        /// Se simmetricRange è a true yAngle appartiene al range (-PI/2, PI/2) altrimenti 
-        /// yAngle appartiene al range (PI/2, 3/2*PI).
-        /// Riferimento: Dispense di Robotica Industriale - Bruno Siciliano
+        /// Restituisce i tre angoli di rotazione rispetto ai tre assi cartesiani, nell'ordine X, Y, Z.
         /// </summary>
-        /// <param name="xRadAngle"></param>
-        /// <param name="yRadAngle"></param>
-        /// <param name="zRadAngle"></param>
         public void ToEulerAnglesXYZ(bool simmetricRange, out double xRadAngle, out double yRadAngle, out double zRadAngle)
         {
             if (_m11.IsEquals(0) && _m21.IsEquals(0))
@@ -803,14 +547,9 @@ namespace Axiom.GeoMath
         }
 
         /// <summary>
-        /// Restituisce i due angoli di rotazione rispetto agli assi Z X in terna corrente. 
-        /// Che poi equivale ai due angoli in X Z in terna fissa. 
-        /// N.B. Considera solo la normale Z, cioè la terza colonna della matrice. 
-        /// Con firstSolution si può scegliere tra 2 soluzioni valide.
+        /// Restituisce i due angoli di rotazione rispetto agli assi Z X in terna corrente.
+        /// N.B. Considera solo la normale Z, cioè la terza colonna della matrice.
         /// </summary>
-        /// <param name="firstSolution">Soluzioni valide</param>
-        /// <param name="zRadAngle">Angolo per asse Z</param>
-        /// <param name="xRadAngle">Angolo rotazione asse X</param>
         public void ToEulerAnglesZX(bool firstSolution, out double zRadAngle, out double xRadAngle)
         {
             double sZ, cZ, sX, cX;
@@ -865,245 +604,104 @@ namespace Axiom.GeoMath
         }
 
         /// <summary>
-        /// Get del vettore della colonna i-esima
+        /// Get del vettore della colonna i-esima.
         /// </summary>
-        /// <param name="col"></param>
-        /// <returns></returns>
         public Vector3D GetVector(int col) => new Vector3D(this[0, col], this[1, col], this[2, col]);
-
-        /// <summary>
-        /// Set del vettore della colonna i-esima
-        /// </summary>
-        /// <param name="col"></param>
-        /// <param name="vector"></param>
-        private void SetVector(int col, Vector3D vector)
-        {
-            this[0, col] = vector.X;
-            this[1, col] = vector.Y;
-            this[2, col] = vector.Z;
-        }
         #endregion
 
         #region OPERATORS
         /// <summary>
         /// Moltiplicazione matrice-matrice
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
         public static RTMatrix operator *(RTMatrix left, RTMatrix right)
         {
-            RTMatrix result = new RTMatrix();
+            return new RTMatrix(
+                left._m11 * right._m11 + left._m12 * right._m21 + left._m13 * right._m31 + left._m14 * right._m41,
+                left._m11 * right._m12 + left._m12 * right._m22 + left._m13 * right._m32 + left._m14 * right._m42,
+                left._m11 * right._m13 + left._m12 * right._m23 + left._m13 * right._m33 + left._m14 * right._m43,
+                left._m11 * right._m14 + left._m12 * right._m24 + left._m13 * right._m34 + left._m14 * right._m44,
 
-            result._m11 = left._m11 * right._m11 + left._m12 * right._m21 + left._m13 * right._m31 + left._m14 * right._m41;
-            result._m12 = left._m11 * right._m12 + left._m12 * right._m22 + left._m13 * right._m32 + left._m14 * right._m42;
-            result._m13 = left._m11 * right._m13 + left._m12 * right._m23 + left._m13 * right._m33 + left._m14 * right._m43;
-            result._m14 = left._m11 * right._m14 + left._m12 * right._m24 + left._m13 * right._m34 + left._m14 * right._m44;
+                left._m21 * right._m11 + left._m22 * right._m21 + left._m23 * right._m31 + left._m24 * right._m41,
+                left._m21 * right._m12 + left._m22 * right._m22 + left._m23 * right._m32 + left._m24 * right._m42,
+                left._m21 * right._m13 + left._m22 * right._m23 + left._m23 * right._m33 + left._m24 * right._m43,
+                left._m21 * right._m14 + left._m22 * right._m24 + left._m23 * right._m34 + left._m24 * right._m44,
 
-            result._m21 = left._m21 * right._m11 + left._m22 * right._m21 + left._m23 * right._m31 + left._m24 * right._m41;
-            result._m22 = left._m21 * right._m12 + left._m22 * right._m22 + left._m23 * right._m32 + left._m24 * right._m42;
-            result._m23 = left._m21 * right._m13 + left._m22 * right._m23 + left._m23 * right._m33 + left._m24 * right._m43;
-            result._m24 = left._m21 * right._m14 + left._m22 * right._m24 + left._m23 * right._m34 + left._m24 * right._m44;
+                left._m31 * right._m11 + left._m32 * right._m21 + left._m33 * right._m31 + left._m34 * right._m41,
+                left._m31 * right._m12 + left._m32 * right._m22 + left._m33 * right._m32 + left._m34 * right._m42,
+                left._m31 * right._m13 + left._m32 * right._m23 + left._m33 * right._m33 + left._m34 * right._m43,
+                left._m31 * right._m14 + left._m32 * right._m24 + left._m33 * right._m34 + left._m34 * right._m44,
 
-            result._m31 = left._m31 * right._m11 + left._m32 * right._m21 + left._m33 * right._m31 + left._m34 * right._m41;
-            result._m32 = left._m31 * right._m12 + left._m32 * right._m22 + left._m33 * right._m32 + left._m34 * right._m42;
-            result._m33 = left._m31 * right._m13 + left._m32 * right._m23 + left._m33 * right._m33 + left._m34 * right._m43;
-            result._m34 = left._m31 * right._m14 + left._m32 * right._m24 + left._m33 * right._m34 + left._m34 * right._m44;
-
-            result._m41 = left._m41 * right._m11 + left._m42 * right._m21 + left._m43 * right._m31 + left._m44 * right._m41;
-            result._m42 = left._m41 * right._m12 + left._m42 * right._m22 + left._m43 * right._m32 + left._m44 * right._m42;
-            result._m43 = left._m41 * right._m13 + left._m42 * right._m23 + left._m43 * right._m33 + left._m44 * right._m43;
-            result._m44 = left._m41 * right._m14 + left._m42 * right._m24 + left._m43 * right._m34 + left._m44 * right._m44;
-
-            return result;
+                left._m41 * right._m11 + left._m42 * right._m21 + left._m43 * right._m31 + left._m44 * right._m41,
+                left._m41 * right._m12 + left._m42 * right._m22 + left._m43 * right._m32 + left._m44 * right._m42,
+                left._m41 * right._m13 + left._m42 * right._m23 + left._m43 * right._m33 + left._m44 * right._m43,
+                left._m41 * right._m14 + left._m42 * right._m24 + left._m43 * right._m34 + left._m44 * right._m44);
         }
 
         /// <summary>
-        /// Applicazione della matrice a un vettore 3D
+        /// Applicazione della matrice a un vettore 3D (solo rotazione, senza traslazione).
         /// </summary>
-        /// <param name="matrix"></param>
-        /// <param name="vector"></param>
-        /// <returns></returns>
-        public static Vector3D operator *(RTMatrix matrix, Vector3D vector)
-        {
-            Vector3D result = new(
-            ((matrix._m11 * vector.X) + (matrix._m12 * vector.Y) + (matrix._m13 * vector.Z)),
-             ((matrix._m21 * vector.X) + (matrix._m22 * vector.Y) + (matrix._m23 * vector.Z)),
-            ((matrix._m31 * vector.X) + (matrix._m32 * vector.Y) + (matrix._m33 * vector.Z)));
-            return result;
-        }
+        public static Vector3D operator *(RTMatrix matrix, Vector3D vector) => new Vector3D(
+            (matrix._m11 * vector.X) + (matrix._m12 * vector.Y) + (matrix._m13 * vector.Z),
+            (matrix._m21 * vector.X) + (matrix._m22 * vector.Y) + (matrix._m23 * vector.Z),
+            (matrix._m31 * vector.X) + (matrix._m32 * vector.Y) + (matrix._m33 * vector.Z));
 
         /// <summary>
-        /// Applicazione della matrice a un punto 3D
+        /// Applicazione della matrice a un punto 3D (rotazione + traslazione).
         /// </summary>
-        /// <param name="matrix"></param>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        public static Point3D operator *(RTMatrix matrix, Point3D point)
-        {
-            Point3D result = new(
-            ((matrix._m11 * point.X) + (matrix._m12 * point.Y) + (matrix._m13 * point.Z) + matrix._m14),
-            ((matrix._m21 * point.X) + (matrix._m22 * point.Y) + (matrix._m23 * point.Z) + matrix._m24),
-            ((matrix._m31 * point.X) + (matrix._m32 * point.Y) + (matrix._m33 * point.Z) + matrix._m34));
-            return result;
-        }
+        public static Point3D operator *(RTMatrix matrix, Point3D point) => new Point3D(
+            (matrix._m11 * point.X) + (matrix._m12 * point.Y) + (matrix._m13 * point.Z) + matrix._m14,
+            (matrix._m21 * point.X) + (matrix._m22 * point.Y) + (matrix._m23 * point.Z) + matrix._m24,
+            (matrix._m31 * point.X) + (matrix._m32 * point.Y) + (matrix._m33 * point.Z) + matrix._m34);
 
         /// <summary>
         /// Moltiplicazione per uno scalare
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="scalar"></param>
-        /// <returns></returns>
-        public static RTMatrix operator *(RTMatrix left, double scalar)
-        {
-            RTMatrix result = new RTMatrix
-            {
-                _m11 = left._m11 * scalar,
-                _m12 = left._m12 * scalar,
-                _m13 = left._m13 * scalar,
-                _m14 = left._m14 * scalar,
-
-                _m21 = left._m21 * scalar,
-                _m22 = left._m22 * scalar,
-                _m23 = left._m23 * scalar,
-                _m24 = left._m24 * scalar,
-
-                _m31 = left._m31 * scalar,
-                _m32 = left._m32 * scalar,
-                _m33 = left._m33 * scalar,
-                _m34 = left._m34 * scalar,
-
-                _m41 = left._m41 * scalar,
-                _m42 = left._m42 * scalar,
-                _m43 = left._m43 * scalar,
-                _m44 = left._m44 * scalar
-            };
-
-            return result;
-        }
+        public static RTMatrix operator *(RTMatrix left, double scalar) =>
+            new RTMatrix(left._m11 * scalar, left._m12 * scalar, left._m13 * scalar, left._m14 * scalar,
+                         left._m21 * scalar, left._m22 * scalar, left._m23 * scalar, left._m24 * scalar,
+                         left._m31 * scalar, left._m32 * scalar, left._m33 * scalar, left._m34 * scalar,
+                         left._m41 * scalar, left._m42 * scalar, left._m43 * scalar, left._m44 * scalar);
 
         /// <summary>
         /// Somma elemento per elemento
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
-        public static RTMatrix operator +(RTMatrix left, RTMatrix right)
-        {
-            RTMatrix result = new RTMatrix
-            {
-                _m11 = left._m11 + right._m11,
-                _m12 = left._m12 + right._m12,
-                _m13 = left._m13 + right._m13,
-                _m14 = left._m14 + right._m14,
-
-                _m21 = left._m21 + right._m21,
-                _m22 = left._m22 + right._m22,
-                _m23 = left._m23 + right._m23,
-                _m24 = left._m24 + right._m24,
-
-                _m31 = left._m31 + right._m31,
-                _m32 = left._m32 + right._m32,
-                _m33 = left._m33 + right._m33,
-                _m34 = left._m34 + right._m34,
-
-                _m41 = left._m41 + right._m41,
-                _m42 = left._m42 + right._m42,
-                _m43 = left._m43 + right._m43,
-                _m44 = left._m44 + right._m44
-            };
-
-            return result;
-        }
+        public static RTMatrix operator +(RTMatrix left, RTMatrix right) =>
+            new RTMatrix(left._m11 + right._m11, left._m12 + right._m12, left._m13 + right._m13, left._m14 + right._m14,
+                         left._m21 + right._m21, left._m22 + right._m22, left._m23 + right._m23, left._m24 + right._m24,
+                         left._m31 + right._m31, left._m32 + right._m32, left._m33 + right._m33, left._m34 + right._m34,
+                         left._m41 + right._m41, left._m42 + right._m42, left._m43 + right._m43, left._m44 + right._m44);
 
         /// <summary>
         /// Sottrazione elemento per elemento
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="right"></param>
-        /// <returns></returns>
-        public static RTMatrix operator -(RTMatrix left, RTMatrix right)
-        {
-            RTMatrix result = new RTMatrix
-            {
-                _m11 = left._m11 - right._m11,
-                _m12 = left._m12 - right._m12,
-                _m13 = left._m13 - right._m13,
-                _m14 = left._m14 - right._m14,
-
-                _m21 = left._m21 - right._m21,
-                _m22 = left._m22 - right._m22,
-                _m23 = left._m23 - right._m23,
-                _m24 = left._m24 - right._m24,
-
-                _m31 = left._m31 - right._m31,
-                _m32 = left._m32 - right._m32,
-                _m33 = left._m33 - right._m33,
-                _m34 = left._m34 - right._m34,
-
-                _m41 = left._m41 - right._m41,
-                _m42 = left._m42 - right._m42,
-                _m43 = left._m43 - right._m43,
-                _m44 = left._m44 - right._m44
-            };
-
-            return result;
-        }
+        public static RTMatrix operator -(RTMatrix left, RTMatrix right) =>
+            new RTMatrix(left._m11 - right._m11, left._m12 - right._m12, left._m13 - right._m13, left._m14 - right._m14,
+                         left._m21 - right._m21, left._m22 - right._m22, left._m23 - right._m23, left._m24 - right._m24,
+                         left._m31 - right._m31, left._m32 - right._m32, left._m33 - right._m33, left._m34 - right._m34,
+                         left._m41 - right._m41, left._m42 - right._m42, left._m43 - right._m43, left._m44 - right._m44);
 
         /// <summary>
         /// Negazione elemento per elemento
         /// </summary>
-        /// <param name="matrix"></param>
-        /// <returns></returns>
-        public static RTMatrix operator -(RTMatrix matrix)
-        {
-            RTMatrix result = new RTMatrix
-            {
-                _m11 = -matrix._m11,
-                _m12 = -matrix._m12,
-                _m13 = -matrix._m13,
-                _m14 = -matrix._m14,
-                _m21 = -matrix._m21,
-                _m22 = -matrix._m22,
-                _m23 = -matrix._m23,
-                _m24 = -matrix._m24,
-                _m31 = -matrix._m31,
-                _m32 = -matrix._m32,
-                _m33 = -matrix._m33,
-                _m34 = -matrix._m34,
-                _m41 = -matrix._m41,
-                _m42 = -matrix._m42,
-                _m43 = -matrix._m43,
-                _m44 = -matrix._m44
-            };
-            return result;
-        }
+        public static RTMatrix operator -(RTMatrix matrix) =>
+            new RTMatrix(-matrix._m11, -matrix._m12, -matrix._m13, -matrix._m14,
+                         -matrix._m21, -matrix._m22, -matrix._m23, -matrix._m24,
+                         -matrix._m31, -matrix._m32, -matrix._m33, -matrix._m34,
+                         -matrix._m41, -matrix._m42, -matrix._m43, -matrix._m44);
 
         /// <summary>
         /// Uguaglianza esatta elemento per elemento
         /// </summary>
-        /// <param name="left">Matrice sinistra</param>
-        /// <param name="right">Matrice destra</param>
-        /// <returns><c>true</c> Uguaglianza esatta</returns>
-        public static bool operator ==(RTMatrix left, RTMatrix right)
-        {
-            if (left._m11 == right._m11 && left._m12 == right._m12 && left._m13 == right._m13 && left._m14 == right._m14 &&
-                left._m21 == right._m21 && left._m22 == right._m22 && left._m23 == right._m23 && left._m24 == right._m24 &&
-                left._m31 == right._m31 && left._m32 == right._m32 && left._m33 == right._m33 && left._m34 == right._m34 &&
-                left._m41 == right._m41 && left._m42 == right._m42 && left._m43 == right._m43 && left._m44 == right._m44)
-                return true;
-
-            return false;
-        }
+        public static bool operator ==(RTMatrix left, RTMatrix right) =>
+            left._m11 == right._m11 && left._m12 == right._m12 && left._m13 == right._m13 && left._m14 == right._m14 &&
+            left._m21 == right._m21 && left._m22 == right._m22 && left._m23 == right._m23 && left._m24 == right._m24 &&
+            left._m31 == right._m31 && left._m32 == right._m32 && left._m33 == right._m33 && left._m34 == right._m34 &&
+            left._m41 == right._m41 && left._m42 == right._m42 && left._m43 == right._m43 && left._m44 == right._m44;
 
         /// <summary>
         /// Disuguaglianza esatta elemento per elemento
         /// </summary>
-        /// <param name="left">Matrice sinistra</param>
-        /// <param name="right">Matrice destra</param>
-        /// <returns><c>true</c> Disuguaglianza esatta</returns>
         public static bool operator !=(RTMatrix left, RTMatrix right) => !(left == right);
-
         #endregion OPERATORS
 
         #region PRIVATE METHODS
@@ -1131,16 +729,13 @@ namespace Axiom.GeoMath
         #endregion
 
         #region Overloads di Object
-
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-
             sb.AppendFormat(" | {0} {1} {2} {3} |\n", _m11, _m12, _m13, _m14);
             sb.AppendFormat(" | {0} {1} {2} {3} |\n", _m21, _m22, _m23, _m24);
             sb.AppendFormat(" | {0} {1} {2} {3} |\n", _m31, _m32, _m33, _m34);
             sb.AppendFormat(" | {0} {1} {2} {3} |\n", _m41, _m42, _m43, _m44);
-
             return sb.ToString();
         }
         #endregion

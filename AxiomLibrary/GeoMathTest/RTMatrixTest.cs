@@ -46,66 +46,67 @@ public class RTMatrixTest
     [TestMethod]
     public void TestPropertiesAndIndexers()
     {
-        var matrix = RTMatrix.Identity;
-        matrix[0, 3] = 5;
+        // RTMatrix è immutabile (readonly struct): "modificare" significa costruire nuove istanze
+        // con i metodi With*. L'indexer e le proprietà (Translation/Scale/Vectors/Values) sono di sola lettura.
+        var matrix = RTMatrix.Identity.WithElement(0, 3, 5);
         Assert.AreEqual(5, matrix[3]);
         Assert.AreEqual(5, matrix.TraslationX);
 
         var values = new double[16];
         values[0] = 2;
         values[15] = 1;
-        matrix.Values = values;
+        matrix = new RTMatrix(values);
         Assert.AreEqual(2, matrix[0]);
         Assert.AreEqual(1, matrix[15]);
 
         var readValues = matrix.Values;
         Assert.AreEqual(16, readValues.Length);
         Assert.AreEqual(2, readValues[0]);
-
-        matrix.Values = null!;
-
-        matrix.Values = new double[4];
+        // Values è una copia: modificarla non intacca la matrice.
+        readValues[0] = 999;
         Assert.AreEqual(2, matrix[0]);
 
-        matrix.Scale = new Vector3D(2, 3, 4);
+        matrix = matrix.WithScale(new Vector3D(2, 3, 4));
         Assert.IsTrue(matrix.Scale.IsEquals(new Vector3D(2, 3, 4)));
 
-        matrix.Translation = new Vector3D(1, 2, 3);
+        matrix = matrix.WithTranslation(new Vector3D(1, 2, 3));
         Assert.IsTrue(matrix.Translation.IsEquals(new Vector3D(1, 2, 3)));
         Assert.AreEqual(2, matrix.TraslationY);
         Assert.AreEqual(3, matrix.TraslationZ);
 
         for (var i = 0; i < 16; i++)
         {
-            matrix[i] = i + 1;
+            matrix = matrix.WithElement(i, i + 1);
             Assert.AreEqual(i + 1, matrix[i]);
         }
 
         Assert.AreEqual(0, matrix[99]);
         var before = matrix[0];
-        matrix[99] = 123;
-        Assert.AreEqual(before, matrix[0]);
+        // Indice fuori range: WithElement restituisce la matrice invariata.
+        Assert.AreEqual(before, matrix.WithElement(99, 123)[0]);
 
         Assert.IsTrue(matrix.XVector.IsEquals(new Vector3D(1, 5, 9)));
-        matrix.YVector = new Vector3D(0, 5, 0);
+        matrix = matrix.WithVector(1, new Vector3D(0, 5, 0));
         Assert.IsTrue(matrix.YVector.IsEquals(new Vector3D(0, 5, 0)));
     }
 
     [TestMethod]
     public void TestSettersAndClone()
     {
-        var matrix = RTMatrix.FromTraslation(new Vector3D(1, 2, 3));
-        matrix.SetRotation(0, 0, 0);
+        // WithRotation mantiene la traslazione.
+        var matrix = RTMatrix.FromTraslation(new Vector3D(1, 2, 3)).WithRotation(0, 0, 0);
         Assert.IsTrue(matrix.Translation.IsEquals(new Vector3D(1, 2, 3)));
 
-        var axes = RTMatrix.Identity.Clone();
-        axes.SetFromAxes(Vector3D.UnitX, Vector3D.UnitY, Vector3D.UnitZ);
+        // WithAxes imposta la sottomatrice 3x3.
+        var axes = RTMatrix.Identity.WithAxes(Vector3D.UnitX, Vector3D.UnitY, Vector3D.UnitZ);
         Assert.IsTrue(axes.IsEquals(RTMatrix.Identity));
 
         var clone = matrix.Clone();
         Assert.IsTrue(clone.IsEquals(matrix));
 
-        Assert.ThrowsException<ArgumentNullException>(() => matrix.CloneTo(null!));
+        // Copia per valore: la copia è indipendente.
+        var copy = new RTMatrix(matrix);
+        Assert.IsTrue(copy.IsEquals(matrix));
     }
 
     [TestMethod]
@@ -160,8 +161,7 @@ public class RTMatrixTest
 
         Assert.ThrowsException<InvalidOperationException>(() => RTMatrix.Zero.Inverse());
 
-        var rt = RTMatrix.FromEulerAnglesXYZ(0, 0, Math.PI / 2);
-        rt.Translation = new Vector3D(1, 0, 0);
+        var rt = RTMatrix.FromEulerAnglesXYZ(0, 0, Math.PI / 2).WithTranslation(new Vector3D(1, 0, 0));
         var inverseRt = rt.InverseRT();
         var point = new Point3D(2, 1, 3);
         var restored = inverseRt * (rt * point);

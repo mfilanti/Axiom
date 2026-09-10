@@ -572,8 +572,7 @@ namespace Axiom.GeoShape.Curves
 				Vector3D vY = vZ.Perpendicular();
 				Vector3D vX = vY.Cross(vZ);
 				// Riporto sul piano i 3 punti e chiamo il metodo corrispondente in 2D
-				RTMatrix matrix = RTMatrix.Identity;
-				matrix.SetFromAxes(vX, vY, vZ);
+				RTMatrix matrix = RTMatrix.FromVectors(vX, vY, vZ);
 				RTMatrix inverse = matrix.Inverse();
 				Point3D pStartXY = inverse * pStart;
 				Point3D pIntXY = inverse * pInt;
