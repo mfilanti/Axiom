@@ -126,7 +126,7 @@ namespace Axiom.GeoMath
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static bool IsNotNull(this Point3D point) => point != null && !point.IsNan();
+        public static bool IsNotNull(this Point3D point) => !point.IsNan();
 
         /// <summary>
         /// Indica se il punto è nullo. Un punto è "nullo" se il riferimento è null oppure se è il
@@ -135,7 +135,7 @@ namespace Axiom.GeoMath
         /// </summary>
         /// <param name="point"></param>
         /// <returns></returns>
-        public static bool IsNull(this Point3D point) => point is null || point.IsNan();
+        public static bool IsNull(this Point3D point) => point.IsNan();
         #endregion
     }
 }

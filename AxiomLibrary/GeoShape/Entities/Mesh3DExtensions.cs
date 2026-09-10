@@ -98,10 +98,7 @@ namespace Axiom.GeoShape.Entities
 						if (line.Contains("vertex"))
 						{
 							string[] arr = line.Split(separator, StringSplitOptions.RemoveEmptyEntries);
-							Point3D vertex = new Point3D();
-							vertex.X = ToDouble(arr[1]);
-							vertex.Y = ToDouble(arr[2]);
-							vertex.Z = ToDouble(arr[3]);
+							Point3D vertex = new Point3D(ToDouble(arr[1]), ToDouble(arr[2]), ToDouble(arr[3]));
 							points.Add(vertex);
 							if (points.Count == 3)
 							{
@@ -127,18 +124,11 @@ namespace Axiom.GeoShape.Entities
 				{
 					// Ignoriamo i 12 bytes della normale
 					r.ReadBytes(12);
-					Point3D vertex1 = new Point3D();
-					vertex1.X = (double)r.ReadSingle();
-					vertex1.Y = r.ReadSingle();
-					vertex1.Z = r.ReadSingle();
-					Point3D vertex2 = new Point3D();
-					vertex2.X = r.ReadSingle();
-					vertex2.Y = r.ReadSingle();
-					vertex2.Z = r.ReadSingle();
-					Point3D vertex3 = new Point3D();
-					vertex3.X = r.ReadSingle();
-					vertex3.Y = r.ReadSingle();
-					vertex3.Z = r.ReadSingle();
+					// N.B. gli argomenti sono valutati da sinistra a destra: le ReadSingle() avvengono
+					// in ordine X, Y, Z (coerente con la lettura sequenziale dello stream binario).
+					Point3D vertex1 = new Point3D(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+					Point3D vertex2 = new Point3D(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
+					Point3D vertex3 = new Point3D(r.ReadSingle(), r.ReadSingle(), r.ReadSingle());
 					r.ReadBytes(2);
 
 					result.Triangles.Add(new Triangle3D(vertex1, vertex2, vertex3));

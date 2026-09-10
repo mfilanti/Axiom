@@ -392,16 +392,14 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public double EllipseAngleToCircularAngle(double ellipseRadAngle)
 		{
-			Point3D point = new Point3D(0, 0);
-
 			// Riportiamo l'angolo tra 0 e 360 per comodità
 			ellipseRadAngle = ellipseRadAngle.AngleToRange02PI();
 
 			double a2 = A * A;
 			double b2 = B * B;
 			double tan2 = Math.Tan(ellipseRadAngle) * Math.Tan(ellipseRadAngle);
-			point.X = A * B / (Math.Sqrt(b2 + a2 * tan2));
-			point.Y = A * B * Math.Tan(ellipseRadAngle) / (Math.Sqrt(b2 + a2 * tan2));
+			double denom = Math.Sqrt(b2 + a2 * tan2);
+			Point3D point = new Point3D(A * B / denom, A * B * Math.Tan(ellipseRadAngle) / denom);
 			// La formula sopra vale solo per il primo e quarto quadrante, altrimenti va invertito
 			if (ellipseRadAngle > Math.PI / 2 && ellipseRadAngle < 1.5 * Math.PI)
 				point = -point;
@@ -468,16 +466,15 @@ namespace Axiom.GeoShape.Curves
 			// PI e 1.5*PI sono casi limite per cui la tan va all'infinito per cui vanno gestiti a parte
 			if (angle == Math.PI / 2 || angle == 1.5 * Math.PI)
 			{
-				point.X = A * Math.Cos(angle);
-				point.Y = B * Math.Sin(angle);
+				point = new Point3D(A * Math.Cos(angle), B * Math.Sin(angle), 0);
 			}
 			else
 			{
 				double a2 = A * A;
 				double b2 = B * B;
 				double tan2 = Math.Tan(angle) * Math.Tan(angle);
-				point.X = A * B / (Math.Sqrt(b2 + a2 * tan2));
-				point.Y = A * B * Math.Tan(angle) / (Math.Sqrt(b2 + a2 * tan2));
+				double denom = Math.Sqrt(b2 + a2 * tan2);
+				point = new Point3D(A * B / denom, A * B * Math.Tan(angle) / denom, 0);
 				// La formula sopra vale solo per il primo e quarto quadrante, altrimenti va invertito
 				if (angle > Math.PI / 2 && angle < 1.5 * Math.PI)
 					point = -point;
@@ -645,8 +642,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public static Ellipse3D FromEllipse2D(Ellipse3D ellipse2, double z)
 		{
-			Point3D center = (Point3D)ellipse2.Center;
-			center.Z = z;
+			Point3D center = ellipse2.Center.WithZ(z);
 			return new Ellipse3D(center, ellipse2.A, ellipse2.B, ellipse2.RotationA, ellipse2.StartAngle, ellipse2.EndAngle, ellipse2.CounterClockWise, RTMatrix.Identity);
 		}
 

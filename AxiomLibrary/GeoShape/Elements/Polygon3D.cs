@@ -262,7 +262,9 @@ namespace Axiom.GeoShape.Elements
 		/// <returns></returns>
 		public Point3D GetBarycenter()
 		{
-			Point3D result = new Point3D(0, 0);
+			// Point3D è immutabile: si accumula su variabili locali e si costruisce il risultato alla fine.
+			double resultX = 0.0;
+			double resultY = 0.0;
 			double signedArea = 0.0;
 			double x0 = 0.0; // Current vertex X
 			double y0 = 0.0; // Current vertex Y
@@ -279,8 +281,8 @@ namespace Axiom.GeoShape.Elements
 				y1 = Vertices[i + 1].Y;
 				a = x0 * y1 - x1 * y0;
 				signedArea += a;
-				result.X += (x0 + x1) * a;
-				result.Y += (y0 + y1) * a;
+				resultX += (x0 + x1) * a;
+				resultY += (y0 + y1) * a;
 			}
 
 			// Per l'ultimo vertice (assieme al primo)
@@ -290,14 +292,14 @@ namespace Axiom.GeoShape.Elements
 			y1 = Vertices[0].Y;
 			a = x0 * y1 - x1 * y0;
 			signedArea += a;
-			result.X += (x0 + x1) * a;
-			result.Y += (y0 + y1) * a;
+			resultX += (x0 + x1) * a;
+			resultY += (y0 + y1) * a;
 
 			signedArea *= 0.5;
-			result.X /= (6 * signedArea);
-			result.Y /= (6 * signedArea);
+			resultX /= (6 * signedArea);
+			resultY /= (6 * signedArea);
 
-			return result;
+			return new Point3D(resultX, resultY);
 		}
 		#endregion 
 

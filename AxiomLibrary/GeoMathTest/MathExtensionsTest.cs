@@ -45,10 +45,9 @@ public class MathExtensionsTest
     [TestMethod]
     public void TestPointNullExtensions()
     {
-        Point3D point = null!;
-        Assert.IsTrue(point.IsNull());
-        point = new Point3D(1, 2, 3);
-        Assert.IsTrue(point.IsNotNull());
+        // Point3D è uno struct: il "nullo" è il sentinella NaN (NullPoint), non un riferimento null.
+        Assert.IsTrue(Point3D.NullPoint.IsNull());
+        Assert.IsTrue(new Point3D(1, 2, 3).IsNotNull());
     }
 
     /// <summary>

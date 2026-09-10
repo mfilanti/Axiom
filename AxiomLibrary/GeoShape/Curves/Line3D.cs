@@ -119,8 +119,8 @@ namespace Axiom.GeoShape.Curves
 		public override Curve3D MirrorX()
 		{
 			Line3D result = ToLine2D();
-			result.PStart.Y *= -1;
-			result.PEnd.Y *= -1;
+			result.PStart = result.PStart.WithY(-result.PStart.Y);
+			result.PEnd = result.PEnd.WithY(-result.PEnd.Y);
 			return result;
 		}
 
@@ -131,8 +131,8 @@ namespace Axiom.GeoShape.Curves
 		public override Curve3D MirrorY()
 		{
 			Line3D result = ToLine2D();
-			result.PStart.X *= -1;
-			result.PEnd.X *= -1;
+			result.PStart = result.PStart.WithX(-result.PStart.X);
+			result.PEnd = result.PEnd.WithX(-result.PEnd.X);
 			return result;
 		}
 
@@ -215,12 +215,10 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public override Point3D Evaluate(double offset, out Vector3D tangent)
 		{
-			Point3D result = new Point3D
-			{
-				X = PStart.X + offset * (PEnd.X - PStart.X),
-				Y = PStart.Y + offset * (PEnd.Y - PStart.Y),
-				Z = PStart.Z + offset * (PEnd.Z - PStart.Z)
-			};
+			Point3D result = new Point3D(
+				PStart.X + offset * (PEnd.X - PStart.X),
+				PStart.Y + offset * (PEnd.Y - PStart.Y),
+				PStart.Z + offset * (PEnd.Z - PStart.Z));
 			tangent = PEnd - PStart;
 			tangent.SetNormalize();
 

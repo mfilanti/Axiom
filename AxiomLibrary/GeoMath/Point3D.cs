@@ -1,18 +1,24 @@
-﻿using System;
+using System;
 
 namespace Axiom.GeoMath
 {
 	/// <summary>
-	/// Punto 3D
+	/// Punto 3D <b>immutabile</b> (readonly struct): le coordinate non cambiano dopo la costruzione,
+	/// tutte le operazioni restituiscono NUOVE istanze. Per modificare una coordinata usare i metodi
+	/// <see cref="WithX"/>/<see cref="WithY"/>/<see cref="WithZ"/>/<see cref="With(double,double,double)"/>.
 	/// </summary>
-	public class Point3D
+	/// <remarks>
+	/// Essendo uno struct, <c>Point3D</c> non può essere <c>null</c> e non ammette un costruttore senza
+	/// parametri: il "punto nullo" sentinella (coordinate NaN) è <see cref="NullPoint"/> e si verifica
+	/// con <see cref="IsNan"/> (o l'estensione IsNull). N.B. <c>default(Point3D)</c> è (0,0,0), NON il
+	/// sentinella NaN.
+	/// </remarks>
+	public readonly struct Point3D : IEquatable<Point3D>
 	{
 		#region Static
 		/// <summary>
 		/// Cambia segno a tutte le componenti
 		/// </summary>
-		/// <param name="left"></param>
-		/// <returns></returns>
 		public static Point3D Negate(Point3D left) => -left;
 
 		/// <summary>
@@ -21,50 +27,36 @@ namespace Axiom.GeoMath
 		public static Point3D Zero => new Point3D(0, 0, 0);
 
 		/// <summary>
-		/// Punto nullo: Point3D(double.NaN, double.NaN, double.NaN)
+		/// Punto nullo (sentinella): Point3D(double.NaN, double.NaN, double.NaN)
 		/// </summary>
 		public static Point3D NullPoint => new Point3D(double.NaN, double.NaN, double.NaN);
 		#endregion
 
-		#region Fields
-
-		#endregion
-
-		#region Properties
+		#region Properties (readonly)
 		/// <summary>
 		/// Coordinata X
 		/// </summary>
-		public double X { get; set; }
+		public double X { get; }
 
 		/// <summary>
 		/// Coordinata Y
 		/// </summary>
-		public double Y { get; set; }
+		public double Y { get; }
 
 		/// <summary>
 		/// Coordinata Z
 		/// </summary>
-		public double Z { get; set; }
+		public double Z { get; }
 
 		/// <summary>
 		/// Indica che il punto è assoluto.
 		/// </summary>
-		public bool IsAbsolute { get; set; } = true;
-
+		public bool IsAbsolute { get; }
 		#endregion
 
 		#region Constructors
 		/// <summary>
-		/// Costrutore di copia.
-		/// </summary>
-		/// <param name="other">Copia</param>
-		public Point3D(Point3D other) : this(other.X, other.Y, other.Z)
-		{
-			IsAbsolute = other.IsAbsolute;
-		}
-
-		/// <summary>
-		/// Costrutore di default.
+		/// Costruttore principale (punto assoluto).
 		/// </summary>
 		/// <param name="x">X</param>
 		/// <param name="y">Y</param>
@@ -74,21 +66,69 @@ namespace Axiom.GeoMath
 			X = x;
 			Y = y;
 			Z = z;
-		}
-		/// <summary>
-		/// Costrutore di default.
-		/// </summary>
-		public Point3D() : this(double.NaN, double.NaN, double.NaN)
-		{
+			IsAbsolute = true;
 		}
 
 		/// <summary>
-		/// Init
+		/// Costruttore con flag IsAbsolute esplicito.
 		/// </summary>
-		public Point3D(double x, double y) : this(x, y, 0)
+		public Point3D(double x, double y, double z, bool isAbsolute)
 		{
+			X = x;
+			Y = y;
+			Z = z;
+			IsAbsolute = isAbsolute;
+		}
+
+		/// <summary>
+		/// Costruttore di copia.
+		/// </summary>
+		/// <param name="other">Punto da copiare</param>
+		public Point3D(Point3D other)
+		{
+			X = other.X;
+			Y = other.Y;
+			Z = other.Z;
+			IsAbsolute = other.IsAbsolute;
+		}
+
+		/// <summary>
+		/// Costruttore 2D (Z = 0, IsAbsolute = false).
+		/// </summary>
+		public Point3D(double x, double y)
+		{
+			X = x;
+			Y = y;
+			Z = 0;
 			IsAbsolute = false;
 		}
+		#endregion
+
+		#region With (immutabilità)
+		/// <summary>
+		/// Restituisce una copia con la coordinata X indicata.
+		/// </summary>
+		public Point3D WithX(double x) => new Point3D(x, Y, Z, IsAbsolute);
+
+		/// <summary>
+		/// Restituisce una copia con la coordinata Y indicata.
+		/// </summary>
+		public Point3D WithY(double y) => new Point3D(X, y, Z, IsAbsolute);
+
+		/// <summary>
+		/// Restituisce una copia con la coordinata Z indicata.
+		/// </summary>
+		public Point3D WithZ(double z) => new Point3D(X, Y, z, IsAbsolute);
+
+		/// <summary>
+		/// Restituisce una copia con le coordinate indicate.
+		/// </summary>
+		public Point3D With(double x, double y, double z) => new Point3D(x, y, z, IsAbsolute);
+
+		/// <summary>
+		/// Restituisce una copia con il flag IsAbsolute indicato.
+		/// </summary>
+		public Point3D WithIsAbsolute(bool isAbsolute) => new Point3D(X, Y, Z, isAbsolute);
 		#endregion
 
 		#region Methods
@@ -165,185 +205,122 @@ namespace Axiom.GeoMath
 				   Math.Abs(crossY) < MathUtils.FineTolerance &&
 				   Math.Abs(crossZ) < MathUtils.FineTolerance;
 		}
+
+		/// <summary>
+		/// Indica che il punto è NaN (sentinella "nullo").
+		/// </summary>
+		/// <returns></returns>
+		public bool IsNan() => double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z);
+
+		/// <summary>
+		/// Rappresentazione testuale del punto.
+		/// </summary>
+		public override string ToString() => $"({X}, {Y}, {Z})";
+
+		/// <summary>
+		/// Trasforma il punto in un vettore.
+		/// </summary>
+		/// <returns></returns>
+		public Vector3D ToVector() => new Vector3D(X, Y, Z);
+
+		/// <summary>
+		/// Distanza tra punti al quadrato
+		/// </summary>
+		/// <param name="point"></param>
+		/// <returns></returns>
+		public double DistanceSqr(Point3D point) => Math.Pow(X - point.X, 2) + Math.Pow(Y - point.Y, 2) + Math.Pow(Z - point.Z, 2);
 		#endregion
 
 		#region EqualityOverrides
+		/// <summary>
+		/// Uguaglianza con tolleranza (vedi <see cref="IsEquals(Point3D)"/>).
+		/// </summary>
+		public bool Equals(Point3D other) => IsEquals(other);
 
 		/// <summary>
-		/// Esegue un controllo di uguaglianza con tolleranza.
+		/// Uguaglianza con tolleranza.
 		/// </summary>
-		/// <param name="obj"></param>
-		/// <returns></returns>
-		public override bool Equals(object obj)
-		{
-			if (ReferenceEquals(this, obj))
-				return true;
-			if (obj is null || obj.GetType() != typeof(Point3D))
-				return false;
-			var other = (Point3D)obj;
-			return IsEquals(other);
-		}
+		public override bool Equals(object obj) => obj is Point3D other && IsEquals(other);
 
 		/// <summary>
 		/// HashCode per il punto 3D.
 		/// </summary>
 		/// <remarks>
-		/// <see cref="Equals(object)"/> confronta i punti con una <b>tolleranza</b> (vedi
-		/// <see cref="IsEquals(Point3D)"/>). Un'uguaglianza tollerante NON è compatibile con un hash
-		/// discriminante: due punti "uguali" a cavallo di una cella di arrotondamento potrebbero
-		/// ottenere hash diversi, violando il contratto Equals/GetHashCode (con conseguenti lookup
-		/// falliti in HashSet/Dictionary). Per garantire il contratto si usa quindi un hash costante:
-		/// tutti i punti finiscono nello stesso bucket e la disambiguazione è demandata a Equals.
-		/// N.B. Point3D NON è pensato come chiave di dizionario/hashset (sarebbe O(n) per lookup):
-		/// se serve indicizzare punti, usare una struttura spaziale (es. Octree) o una chiave esatta.
+		/// <see cref="Equals(object)"/> confronta i punti con una <b>tolleranza</b>. Un'uguaglianza
+		/// tollerante non è compatibile con un hash discriminante (due punti "uguali" a cavallo di una
+		/// cella di arrotondamento potrebbero avere hash diversi, violando il contratto). Si usa quindi
+		/// un hash costante: la disambiguazione è demandata a Equals. Point3D NON è adatto come chiave
+		/// di dizionario/hashset; per indicizzare punti usare una struttura spaziale (es. Octree).
 		/// </remarks>
 		/// <returns></returns>
 		public override int GetHashCode() => 0;
+		#endregion
 
-        /// <summary>
-        /// Indica che il punto è NaN.
-        /// </summary>
-        /// <returns></returns>
-        public bool IsNan() => double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z);
-
-        /// <summary>
-        /// Rappresentazione testuale del punto.
-        /// </summary>
-        public override string ToString() => $"({X}, {Y}, {Z})";
-
-        /// <summary>
-        /// Trasforma il punto in un vettore.
-        /// </summary>
-        /// <returns></returns>
-        public Vector3D ToVector() => new Vector3D(X, Y, Z);
-
-        /// <summary>
-        /// Distanza tra punti al quadrato
-        /// </summary>
-        /// <param name="point"></param>
-        /// <returns></returns>
-        public double DistanceSqr(Point3D point) => Math.Pow(X - point.X, 2) + Math.Pow(Y - point.Y, 2) + Math.Pow(Z - point.Z, 2);
-        #endregion
-
-        #region Operators
-        /// <summary>
-        /// Implicit conversion from Vector3D to Point3D .
-        /// </summary>
-        /// <param name="vector3D">Vettore</param>
-        public static implicit operator Point3D(Vector3D vector3D) => new Point3D(vector3D.X, vector3D.Y, vector3D.Z);
+		#region Operators
+		/// <summary>
+		/// Implicit conversion from Vector3D to Point3D .
+		/// </summary>
+		/// <param name="vector3D">Vettore</param>
+		public static implicit operator Point3D(Vector3D vector3D) => new Point3D(vector3D.X, vector3D.Y, vector3D.Z);
 
 		/// <summary>
-		/// Operatore ==
+		/// Operatore == (con tolleranza). N.B. essendo uno struct i valori non possono essere null.
 		/// </summary>
-		/// <param name="obj1">Primo oggetto</param>
-		/// <param name="obj2">Secondo oggetto</param>
-		/// <returns>True se gli oggetti sono uguali altrimenti false.</returns>
-		public static bool operator ==(Point3D obj1, Point3D obj2)
-		{
-			if (obj1 as object == null)
-			{
-				if (obj2 as object == null)
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-			else
-			{
-				return obj1.Equals(obj2);
-			}
-		}
+		public static bool operator ==(Point3D obj1, Point3D obj2) => obj1.IsEquals(obj2);
 
 		/// <summary>
-		/// Operatore !=
+		/// Operatore != (con tolleranza).
 		/// </summary>
-		/// <param name="obj1">Primo oggetto</param>
-		/// <param name="obj2">Secondo oggetto</param>
-		/// <returns>True se gli oggetti sono diversi altrimenti false.</returns>
-		public static bool operator !=(Point3D obj1, Point3D obj2)
-		{
-			return !(obj1 == obj2);
-		}
+		public static bool operator !=(Point3D obj1, Point3D obj2) => !obj1.IsEquals(obj2);
 
 		/// <summary>
 		/// Operatore +
 		/// </summary>
-		/// <param name="a">Primo oggetto</param>
-		/// <param name="b">Secondo oggetto</param>
-		/// <returns>Somma dei due oggetti.</returns>
 		public static Point3D operator +(Point3D a, Point3D b) => new Point3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
 		/// <summary>
 		/// Operatore +
 		/// </summary>
-		/// <param name="a">Primo oggetto</param>
-		/// <param name="b">Secondo oggetto</param>
-		/// <returns>Somma dei due oggetti.</returns>
-		public static Point3D operator +(Point3D a, Vector3D b) => new Point3D (a.X + b.X, a.Y + b.Y, a.Z + b.Z);
+		public static Point3D operator +(Point3D a, Vector3D b) => new Point3D(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 
 		/// <summary>
 		/// Operatore -
 		/// </summary>
-		/// <param name="a">Primo oggetto</param>
-		/// <param name="b">Secondo oggetto</param>
-		/// <returns>Differenza dei due oggetti.</returns>
 		public static Vector3D operator -(Point3D a, Point3D b) => new Vector3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
 		/// <summary>
 		/// Operatore -
 		/// </summary>
-		/// <param name="a">Primo oggetto</param>
-		/// <param name="b">Secondo oggetto</param>
-		/// <returns>Differenza dei due oggetti.</returns>
-		public static Point3D operator -(Point3D a, Vector3D b) => new Point3D( a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+		public static Point3D operator -(Point3D a, Vector3D b) => new Point3D(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
 
 		/// <summary>
 		/// Cambia segno a tutte le componenti
 		/// </summary>
-		/// <param name="left"></param>
-		/// <returns></returns>
 		public static Point3D operator -(Point3D left) => new Point3D(-left.X, -left.Y, -left.Z);
 
 		/// <summary>
 		/// Operatore *
 		/// </summary>
-		/// <param name="a">Oggetto</param>
-		/// <param name="scalar">Scalare</param>
-		/// <returns>Moltiplicazione dell'oggetto per lo scalare.</returns>
 		public static Point3D operator *(Point3D a, double scalar) => new Point3D(a.X * scalar, a.Y * scalar, a.Z * scalar);
+
 		/// <summary>
 		/// Operatore *
 		/// </summary>
-		/// <param name="a">Oggetto</param>
-		/// <param name="scalar">Scalare</param>
-		/// <returns>Moltiplicazione dell'oggetto per lo scalare.</returns>
 		public static Point3D operator *(double scalar, Point3D a) => new Point3D(a.X * scalar, a.Y * scalar, a.Z * scalar);
 
 		/// <summary>
 		/// Operatore /
 		/// </summary>
-		/// <param name="a">Oggetto</param>
-		/// <param name="scalar">Scalare</param>
-		/// <returns>Divisione dell'oggetto per lo scalare.</returns>
 		public static Point3D operator /(Point3D a, double scalar) => new Point3D(a.X / scalar, a.Y / scalar, a.Z / scalar);
 
 		/// <summary>
-		/// Confronto strettamente maggiore
+		/// Confronto strettamente maggiore (componente per componente)
 		/// </summary>
-		/// <param name="left"></param>
-		/// <param name="right"></param>
-		/// <returns></returns>
 		public static bool operator >(Point3D left, Point3D right) => left.X > right.X && left.Y > right.Y && left.Z > right.Z;
 
 		/// <summary>
-		/// Confronto strettamente minore
+		/// Confronto strettamente minore (componente per componente)
 		/// </summary>
-		/// <param name="left"></param>
-		/// <param name="right"></param>
-		/// <returns></returns>
 		public static bool operator <(Point3D left, Point3D right) => left.X < right.X && left.Y < right.Y && left.Z < right.Z;
 		#endregion
 	}

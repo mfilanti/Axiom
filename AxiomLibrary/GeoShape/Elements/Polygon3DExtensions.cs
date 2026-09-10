@@ -74,9 +74,10 @@ namespace Axiom.GeoShape.Elements
 			Point3D f = finalQuad.Vertices[1];
 			Point3D g = finalQuad.Vertices[2];
 			Point3D h = finalQuad.Vertices[3];
-			finalPoint = new Point3D();
-			finalPoint.X = (1 - u) * (1 - v) * e.X + u * (1 - v) * f.X + u * v * g.X + (1 - u) * v * h.X;
-			finalPoint.Y = (1 - u) * (1 - v) * e.Y + u * (1 - v) * f.Y + u * v * g.Y + (1 - u) * v * h.Y;
+			finalPoint = new Point3D(
+				(1 - u) * (1 - v) * e.X + u * (1 - v) * f.X + u * v * g.X + (1 - u) * v * h.X,
+				(1 - u) * (1 - v) * e.Y + u * (1 - v) * f.Y + u * v * g.Y + (1 - u) * v * h.Y,
+				0);
 		}
 
 		/// <summary>

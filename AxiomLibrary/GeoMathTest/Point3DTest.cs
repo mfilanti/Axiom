@@ -18,7 +18,7 @@ namespace Axiom.GeoMathTest
 		[TestMethod]
 		public void TestCopyCtor()
 		{
-			var original = new Point3D(1.5, 2.5, 3.5) { IsAbsolute = false };
+			var original = new Point3D(1.5, 2.5, 3.5, false);
 			var copy = new Point3D(original);
 			Assert.AreEqual(original.X, copy.X);
 			Assert.AreEqual(original.Y, copy.Y);
@@ -29,8 +29,14 @@ namespace Axiom.GeoMathTest
 		[TestMethod]
 		public void TestDefaultCtorAnd2DCtor()
 		{
+			// Point3D è uno struct: new Point3D() è il valore di default (0,0,0), NON il sentinella NaN
+			// (che è Point3D.NullPoint). Questo differisce dalla precedente implementazione a classe.
 			var defaultPoint = new Point3D();
-			Assert.IsTrue(defaultPoint.IsNan());
+			Assert.AreEqual(0, defaultPoint.X);
+			Assert.AreEqual(0, defaultPoint.Y);
+			Assert.AreEqual(0, defaultPoint.Z);
+			Assert.IsFalse(defaultPoint.IsNan());
+			Assert.IsTrue(Point3D.NullPoint.IsNan());
 
 			var point2d = new Point3D(3, 4);
 			Assert.AreEqual(0, point2d.Z);
@@ -78,10 +84,13 @@ namespace Axiom.GeoMathTest
 			var p1 = new Point3D(1, 2, 3);
 			var p2 = new Point3D(1, 2, 3);
 			Assert.IsTrue(p1.Equals(p2));
+			Assert.IsTrue(p1 == p2);
 			Assert.AreEqual(p1.GetHashCode(), p2.GetHashCode());
-			Assert.IsTrue(p1 != null);
-			Point3D? nullPoint = null;
-			Assert.IsTrue(nullPoint == null);
+
+			// Point3D è uno struct: non può essere null. Il "nullo" concettuale è il sentinella NaN.
+			Point3D? nullable = null;
+			Assert.IsTrue(nullable == null);
+			Assert.IsTrue(Point3D.NullPoint.IsNull());
 		}
 
 		/// <summary>
@@ -110,7 +119,7 @@ namespace Axiom.GeoMathTest
 		{
 			var point = new Point3D(1, 2, 3);
 			Assert.IsTrue(point.Equals(point));
-			Assert.IsFalse(point.Equals(null));
+			Assert.IsFalse(point.Equals((object?)null));
 			Assert.IsFalse(point.Equals("not a point"));
 		}
 
@@ -120,6 +129,52 @@ namespace Axiom.GeoMathTest
 			var p = new Point3D(1, 2, 3);
 			Assert.IsFalse(p.IsNan());
 			Assert.IsTrue(Point3D.NullPoint.IsNan());
+		}
+
+		/// <summary>
+		/// Immutabilità: i metodi With restituiscono nuove istanze, l'originale non cambia.
+		/// </summary>
+		[TestMethod]
+		public void TestImmutabilityWithMethods()
+		{
+			var original = new Point3D(1, 2, 3);
+
+			var wx = original.WithX(10);
+			var wy = original.WithY(20);
+			var wz = original.WithZ(30);
+			var w = original.With(7, 8, 9);
+
+			// L'originale è immutato.
+			Assert.IsTrue(original.IsEquals(new Point3D(1, 2, 3)), "L'originale non deve cambiare.");
+
+			Assert.IsTrue(wx.IsEquals(new Point3D(10, 2, 3)));
+			Assert.IsTrue(wy.IsEquals(new Point3D(1, 20, 3)));
+			Assert.IsTrue(wz.IsEquals(new Point3D(1, 2, 30)));
+			Assert.IsTrue(w.IsEquals(new Point3D(7, 8, 9)));
+
+			// I metodi With preservano IsAbsolute.
+			var rel = new Point3D(1, 2, 3, false);
+			Assert.IsFalse(rel.WithX(9).IsAbsolute);
+		}
+
+		/// <summary>
+		/// Semantica a valore: assegnando un Point3D si copia (nessun aliasing/condivisione di stato).
+		/// </summary>
+		[TestMethod]
+		public void TestValueSemantics()
+		{
+			var a = new Point3D(1, 2, 3);
+			var b = a;            // copia per valore
+			b = b.WithX(99);      // modifica solo la copia
+
+			Assert.AreEqual(1, a.X, "L'originale non deve essere influenzato dalla copia.");
+			Assert.AreEqual(99, b.X);
+
+			// In una lista, sostituire un elemento non tocca la variabile originale.
+			var list = new List<Point3D> { a };
+			list[0] = list[0].WithY(50);
+			Assert.AreEqual(2, a.Y);
+			Assert.AreEqual(50, list[0].Y);
 		}
 
 		[TestMethod]

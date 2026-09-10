@@ -296,9 +296,10 @@ namespace Axiom.GeoShape.Elements
 		public Point3D Project2D(Point3D point)
 		{
 			Point3D projection3 = Project(point);
-			Point3D result = new Point3D();
-			result.X = (projection3 - Location).Dot(XAxis);
-			result.Y = (projection3 - Location).Dot(YAxis);
+			Point3D result = new Point3D(
+				(projection3 - Location).Dot(XAxis),
+				(projection3 - Location).Dot(YAxis),
+				0);
 			return result;
 		}
 
@@ -492,17 +493,17 @@ namespace Axiom.GeoShape.Elements
 					if (sameX)
 					{
 						result = Plane3D.YZPlane;
-						result.Location.X = x;
+						result.Location = result.Location.WithX(x);
 					}
 					if (sameY)
 					{
 						result = Plane3D.XZPlane;
-						result.Location.Y = y;
+						result.Location = result.Location.WithY(y);
 					}
 					if (sameZ)
 					{
 						result = Plane3D.XYPlane;
-						result.Location.Z = z;
+						result.Location = result.Location.WithZ(z);
 					}
 				}
 			}

@@ -421,13 +421,11 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public Point3D EvaluateAngle(double offsetRadAngle, out Vector3D tangent)
 		{
-			Point3D result = new Point3D();
+			Point3D result;
 			tangent = Vector3D.Zero;
 			if (CounterClockWise == true)
 			{
-				result.X = Radius * Math.Cos(StartAngle + offsetRadAngle);
-				result.Y = Radius * Math.Sin(StartAngle + offsetRadAngle);
-				result.Z = 0;
+				result = new Point3D(Radius * Math.Cos(StartAngle + offsetRadAngle), Radius * Math.Sin(StartAngle + offsetRadAngle), 0);
 				tangent.X = -Math.Sin(StartAngle + offsetRadAngle);
 				tangent.Y = Math.Cos(StartAngle + offsetRadAngle);
 				tangent.Z = 0;
@@ -435,9 +433,7 @@ namespace Axiom.GeoShape.Curves
 			}
 			else
 			{
-				result.X = Radius * Math.Cos(StartAngle - offsetRadAngle);
-				result.Y = Radius * Math.Sin(StartAngle - offsetRadAngle);
-				result.Z = 0;
+				result = new Point3D(Radius * Math.Cos(StartAngle - offsetRadAngle), Radius * Math.Sin(StartAngle - offsetRadAngle), 0);
 				tangent.X = Math.Sin(StartAngle - offsetRadAngle);
 				tangent.Y = -Math.Cos(StartAngle - offsetRadAngle);
 				tangent.Z = 0;
@@ -726,8 +722,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public static Arc3D FromArc2D(Arc3D arc2, double z)
 		{
-			Point3D center = (Point3D)arc2.Center;
-			center.Z = z;
+			Point3D center = arc2.Center.WithZ(z);
 			return new Arc3D(center, arc2.Radius, arc2.StartAngle, arc2.EndAngle, arc2.CounterClockWise, RTMatrix.Identity);
 		}
 

@@ -266,7 +266,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public Point3D EvaluateAngle(double offsetRadAngle, out Vector3D tangent)
 		{
-			Point3D result = new Point3D();
+			Point3D result;
 			tangent = Vector3D.Zero;
 			// SpanAngle nullo: l'elica degenera (nessuna avanzamento in Z) -> offsetZ = 0 (niente NaN).
 			double offsetZ = SpanAngle.IsEquals(0) ? 0 : -Depth * offsetRadAngle / SpanAngle;
@@ -275,9 +275,7 @@ namespace Axiom.GeoShape.Curves
 
 			if (CounterClockWise == true)
 			{
-				result.X = Radius * Math.Cos(StartAngle + offsetRadAngle);
-				result.Y = Radius * Math.Sin(StartAngle + offsetRadAngle);
-				result.Z = offsetZ;
+				result = new Point3D(Radius * Math.Cos(StartAngle + offsetRadAngle), Radius * Math.Sin(StartAngle + offsetRadAngle), offsetZ);
 				tangent.X = -Math.Sin(StartAngle + offsetRadAngle);
 				tangent.Y = Math.Cos(StartAngle + offsetRadAngle);
 				tangent.Z = tangentZ;
@@ -285,9 +283,7 @@ namespace Axiom.GeoShape.Curves
 			}
 			else
 			{
-				result.X = Radius * Math.Cos(StartAngle - offsetRadAngle);
-				result.Y = Radius * Math.Sin(StartAngle - offsetRadAngle);
-				result.Z = offsetZ;
+				result = new Point3D(Radius * Math.Cos(StartAngle - offsetRadAngle), Radius * Math.Sin(StartAngle - offsetRadAngle), offsetZ);
 				tangent.X = Math.Sin(StartAngle - offsetRadAngle);
 				tangent.Y = -Math.Cos(StartAngle - offsetRadAngle);
 				tangent.Z = tangentZ;
@@ -429,8 +425,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public static Helix3D FromHelix2D(Helix3D helix2, double z)
 		{
-			Point3D center = (Point3D)helix2.Center;
-			center.Z = z;
+			Point3D center = helix2.Center.WithZ(z);
 			return new Helix3D(center, helix2.Radius, helix2.Depth, helix2.StartAngle, helix2.SpanAngle, helix2.CounterClockWise, RTMatrix.Identity);
 		}
 
