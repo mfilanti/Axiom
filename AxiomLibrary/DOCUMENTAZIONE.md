@@ -331,16 +331,23 @@ Vector3D c = v1.Cross(v2);                // UnitZ
 var rot = Vector3D.UnitX.Rotate(Vector3D.UnitZ, Math.PI / 2);  // ≈ UnitY
 ```
 
-### 4.5 `RTMatrix` — matrice di roto-traslazione 4×4
+### 4.5 `RTMatrix` — matrice di roto-traslazione 4×4 (readonly struct immutabile)
 
-Cuore delle trasformazioni. Serializzabile (`[DataContract]`, campo `Values` di 16 `double`).
+Cuore delle trasformazioni. **Immutabile** (`readonly struct`): ogni operazione restituisce una nuova
+matrice. Serializzabile (`[DataContract]` sui 16 campi); `Values` è un getter di 16 `double`.
+È un value type (non può essere `null`; `default(RTMatrix)` = matrice nulla `Zero`).
 
 **Factory statici:** `Identity`, `Zero`, `FromEulerAnglesXYZ(x,y,z)` (composizione Z·Y·X, angoli
 RPY), `FromEulerAnglesZX(z,x)`, `FromVectors(x,y,z[,trasl])`, `FromTraslation(trasl)`,
 `FromNormal(normal[,trasl])`.
 
-**Proprietà notevoli:** `Translation`, `XVector`/`YVector`/`ZVector` (colonne 1/2/3 = assi locali),
-`Scale`, `Determinant`, `DeterminantAffine`, `TraslationX/Y/Z`, indexer `this[row,col]` e `this[i]`.
+**Proprietà (sola lettura):** `Translation`, `XVector`/`YVector`/`ZVector` (colonne 1/2/3 = assi
+locali), `Scale`, `Determinant`, `DeterminantAffine`, `TraslationX/Y/Z`, `Values`, indexer
+`this[row,col]` e `this[i]`.
+
+**Metodi "With" (immutabilità):** `WithElement(i,val)` / `WithElement(row,col,val)`,
+`WithTranslation(v)`, `WithAxes(x,y,z)` (imposta la sottomatrice 3×3), `WithRotation(x,y,z)` (mantiene
+la traslazione), `WithScale(s)`, `WithVector(col,v)`. Es. `m = m.WithTranslation(t).WithRotation(0,0,a)`.
 
 **Metodi principali:**
 
@@ -350,15 +357,18 @@ RPY), `FromEulerAnglesZX(z,x)`, `FromVectors(x,y,z[,trasl])`, `FromTraslation(tr
 | `Inverse` | `RTMatrix Inverse()` | inversa generale |
 | `InverseRT` | `RTMatrix InverseRT()` | inversa ottimizzata per sole roto-traslazioni |
 | `Transpose` | `RTMatrix Transpose()` | |
-| `SetRotation` | `void SetRotation(x,y,z)` | imposta la parte rotazionale |
-| `Traslate` | `RTMatrix Traslate(x,y,z)` | |
+| `Traslate` | `RTMatrix Traslate(x,y,z)` | somma una traslazione (nuova istanza) |
 | `Transform` | `RTMatrix Transform(Point3D origin, Vector3D axis, double angle)` | rotazione attorno a un asse arbitrario |
 | `ToEulerAnglesXYZ` | `void (bool simmetricRange, out x, out y, out z)` | estrae angoli (2 soluzioni possibili) |
 | `ToEulerAnglesZX` | `void (bool firstSolution, out z, out x)` | |
-| `IsNaN`, `Clone`, `CloneTo`, `IsEquals` | | |
+| `IsNaN`, `Clone`, `IsEquals` | | |
+
+> N.B. I metodi mutanti della vecchia classe (`SetRotation`, `SetFromAxes`, `SetVector`, `CloneTo`, e
+> i setter di indexer/`Translation`/`Scale`/`Values`/`XVector`…) sono stati **rimossi**: usare i
+> corrispondenti `With*`.
 
 **Operatori:** `*` (`M*M`, `M*V`, `M*P`, `M*scalar`), `+`, `-` (binario/unario), `==`, `!=`
-(uguaglianza **esatta**, a differenza degli altri tipi).
+(uguaglianza **esatta**, a differenza dei confronti tolleranti di `Point3D`/`Vector3D`).
 
 ### 4.6 `AABBox3D` — bounding box allineato agli assi
 

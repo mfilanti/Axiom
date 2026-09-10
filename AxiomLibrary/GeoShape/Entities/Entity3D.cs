@@ -89,7 +89,7 @@ namespace Axiom.GeoShape.Entities
 		[XmlIgnore()]
 		public double X
 		{
-			get => RTMatrix[0, 3]; set => RTMatrix[0, 3] = value;
+			get => RTMatrix[0, 3]; set => RTMatrix = RTMatrix.WithElement(0, 3, value);
 		}
 
 		/// <summary>
@@ -98,7 +98,7 @@ namespace Axiom.GeoShape.Entities
 		[XmlIgnore()]
 		public double Y
 		{
-			get => RTMatrix[1, 3]; set => RTMatrix[1, 3] = value;
+			get => RTMatrix[1, 3]; set => RTMatrix = RTMatrix.WithElement(1, 3, value);
 		}
 
 		/// <summary>
@@ -107,7 +107,7 @@ namespace Axiom.GeoShape.Entities
 		[XmlIgnore()]
 		public double Z
 		{
-			get => RTMatrix[2, 3]; set => RTMatrix[2, 3] = value;
+			get => RTMatrix[2, 3]; set => RTMatrix = RTMatrix.WithElement(2, 3, value);
 		}
 
 		/// <summary>
@@ -343,7 +343,7 @@ namespace Axiom.GeoShape.Entities
 		public void SetRotation(double xRadAngle, double yRadAngle, double zRadAngle)
 		{
 			RotationYSimmetricRange = yRadAngle <= Math.PI / 2 && yRadAngle >= -Math.PI / 2;
-			RTMatrix.SetRotation(xRadAngle, yRadAngle, zRadAngle);
+			RTMatrix = RTMatrix.WithRotation(xRadAngle, yRadAngle, zRadAngle);
 		}
 
 		#endregion 

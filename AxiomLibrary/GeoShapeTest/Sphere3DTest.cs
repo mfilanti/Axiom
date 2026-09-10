@@ -12,7 +12,7 @@ public class Sphere3DTest
     public void TestCloneAndAabbox()
     {
         var sphere = new Sphere3D(2);
-        sphere.RTMatrix.Translation = new Vector3D(1, 2, 3);
+        sphere.RTMatrix = sphere.RTMatrix.WithTranslation(new Vector3D(1, 2, 3));
         var clone = sphere.Clone();
         Assert.IsInstanceOfType(clone, typeof(Sphere3D));
 
