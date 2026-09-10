@@ -14,15 +14,12 @@ public class Entity3DTest
         Assert.ThrowsException<Exception>(() => sphere.ParametersFormula = new List<Parameter>());
     }
 
-    // Muta lo stato statico globale Delegates.DelegateEvaluator: non deve girare in parallelo con
-    // altri test che fanno lo stesso (es. Node3DTest.TestUpdateWithEvaluator), altrimenti si ha una
-    // race (l'evaluator viene azzerato da un test mentre un altro lo invoca -> NullReferenceException).
-    [DoNotParallelize]
+    // L'evaluator è iniettato come parametro (non più stato statico globale): niente race,
+    // il test può girare in parallelo.
     [TestMethod]
     public void TestUpdateWithEvaluator()
     {
-        var previous = Delegates.DelegateEvaluator;
-        Delegates.DelegateEvaluator = (Dictionary<string, Variable> variables, string expression, out string error) =>
+        Delegates.EvaluatorDelegate evaluator = (Dictionary<string, Variable> variables, string expression, out string error) =>
         {
             error = "";
             if (string.IsNullOrEmpty(expression))
@@ -32,43 +29,36 @@ public class Entity3DTest
             return double.TryParse(expression, out var value) ? value : double.NaN;
         };
 
-        try
+        var sphere = new Sphere3D(1)
         {
-            var sphere = new Sphere3D(1)
-            {
-                Id = "s",
-                Path = "/root",
-                XFormula = "1",
-                YFormula = "2",
-                ZFormula = "3",
-                RotXFormula = "90",
-                RotYFormula = "0",
-                RotZFormula = "0",
-                RadiusFormula = "4"
-            };
+            Id = "s",
+            Path = "/root",
+            XFormula = "1",
+            YFormula = "2",
+            ZFormula = "3",
+            RotXFormula = "90",
+            RotYFormula = "0",
+            RotZFormula = "0",
+            RadiusFormula = "4"
+        };
 
-            var result = sphere.Update(new Dictionary<string, Variable>(), out var error);
-            Assert.IsTrue(result);
-            Assert.AreEqual(string.Empty, error);
-            Assert.AreEqual(1, sphere.X);
-            Assert.AreEqual(2, sphere.Y);
-            Assert.AreEqual(3, sphere.Z);
-            Assert.AreEqual(4, sphere.Radius);
+        var result = sphere.Update(new Dictionary<string, Variable>(), evaluator, out var error);
+        Assert.IsTrue(result);
+        Assert.AreEqual(string.Empty, error);
+        Assert.AreEqual(1, sphere.X);
+        Assert.AreEqual(2, sphere.Y);
+        Assert.AreEqual(3, sphere.Z);
+        Assert.AreEqual(4, sphere.Radius);
 
-            Delegates.DelegateEvaluator = (Dictionary<string, Variable> variables, string expression, out string errorDescription) =>
-            {
-                errorDescription = "err";
-                return double.NaN;
-            };
-
-            sphere.XFormula = "bad";
-            var failed = sphere.Update(new Dictionary<string, Variable>(), out var errorDescription);
-            Assert.IsFalse(failed);
-            Assert.IsTrue(errorDescription.Contains("Entity"));
-        }
-        finally
+        Delegates.EvaluatorDelegate failingEvaluator = (Dictionary<string, Variable> variables, string expression, out string errorDescription) =>
         {
-            Delegates.DelegateEvaluator = previous;
-        }
+            errorDescription = "err";
+            return double.NaN;
+        };
+
+        sphere.XFormula = "bad";
+        var failed = sphere.Update(new Dictionary<string, Variable>(), failingEvaluator, out var err2);
+        Assert.IsFalse(failed);
+        Assert.IsTrue(err2.Contains("Entity"));
     }
 }

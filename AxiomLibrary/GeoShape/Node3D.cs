@@ -505,7 +505,17 @@ namespace Axiom.GeoShape
 		/// </summary>
 		public void UpdateRTMatrix()
 		{
-			Update(new(), out _);
+			// Senza evaluator le formule non vengono valutate (aggiorna solo le matrici world).
+			Update(new(), null, out _);
+		}
+
+		/// <summary>
+		/// Come <see cref="UpdateRTMatrix()"/>, valutando le formule con l'evaluator indicato.
+		/// </summary>
+		/// <param name="evaluator">Valutatore di espressioni (può essere null per non valutare le formule).</param>
+		public void UpdateRTMatrix(Delegates.EvaluatorDelegate evaluator)
+		{
+			Update(new(), evaluator, out _);
 		}
 
 		/// <summary>
@@ -518,11 +528,11 @@ namespace Axiom.GeoShape
 		/// <param name="secondaryVariables">Variabili secondarie del padre</param>
 		/// <param name="errorDescription">Restituisce un messaggio con la descrizione dell'eventuale errore</param>
 		/// <returns>Indica se ci sono stati errori (true: ok, false: errori)</returns>
-		public virtual bool Update(Dictionary<string, Variable> variables, out string errorDescription)
+		public virtual bool Update(Dictionary<string, Variable> variables, Delegates.EvaluatorDelegate evaluator, out string errorDescription)
 		{
 			bool result = true;
 			errorDescription = "Node " + Id + "\n";
-			if (Delegates.DelegateEvaluator != null)
+			if (evaluator != null)
 			{
 				string localErrorDescription;
 				Dictionary<string, Variable> allVariables = new Dictionary<string, Variable>();
@@ -536,7 +546,7 @@ namespace Axiom.GeoShape
 					// Aggiorno anche le variabili con formule
 					if (kvp.Value.Formula != null && kvp.Value.Formula.Length > 0)
 					{
-						double value = Delegates.DelegateEvaluator(allVariables, kvp.Value.Formula, out localErrorDescription);
+						double value = evaluator(allVariables, kvp.Value.Formula, out localErrorDescription);
 						if (value.CompareTo(double.NaN) == 0)
 						{
 							result = false;
@@ -561,7 +571,7 @@ namespace Axiom.GeoShape
 
 				foreach (var item in _parameters)
 				{
-					double value = Delegates.DelegateEvaluator(allVariables, item.Value.Formula, out localErrorDescription);
+					double value = evaluator(allVariables, item.Value.Formula, out localErrorDescription);
 					if (value.CompareTo(double.NaN) == 0)
 					{
 						result = false;
@@ -590,7 +600,7 @@ namespace Axiom.GeoShape
 					Parameter parameter = parameters[i];
 					if (parameter.Formula != null && parameter.Formula.Length > 0)
 					{
-						double value = Delegates.DelegateEvaluator(allVariables, parameter.Formula, out localErrorDescription);
+						double value = evaluator(allVariables, parameter.Formula, out localErrorDescription);
 						if (value.CompareTo(double.NaN) == 0)
 						{
 							result = false;
@@ -607,7 +617,7 @@ namespace Axiom.GeoShape
 				// Faccio l'update di tutte le Entity3D
 				foreach (Entity3D entity in Entities.Values)
 				{
-					bool localResult = entity.Update(allVariables, out localErrorDescription);
+					bool localResult = entity.Update(allVariables, evaluator, out localErrorDescription);
 					if (localResult == false)
 					{
 						result = false;
@@ -620,7 +630,7 @@ namespace Axiom.GeoShape
 				// Ora faccio l'update di tutti i sotto nodi
 				foreach (Node3D node in Nodes.Values)
 				{
-					bool localResult = node.Update(allVariables, out localErrorDescription);
+					bool localResult = node.Update(allVariables, evaluator, out localErrorDescription);
 					if (localResult == false)
 					{
 						result = false;

@@ -924,7 +924,7 @@ namespace Axiom.GeoShape.Entities
 		/// </summary>
 		/// <param name="cutPlane">Piano</param>
 		/// <param name="addOutline">Aggiungi la linea di chiusura</param>
-		public void CutByPlane(Plane3D cutPlane, bool addClosingFace)
+		public void CutByPlane(Plane3D cutPlane, bool addClosingFace, Delegates.ComputeTriangulationDelegate triangulator = null)
 		{
 			Figure3D cutFigure = new Figure3D();
 			Mesh3D meshDummy = new Mesh3D();
@@ -959,12 +959,12 @@ namespace Axiom.GeoShape.Entities
 				}
 			}
 
-			if (addClosingFace && Delegates.ComputeTriangulation != null)
+			if (addClosingFace && triangulator != null)
 			{
 				Figure3D figureClone = cutFigure.Clone();
 				figureClone.ApplyRT(cutPlane.GetRTMatrix().Inverse());
 				figureClone.AutomaticSort();
-				List<Triangle3D> closeTriList = Delegates.ComputeTriangulation(figureClone);
+				List<Triangle3D> closeTriList = triangulator(figureClone);
 				foreach (Triangle3D tri in closeTriList)
 				{
 					Triangle3D triClone = tri;

@@ -39,10 +39,11 @@ motore di simulazione fisica spaziale. È progettata per essere riutilizzabile s
   conosce l'applicazione (`Cosmos`).
 - **Due pilastri di astrazione in GeoShape:** `Curve3D` (tutte le curve) ed `Entity3D` (tutte le
   entità geometriche). Attorno a questi due tipi ruota l'intera modellazione.
-- **Estendibilità tramite delegate.** Il core geometrico non incorpora un valutatore di formule né un
-  triangolatore: li riceve dall'esterno come delegate statici (`Delegates.DelegateEvaluator`,
-  `Delegates.ComputeTriangulation`). La libreria definisce i *contratti*, l'applicazione ospite
-  fornisce le *implementazioni*.
+- **Estendibilità tramite delegate iniettati.** Il core geometrico non incorpora un valutatore di
+  formule né un triangolatore: li riceve dall'esterno **come parametri** (dependency injection) dei
+  metodi che ne hanno bisogno. La libreria definisce i *contratti* (i tipi delegate in `Delegates`),
+  l'applicazione ospite fornisce le *implementazioni*. *(In passato erano campi statici globali, poi
+  rimossi per thread-safety — vedi §2.5.)*
 - **Value-oriented con tolleranza.** I confronti geometrici non usano l'uguaglianza esatta ma una
   tolleranza globale (`MathUtils.FineTolerance = 1e-5`).
 - **Estensioni come "hub" funzionali.** Molta logica è in classi statiche di extension method
@@ -153,7 +154,7 @@ valori fissi. Gli attori:
   `Formula` è non vuota è "secondaria" (dipende da altre).
 - **`Parameter`** — parametro geometrico (`Name`, `Value`, `Formula`, `ApplyLinearUom`).
 - **Formule di posa** — `XFormula`, `YFormula`, `ZFormula`, `RotXFormula`, `RotYFormula`, `RotZFormula`.
-- **`Delegates`** — i punti di innesto verso i motori esterni:
+- **`Delegates`** — i **tipi** delegate (punti di innesto verso i motori esterni):
 
 | Delegate | Firma | Scopo |
 |---|---|---|
@@ -161,10 +162,19 @@ valori fissi. Gli attori:
 | `ComputeTriangulationDelegate` | `List<Triangle3D> (Figure3D profile)` | triangola profili chiusi |
 | `RayMeshCollision` | `bool (Ray3D ray, Mesh3D mesh)` | collisione raggio-mesh |
 
-> ⚠️ **Il valutatore è opzionale e va iniettato.** `Node3D.Update(...)` / `Entity3D.Update(...)`
-> valutano le formule **solo se** è stato assegnato `Delegates.DelegateEvaluator`. In assenza, le
-> formule non vengono calcolate (i valori restano quelli impostati direttamente). Analogamente, la
-> triangolazione dei profili chiusi richiede `Delegates.ComputeTriangulation`.
+> ℹ️ **I delegate si iniettano come parametri** (dependency injection), non sono più stato statico
+> globale. In precedenza `Delegates` esponeva i campi statici `DelegateEvaluator` e
+> `ComputeTriangulation` (stato mutabile globale, non thread-safe e fonte di flakiness nei test
+> paralleli): sono stati **rimossi**.
+>
+> - **Valutatore di formule:** passato a `Node3D.Update(variables, evaluator, out error)` e
+>   `Entity3D.Update(variables, evaluator, out error)` (e `Node3D.UpdateRTMatrix(evaluator)`). Se
+>   `evaluator` è `null`, le formule non vengono valutate (i valori restano quelli impostati
+>   direttamente); `UpdateRTMatrix()` senza argomenti equivale a evaluator `null`.
+> - **Triangolatore:** parametro opzionale `triangulator` (default `null`) dei metodi di meshing che
+>   creano superfici di chiusura: `Entity3DExtensions.FromEntity3D/FromExtrusion3D/FromSweepExtrusion3D/
+>   FromPlanarFace3D(..., triangulator)` e `Mesh3D.CutByPlane(..., addClosingFace, triangulator)`. Se
+>   `null`, le facce di chiusura non vengono generate.
 
 ---
 
@@ -242,60 +252,75 @@ tolleranza opzionale), `AngleToRange02PI()` (normalizza in `[0, 2π)`), `AngleTo
 `InternalAngle(a1, a2)` (angolo interno in gradi, sempre positivo), `RoundToString(int decimals)`.
 Su `Point3D`: `IsNotNull()`, `IsNull()`.
 
-### 4.3 `Point3D`
+### 4.3 `Point3D` (readonly struct immutabile)
 
-Punto 3D con semantica di tolleranza. Il costruttore senza parametri crea un punto **NaN**
-(`NullPoint`), usato come sentinella.
+Punto 3D **immutabile** (`readonly struct`) con semantica di tolleranza: le coordinate non cambiano
+dopo la costruzione, ogni operazione restituisce una **nuova** istanza. È un **value type**: non può
+essere `null` e viene copiato per valore.
+
+> ⚠️ **Semantica del "punto nullo".** Essendo uno struct, `Point3D` non ammette un costruttore senza
+> parametri: **`new Point3D()` è il default `(0,0,0)`**, NON il sentinella NaN (a differenza della
+> precedente implementazione a classe). Il sentinella "nullo" è **`Point3D.NullPoint`** `(NaN,NaN,NaN)`,
+> verificabile con `IsNan()` / l'estensione `IsNull()`.
 
 **Statici:** `Zero` = `(0,0,0)`, `NullPoint` = `(NaN,NaN,NaN)`, `Negate(p)`.
 
-**Proprietà:** `X`, `Y`, `Z` (get/set); `IsAbsolute` (default `true`; il costruttore 2D lo mette a `false`).
+**Proprietà (sola lettura):** `X`, `Y`, `Z`; `IsAbsolute` (il costruttore 2D lo mette a `false`).
 
-**Costruttori:** `Point3D()` → NaN · `Point3D(x,y,z)` · `Point3D(x,y)` → z=0, non assoluto · `Point3D(Point3D)` (copia).
+**Costruttori:** `Point3D(x,y,z)` · `Point3D(x,y,z,isAbsolute)` · `Point3D(x,y)` → z=0, non assoluto ·
+`Point3D(Point3D)` (copia). *(nessun `Point3D()`: usare `NullPoint` per il sentinella)*
 
-**Metodi principali:**
+**Metodi "With" (immutabilità):** `WithX(x)`, `WithY(y)`, `WithZ(z)`, `With(x,y,z)`, `WithIsAbsolute(b)`
+— restituiscono una copia con la coordinata modificata (es. `p = p.WithX(10)`).
 
-| Metodo | Firma | Descrizione |
-|---|---|---|
-| `Distance` | `double Distance(Point3D)` | distanza euclidea |
-| `DistanceSqr` | `double DistanceSqr(Point3D)` | distanza al quadrato (evita `sqrt`) |
-| `IsEquals` | `bool IsEquals(Point3D[, double tol])` | uguaglianza tollerante |
-| `AreColinear2D` / `AreColinear3D` | `bool (Point3D p2, Point3D p3)` | test di collinearità |
-| `IsNan` | `bool IsNan()` | è il punto nullo? |
-| `ToVector` | `Vector3D ToVector()` | conversione a vettore |
+**Altri metodi:** `Distance`, `DistanceSqr`, `IsEquals(Point3D[, tol])`, `AreColinear2D`/`AreColinear3D`,
+`IsNan()`, `ToVector()`, `ToString()`.
 
-**Operatori:** conversione **implicita** `Vector3D → Point3D`; `==`, `!=` (tolleranti); `+` (`P+P`,
-`P+V`), `-` (`P-P→V`, `P-V→P`, unario), `*` (`P*scalar`, `scalar*P`), `/` (`P/scalar`), `>`, `<`
-(confronto componente per componente).
+**Uguaglianza:** `Equals`/`==`/`!=` sono **tolleranti** (value equality). `GetHashCode()` restituisce
+un valore **costante** (un'uguaglianza tollerante non è compatibile con un hash discriminante): perciò
+`Point3D` NON è adatto come chiave di dizionario/hashset — per indicizzare punti usare una struttura
+spaziale (es. `OctreeNode`).
 
-### 4.4 `Vector3D`
+**Operatori:** conversione **implicita** `Vector3D → Point3D`; `==`, `!=`; `+` (`P+P`, `P+V`), `-`
+(`P-P→V`, `P-V→P`, unario), `*` (`P*scalar`, `scalar*P`), `/` (`P/scalar`), `>`, `<`.
 
-Vettore 3D con algebra completa.
+### 4.4 `Vector3D` (readonly struct immutabile)
+
+Vettore 3D **immutabile** (`readonly struct`) con algebra completa. Come `Point3D` è un value type
+(non può essere `null`; `default(Vector3D)` è `(0,0,0)` = `Zero`; il sentinella NaN è `NullVector`).
 
 **Statici:** `UnitX/Y/Z`, `NegativeUnitX/Y/Z`, `Zero`, `NullVector`.
 
-**Proprietà:** `X`, `Y`, `Z`; `Norm`; `Length` (= `Norm`); `LengthSquared`; indexer `this[int]` (0=X, 1=Y, 2=Z).
+**Proprietà (sola lettura):** `X`, `Y`, `Z`; `Norm`; `Length` (= `Norm`); `LengthSquared`; indexer
+`this[int]` (0=X, 1=Y, 2=Z, **sola lettura**).
 
-**Costruttori:** `Vector3D(x,y,z)` · `Vector3D(Vector3D)` (copia).
+**Costruttori:** `Vector3D(x,y,z)` · `Vector3D(Vector3D)` (copia). **Metodi With:** `WithX/WithY/WithZ/With`.
 
 **Metodi principali:**
 
 | Metodo | Firma | Note |
 |---|---|---|
-| `Normalize` | `Vector3D Normalize()` | ⚠️ **lancia `InvalidOperationException` su vettore nullo** |
-| `SetNormalize` | `double SetNormalize()` | normalizza in place, ritorna la lunghezza |
-| `Negate` / `SetNegate` | `Vector3D` / `void` | opposto |
-| `Dot` | `double Dot(Vector3D)` | prodotto scalare |
-| `Cross` | `Vector3D Cross(Vector3D)` | prodotto vettoriale |
-| `Perpendicular` | `Vector3D Perpendicular()` | un perpendicolare arbitrario |
-| `IsParallel` | `bool IsParallel(Vector3D[, tol])` | |
-| `Angle` | `double Angle()` / `Angle(v)` / `Angle(refX, refZ)` | angolo (con riferimenti) |
-| `Rotate` | `Vector3D Rotate(Vector3D normal, double radAngle)` | rotazione attorno a un asse |
-| `Slerp` | `Vector3D Slerp(Vector3D dest, double t, Vector3D normal)` | interpolazione sferica |
-| `ApproxEqualsInnerAngle` | `bool (Vector3D[, tol])` | confronto per angolo interno |
+| `Normalize` | `Vector3D Normalize()` | ⚠️ lancia `InvalidOperationException` su vettore nullo |
+| `TryNormalize` | `bool TryNormalize(out Vector3D)` | **sicuro**: false + `Zero` se nullo/NaN (niente eccezione) |
+| `NormalizeOrZero` | `Vector3D NormalizeOrZero()` | **sicuro**: versore o `Zero` |
+| `IsZero` | `bool IsZero([tol])` | vettore (circa) nullo |
+| `Negate` | `Vector3D Negate()` | opposto |
+| `Dot` / `Cross` | `double` / `Vector3D` | prodotti scalare / vettoriale |
+| `Perpendicular` | `Vector3D Perpendicular()` | un perpendicolare (Zero se il vettore è nullo) |
+| `IsParallel` | `bool IsParallel(Vector3D[, tol])` | false se un operando è nullo |
+| `Angle` | `double Angle()` / `Angle(v)` / `Angle(refX, refZ)` | 0 se un operando è nullo |
+| `Rotate` | `Vector3D Rotate(Vector3D normal, double radAngle)` | invariato se asse nullo/parallelo |
+| `Slerp` | `Vector3D Slerp(Vector3D dest, double t, Vector3D normal)` | interpolazione sferica (non muta gli operandi) |
 
-**Operatori:** conversione implicita `Point3D → Vector3D`; `+`, `-` (binario/unario), `*`
-(`V*scalar`, `scalar*V`), `/` (`V/scalar`).
+> N.B. I metodi mutanti della vecchia classe (`SetNormalize`, `SetNegate`) e il setter dell'indexer
+> sono stati **rimossi** con l'immutabilità: usare `NormalizeOrZero()`/`Negate()`/`WithX(...)`.
+
+**Uguaglianza:** `Equals`/`==`/`!=` tolleranti (value equality); `GetHashCode()` costante (come
+`Point3D`). N.B. in precedenza `Vector3D` era una classe **senza `==`** (confronto per riferimento):
+ora è a valore, il che rende correttamente value-based l'uguaglianza di `Ray3D`/`Plane3D`.
+
+**Operatori:** conversione implicita `Point3D → Vector3D`; `==`, `!=`; `+`, `-` (binario/unario),
+`*` (`V*scalar`, `scalar*V`), `/` (`V/scalar`).
 
 ```csharp
 var v  = new Vector3D(1.0, 2.0, 3.0);   // v.Length == v.Norm ; v.LengthSquared == 14
@@ -429,7 +454,8 @@ Costruito sopra GeoMath. Vedi anche la vista logica in
 - **Formule:** `XFormula`…`RotZFormula`, `Variables`, `SecondaryVariables`, `ParametersFormula`.
 - **Metodi:** `AddNode`, `AddEntity` (assegnano Id automatici e ParentRTMatrix), `Clone`/`CloneTo`,
   `GetRotation`/`SetRotation`, `UpdateRTMatrix`, `GetNodeByPathId`/`GetEntityByPathId`/
-  `GetParentNodeByPathId`, `GetSubNodes`/`GetSubEntities`, `Update(variables, out error)`.
+  `GetParentNodeByPathId`, `GetSubNodes`/`GetSubEntities`, `Update(variables, evaluator, out error)`
+  (l'`evaluator` è iniettato; `null` = non valutare le formule).
 
 **`Entity3D`** — base astratta di tutte le entità geometriche, `ICloneable`. Stessa struttura di posa
 e formule di `Node3D`, più il **contratto**:
@@ -437,7 +463,7 @@ e formule di `Node3D`, più il **contratto**:
 ```csharp
 abstract Entity3D Clone();
 abstract AABBox3D GetAABBox();
-virtual  bool Update(Dictionary<string,Variable> variables, out string errorDescription);
+virtual  bool Update(Dictionary<string,Variable> variables, Delegates.EvaluatorDelegate evaluator, out string errorDescription);
 ```
 
 ### 5.2 Curve (`GeoShape.Curves`)
@@ -778,7 +804,8 @@ corretto).
 
 `Entity3DExtensions.From*` converte le entità analitiche in `Mesh3D` triangolate, con densità
 controllata da `slices`/`stacks` o da `maxError` (deviazione massima di corda). I profili chiusi che
-richiedono superfici di chiusura passano per il delegate `Delegates.ComputeTriangulation`.
+richiedono superfici di chiusura usano il delegate `triangulator` passato come parametro (default
+`null` → nessuna faccia di chiusura).
 `Mesh3DExtensions` gestisce l'I/O STL (ASCII e binario, con auto-detection in lettura) e l'estrazione
 del contorno visibile.
 
@@ -1018,9 +1045,13 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
 - **Crittografia (`StringExtensions`)** (non modificato — hardening, non un bug): derivazione chiave
   con padding invece di una KDF; nessuna autenticazione (AES-CBC anziché AES-GCM). Adeguato solo per
   offuscamento interno.
-- **`Vector3D.Normalize()` lancia** su vettore nullo: in `NewtonianGravity` è stata aggiunta la guardia
-  `dist² < 1e-6` (coerente con `ComputeAcceleration`). Resta un'insidia per nuovi utilizzi: valutare
-  una `TryNormalize` in futuro.
+- **`Vector3D.Normalize()` lancia** su vettore nullo: ✅ **mitigato** — sono state aggiunte le
+  alternative sicure `TryNormalize`/`NormalizeOrZero` (usate nei percorsi a rischio), e i punti degeneri
+  di curve/elementi sono stati irrobustiti. `Normalize()` continua a lanciare per retro-compatibilità.
+- **Stato statico globale mutabile** (`Delegates.DelegateEvaluator`/`ComputeTriangulation`): ✅
+  **risolto** — i delegate sono ora **iniettati come parametri** (vedi §2.5), eliminando il problema di
+  thread-safety e la flakiness dei test paralleli. Restano statici i due flag di configurazione
+  `Node3D.DoRTRecursion` e `Spline3D.InterpolationPointsPerSegment` (impostare in fase di init).
 - **`ObjectExtensions.MakeCopyOf`:** il ramo `toClone == null` è dopo i controlli `is`, di fatto
   irraggiungibile per un vero `null` (innocuo).
 - **`CelestialBody.Step` / integratori** assumono `Dynamics` non nullo: gli helper di `Galaxy` ora

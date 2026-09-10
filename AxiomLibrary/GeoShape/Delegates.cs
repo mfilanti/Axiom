@@ -10,14 +10,16 @@ using System.Threading.Tasks;
 namespace Axiom.GeoShape
 {
 	/// <summary>
-	/// Classe contenente i delegati usati nel progetto GeoShape.
+	/// Definizioni dei tipi delegate (punti di estensione) usati nel progetto GeoShape.
 	/// </summary>
 	/// <remarks>
-	/// <b>Thread-safety.</b> I campi <see cref="DelegateEvaluator"/> e <see cref="ComputeTriangulation"/>
-	/// sono punti di estensione GLOBALI e vanno impostati UNA sola volta in fase di inizializzazione
-	/// dell'applicazione (tipicamente sul thread principale), PRIMA di usare la libreria da più thread.
-	/// Non vanno modificati mentre operazioni geometriche sono in esecuzione in parallelo (es. meshing).
-	/// La lettura concorrente del riferimento è sicura; la riscrittura concorrente NO.
+	/// <b>Nota di design.</b> In precedenza questa classe esponeva anche i campi statici globali
+	/// <c>DelegateEvaluator</c> e <c>ComputeTriangulation</c>, impostati una volta e letti ovunque.
+	/// Erano stato mutabile globale (non thread-safe, e fonte di flakiness nei test paralleli).
+	/// Sono stati RIMOSSI: ora l'evaluator e il triangolatore vengono <b>iniettati come parametri</b>
+	/// nei metodi che ne hanno bisogno (es. <c>Node3D.Update(variables, evaluator, out error)</c>,
+	/// <c>Entity3DExtensions.From*(..., triangulator)</c>, <c>Mesh3D.CutByPlane(..., triangulator)</c>).
+	/// Restano qui solo le DEFINIZIONI dei tipi delegate.
 	/// </remarks>
 	public static class Delegates
 	{
@@ -27,21 +29,10 @@ namespace Axiom.GeoShape
 		public delegate double EvaluatorDelegate(Dictionary<string, Variable> variables, string expression, out string errorDescription);
 
 		/// <summary>
-		/// Permette di valutare le espressioni delle varie formule
-		/// </summary>
-		public static EvaluatorDelegate DelegateEvaluator = null;
-
-		/// <summary>
-		/// Funzione che permette di calcolare una triangolazione a partire da una Figure2D regolare. 
-		/// Regolare significa chiusa (con uno o più loop). 
+		/// Funzione che permette di calcolare una triangolazione a partire da una Figure2D regolare.
+		/// Regolare significa chiusa (con uno o più loop).
 		/// </summary>
 		public delegate List<Triangle3D> ComputeTriangulationDelegate(Figure3D profile);
-
-		/// <summary>
-		/// Funzione che permette di calcolare una triangolazione a partire da una Figure2D regolare. 
-		/// Regolare significa chiusa (con uno o più loop). 
-		/// </summary>
-		public static ComputeTriangulationDelegate ComputeTriangulation = null;
 
 		/// <summary>
 		/// Collisione tra un raggio e una mesh

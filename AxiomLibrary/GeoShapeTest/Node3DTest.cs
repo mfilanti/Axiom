@@ -98,15 +98,11 @@ public class Node3DTest
             "X del padre non propagata al nipote.");
     }
 
-    // Muta lo stato statico globale Delegates.DelegateEvaluator: non deve girare in parallelo con
-    // altri test che fanno lo stesso (es. Entity3DTest.TestUpdateWithEvaluator), altrimenti si ha una
-    // race (l'evaluator viene azzerato da un test mentre un altro lo invoca -> NullReferenceException).
-    [DoNotParallelize]
+    // L'evaluator è iniettato come parametro (non più stato statico globale): niente race.
     [TestMethod]
     public void TestUpdateWithEvaluator()
     {
-        var previous = Delegates.DelegateEvaluator;
-        Delegates.DelegateEvaluator = (Dictionary<string, Variable> variables, string expression, out string error) =>
+        Delegates.EvaluatorDelegate evaluator = (Dictionary<string, Variable> variables, string expression, out string error) =>
         {
             error = "";
             if (string.IsNullOrEmpty(expression))
@@ -116,45 +112,38 @@ public class Node3DTest
             return double.TryParse(expression, out var value) ? value : double.NaN;
         };
 
-        try
-        {
-            var node = new Node3D("node") { Path = "" };
-            SetParametersFormula(node, new List<Parameter> { new Parameter("p", false, "5", 0) });
-            node.Variables.Add("v", new Variable { Name = "v", Value = 7 });
-            node.XFormula = "1";
-            node.YFormula = "2";
-            node.ZFormula = "3";
-            node.RotXFormula = "90";
-            node.RotYFormula = "0";
-            node.RotZFormula = "0";
+        var node = new Node3D("node") { Path = "" };
+        SetParametersFormula(node, new List<Parameter> { new Parameter("p", false, "5", 0) });
+        node.Variables.Add("v", new Variable { Name = "v", Value = 7 });
+        node.XFormula = "1";
+        node.YFormula = "2";
+        node.ZFormula = "3";
+        node.RotXFormula = "90";
+        node.RotYFormula = "0";
+        node.RotZFormula = "0";
 
-            var child = new Node3D("child");
-            SetParametersFormula(child, new List<Parameter>());
-            node.AddNode(child);
+        var child = new Node3D("child");
+        SetParametersFormula(child, new List<Parameter>());
+        node.AddNode(child);
 
-            var sphere = new Sphere3D(1) { Id = "sphere" };
-            sphere.XFormula = "4";
-            sphere.YFormula = "5";
-            sphere.ZFormula = "6";
-            sphere.RotXFormula = "0";
-            sphere.RotYFormula = "0";
-            sphere.RotZFormula = "0";
-            sphere.RadiusFormula = "8";
-            node.AddEntity(sphere);
+        var sphere = new Sphere3D(1) { Id = "sphere" };
+        sphere.XFormula = "4";
+        sphere.YFormula = "5";
+        sphere.ZFormula = "6";
+        sphere.RotXFormula = "0";
+        sphere.RotYFormula = "0";
+        sphere.RotZFormula = "0";
+        sphere.RadiusFormula = "8";
+        node.AddEntity(sphere);
 
-            var result = node.Update(new Dictionary<string, Variable>(), out var errorDescription);
-            Assert.IsTrue(result);
-            Assert.AreEqual(string.Empty, errorDescription);
-            Assert.AreEqual(1, node.X);
-            Assert.AreEqual(2, node.Y);
-            Assert.AreEqual(3, node.Z);
-            Assert.AreEqual(8, sphere.Radius);
+        var result = node.Update(new Dictionary<string, Variable>(), evaluator, out var errorDescription);
+        Assert.IsTrue(result);
+        Assert.AreEqual(string.Empty, errorDescription);
+        Assert.AreEqual(1, node.X);
+        Assert.AreEqual(2, node.Y);
+        Assert.AreEqual(3, node.Z);
+        Assert.AreEqual(8, sphere.Radius);
 
-            Assert.AreEqual(5, node.ParametersFormula.First().Value);
-        }
-        finally
-        {
-            Delegates.DelegateEvaluator = previous;
-        }
+        Assert.AreEqual(5, node.ParametersFormula.First().Value);
     }
 }

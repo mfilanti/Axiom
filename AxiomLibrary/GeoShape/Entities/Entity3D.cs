@@ -211,18 +211,18 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="variables">Variabili del padre</param>
 		/// <param name="errorDescription">Restituisce un messaggio con la descrizione dell'eventuale errore</param>
 		/// <returns>Indica se ci sono stati errori (true: ok, false: errori)</returns>
-		public virtual bool Update(Dictionary<string, Variable> variables, out string errorDescription)
+		public virtual bool Update(Dictionary<string, Variable> variables, Delegates.EvaluatorDelegate evaluator, out string errorDescription)
 		{
 			bool result = true;
 			string id = Path.Remove(0, Path.LastIndexOf("/") + 1) + "/" + Id;
 			errorDescription = "Entity " + id + "\n";
-			if (Delegates.DelegateEvaluator != null)
+			if (evaluator != null)
 			{
 				string localErrorDescription;
 				#region X, Y, Z
 				if (XFormula.Length > 0)
 				{
-					double value = Delegates.DelegateEvaluator(variables, XFormula, out localErrorDescription);
+					double value = evaluator(variables, XFormula, out localErrorDescription);
 					if (value.CompareTo(double.NaN) == 0)
 					{
 						result = false;
@@ -233,7 +233,7 @@ namespace Axiom.GeoShape.Entities
 				}
 				if (YFormula.Length > 0)
 				{
-					double value = Delegates.DelegateEvaluator(variables, YFormula, out localErrorDescription);
+					double value = evaluator(variables, YFormula, out localErrorDescription);
 					if (value.CompareTo(double.NaN) == 0)
 					{
 						result = false;
@@ -244,7 +244,7 @@ namespace Axiom.GeoShape.Entities
 				}
 				if (ZFormula.Length > 0)
 				{
-					double value = Delegates.DelegateEvaluator(variables, ZFormula, out localErrorDescription);
+					double value = evaluator(variables, ZFormula, out localErrorDescription);
 					if (value.CompareTo(double.NaN) == 0)
 					{
 						result = false;
@@ -264,7 +264,7 @@ namespace Axiom.GeoShape.Entities
 
 				if (RotXFormula.Length > 0)
 				{
-					double value = Delegates.DelegateEvaluator(variables, RotXFormula, out localErrorDescription);
+					double value = evaluator(variables, RotXFormula, out localErrorDescription);
 					if (value.CompareTo(double.NaN) == 0)
 					{
 						result = false;
@@ -275,7 +275,7 @@ namespace Axiom.GeoShape.Entities
 				}
 				if (RotYFormula.Length > 0)
 				{
-					double value = Delegates.DelegateEvaluator(variables, RotYFormula, out localErrorDescription);
+					double value = evaluator(variables, RotYFormula, out localErrorDescription);
 					if (value.CompareTo(double.NaN) == 0)
 					{
 						result = false;
@@ -286,7 +286,7 @@ namespace Axiom.GeoShape.Entities
 				}
 				if (RotZFormula.Length > 0)
 				{
-					double value = Delegates.DelegateEvaluator(variables, RotZFormula, out localErrorDescription);
+					double value = evaluator(variables, RotZFormula, out localErrorDescription);
 					if (value.CompareTo(double.NaN) == 0)
 					{
 						result = false;
@@ -308,7 +308,7 @@ namespace Axiom.GeoShape.Entities
 					Parameter parameter = parameters[i];
 					if (parameter.Formula != null && parameter.Formula.Length > 0)
 					{
-						double value = Delegates.DelegateEvaluator(variables, parameter.Formula, out localErrorDescription);
+						double value = evaluator(variables, parameter.Formula, out localErrorDescription);
 						if (value.CompareTo(double.NaN) == 0)
 						{
 							result = false;
