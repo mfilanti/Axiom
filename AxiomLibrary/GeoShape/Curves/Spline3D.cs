@@ -103,14 +103,16 @@ namespace Axiom.GeoShape.Curves
 		private Point3D _lastExtraPoint;
 
 		/// <summary>
-		/// Punto di start. 
+		/// Punto di start. Se non ci sono punti di controllo restituisce <see cref="Point3D.NullPoint"/>.
 		/// </summary>
-		public override Point3D StartPoint => _points[0];
+		public override Point3D StartPoint => _points.Count > 0 ? _points[0] : Point3D.NullPoint;
 
 		/// <summary>
-		/// Punto di end. 
+		/// Punto di end. Se non ci sono punti di controllo restituisce <see cref="Point3D.NullPoint"/>.
 		/// </summary>
-		public override Point3D EndPoint => Closed ? _points[0] : _points[_points.Count - 1];
+		public override Point3D EndPoint => _points.Count > 0
+			? (Closed ? _points[0] : _points[_points.Count - 1])
+			: Point3D.NullPoint;
 
 		/// <summary>
 		/// Tangente di start. 
@@ -564,8 +566,11 @@ namespace Axiom.GeoShape.Curves
 		/// <param name="endTangent"></param>
 		public void AutomaticSetFirstLastTangents(Vector3D startTangent, Vector3D endTangent)
 		{
-			FirstExtraPoint = _points[1] - (_points[2] - _points[0]).Length * startTangent.Normalize();
-			LastExtraPoint = _points[_points.Count - 2] + (_points[_points.Count - 1] - _points[_points.Count - 3]).Length * endTangent.Normalize();
+			// Richiede almeno 3 punti di controllo (accede a _points[2] e _points[Count-3]).
+			if (_points.Count < 3)
+				return;
+			FirstExtraPoint = _points[1] - (_points[2] - _points[0]).Length * startTangent.NormalizeOrZero();
+			LastExtraPoint = _points[_points.Count - 2] + (_points[_points.Count - 1] - _points[_points.Count - 3]).Length * endTangent.NormalizeOrZero();
 		}
 
 		/// <summary>
@@ -616,6 +621,26 @@ namespace Axiom.GeoShape.Curves
 			tangents = new List<Vector3D>();
 			pointsInterpolationLink = new Dictionary<int, int>();
 			pointsInterpolationLink.Add(0, 0);
+
+			// Robustezza: la Cardinal spline richiede almeno 3 punti di controllo. Con meno punti si
+			// degrada in modo sicuro (in precedenza si otteneva IndexOutOfRangeException):
+			// - 0/1 punto: nessuna curva (eventualmente il singolo punto);
+			// - 2 punti: un semplice segmento.
+			if (_points.Count < 3)
+			{
+				for (int k = 0; k < _points.Count; k++)
+				{
+					result.Add(_points[k]);
+					if (k > 0) pointsInterpolationLink[k] = result.Count - 1;
+				}
+				Vector3D dir = _points.Count == 2
+					? ((Vector3D)(_points[1] - _points[0])).NormalizeOrZero()
+					: Vector3D.Zero;
+				for (int k = 0; k < result.Count; k++)
+					tangents.Add(dir);
+				return result;
+			}
+
 			List<Vector3D> segmentTangents;
 			for (int i = 0; i < _points.Count; i++)
 			{
@@ -694,7 +719,8 @@ namespace Axiom.GeoShape.Curves
 				double ty = 3 * ay * t * t + 2 * by * t + cy;
 				double tz = 3 * az * t * t + 2 * bz * t + cz;
 				result.Add(new Point3D(x, y, z));
-				tangents.Add(new Vector3D(tx, ty, tz).Normalize());
+				// NormalizeOrZero: punti di controllo coincidenti possono dare tangente nulla.
+				tangents.Add(new Vector3D(tx, ty, tz).NormalizeOrZero());
 			}
 			return result;
 		}

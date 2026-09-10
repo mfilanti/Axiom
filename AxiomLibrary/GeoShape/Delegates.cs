@@ -12,6 +12,13 @@ namespace Axiom.GeoShape
 	/// <summary>
 	/// Classe contenente i delegati usati nel progetto GeoShape.
 	/// </summary>
+	/// <remarks>
+	/// <b>Thread-safety.</b> I campi <see cref="DelegateEvaluator"/> e <see cref="ComputeTriangulation"/>
+	/// sono punti di estensione GLOBALI e vanno impostati UNA sola volta in fase di inizializzazione
+	/// dell'applicazione (tipicamente sul thread principale), PRIMA di usare la libreria da più thread.
+	/// Non vanno modificati mentre operazioni geometriche sono in esecuzione in parallelo (es. meshing).
+	/// La lettura concorrente del riferimento è sicura; la riscrittura concorrente NO.
+	/// </remarks>
 	public static class Delegates
 	{
 		/// <summary>

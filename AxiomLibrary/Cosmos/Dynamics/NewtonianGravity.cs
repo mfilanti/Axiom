@@ -12,6 +12,24 @@ namespace Axiom.Cosmos.Dynamics
 		private readonly IReadOnlyList<CelestialBody> _bodies;
 		private const double G = 6.67430e-11;
 
+		/// <summary>
+		/// Costruttore di default: nessun corpo di riferimento memorizzato.
+		/// Con questo costruttore usare <see cref="ComputeAcceleration"/>, che riceve i corpi come parametro.
+		/// </summary>
+		public NewtonianGravity()
+		{
+			_bodies = Array.Empty<CelestialBody>();
+		}
+
+		/// <summary>
+		/// Costruttore che memorizza l'insieme dei corpi usato da <see cref="ComputeForce"/>.
+		/// </summary>
+		/// <param name="bodies">Corpi che generano il campo gravitazionale.</param>
+		public NewtonianGravity(IReadOnlyList<CelestialBody> bodies)
+		{
+			_bodies = bodies ?? Array.Empty<CelestialBody>();
+		}
+
 		public Vector3D ComputeForce(CelestialBody body)
 		{
 			Vector3D force = Vector3D.Zero;
@@ -20,10 +38,13 @@ namespace Axiom.Cosmos.Dynamics
 			{
 				if (other == body) continue;
 
-				var r = other.Translation - body.Translation;
-				var distance = r.Length;
+				var r = other.WorldMatrix.Translation - body.WorldMatrix.Translation;
+				var distanceSquared = r.LengthSquared;
 
-				force += r.Normalize() * (G * body.Mass * other.Mass / (distance * distance));
+				// Evita la singolarità (e la Normalize su vettore nullo) per corpi coincidenti.
+				if (distanceSquared < 1e-6) continue;
+
+				force += r.Normalize() * (G * body.Mass * other.Mass / distanceSquared);
 			}
 
 			return force;

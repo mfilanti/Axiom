@@ -119,7 +119,7 @@ namespace Axiom.GeoShape.Curves
 		/// <summary>
 		/// Passo dell'elica. 
 		/// </summary>
-		public double Pitch => Depth / SpanAngle * 2 * Math.PI;
+		public double Pitch => SpanAngle.IsEquals(0) ? 0 : Depth / SpanAngle * 2 * Math.PI;
 		#endregion
 
 		#region Ctor
@@ -236,7 +236,8 @@ namespace Axiom.GeoShape.Curves
 		public override Point3D Evaluate(double offset, out Vector3D tangent)
 		{
 			double absOffset = offset * Length;
-			double radOffsetAngle = FromAbsOffsetToRadOffset(absOffset) / Radius;
+			// Raggio nullo (elica degenerata su una retta): niente divisione per zero.
+			double radOffsetAngle = Radius.IsEquals(0) ? 0 : FromAbsOffsetToRadOffset(absOffset) / Radius;
 			return EvaluateAngle(radOffsetAngle, out tangent);
 		}
 
@@ -251,7 +252,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public override Point3D EvaluateAbs(double offset, out Vector3D tangent)
 		{
-			double radOffsetAngle = FromAbsOffsetToRadOffset(offset) / Radius;
+			double radOffsetAngle = Radius.IsEquals(0) ? 0 : FromAbsOffsetToRadOffset(offset) / Radius;
 			return EvaluateAngle(radOffsetAngle, out tangent);
 		}
 
@@ -265,30 +266,22 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public Point3D EvaluateAngle(double offsetRadAngle, out Vector3D tangent)
 		{
-			Point3D result = new Point3D();
+			Point3D result;
 			tangent = Vector3D.Zero;
-			double offsetZ = -Depth * offsetRadAngle / SpanAngle;
-			double tangentZ = (new Vector3D(Length, 0, -Depth)).Normalize().Z;
+			// SpanAngle nullo: l'elica degenera (nessuna avanzamento in Z) -> offsetZ = 0 (niente NaN).
+			double offsetZ = SpanAngle.IsEquals(0) ? 0 : -Depth * offsetRadAngle / SpanAngle;
+			// Length e Depth entrambi nulli -> vettore nullo: NormalizeOrZero evita l'eccezione.
+			double tangentZ = (new Vector3D(Length, 0, -Depth)).NormalizeOrZero().Z;
 
 			if (CounterClockWise == true)
 			{
-				result.X = Radius * Math.Cos(StartAngle + offsetRadAngle);
-				result.Y = Radius * Math.Sin(StartAngle + offsetRadAngle);
-				result.Z = offsetZ;
-				tangent.X = -Math.Sin(StartAngle + offsetRadAngle);
-				tangent.Y = Math.Cos(StartAngle + offsetRadAngle);
-				tangent.Z = tangentZ;
-				tangent.SetNormalize();
+				result = new Point3D(Radius * Math.Cos(StartAngle + offsetRadAngle), Radius * Math.Sin(StartAngle + offsetRadAngle), offsetZ);
+				tangent = new Vector3D(-Math.Sin(StartAngle + offsetRadAngle), Math.Cos(StartAngle + offsetRadAngle), tangentZ).NormalizeOrZero();
 			}
 			else
 			{
-				result.X = Radius * Math.Cos(StartAngle - offsetRadAngle);
-				result.Y = Radius * Math.Sin(StartAngle - offsetRadAngle);
-				result.Z = offsetZ;
-				tangent.X = Math.Sin(StartAngle - offsetRadAngle);
-				tangent.Y = -Math.Cos(StartAngle - offsetRadAngle);
-				tangent.Z = tangentZ;
-				tangent.SetNormalize();
+				result = new Point3D(Radius * Math.Cos(StartAngle - offsetRadAngle), Radius * Math.Sin(StartAngle - offsetRadAngle), offsetZ);
+				tangent = new Vector3D(Math.Sin(StartAngle - offsetRadAngle), -Math.Cos(StartAngle - offsetRadAngle), tangentZ).NormalizeOrZero();
 			}
 			result = RMatrix * result;
 			result = result + (Vector3D)Center;
@@ -426,8 +419,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public static Helix3D FromHelix2D(Helix3D helix2, double z)
 		{
-			Point3D center = (Point3D)helix2.Center;
-			center.Z = z;
+			Point3D center = helix2.Center.WithZ(z);
 			return new Helix3D(center, helix2.Radius, helix2.Depth, helix2.StartAngle, helix2.SpanAngle, helix2.CounterClockWise, RTMatrix.Identity);
 		}
 

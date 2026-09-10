@@ -28,14 +28,14 @@ namespace Axiom.GeoShape.Curves
 		public override Point3D EndPoint => PEnd;
 
 		/// <summary>
-		/// Tangente di start (sola lettura)
+		/// Tangente di start (sola lettura). Per un segmento di lunghezza nulla restituisce Zero.
 		/// </summary>
-		public override Vector3D StartTangent => (PEnd - PStart).Normalize();
+		public override Vector3D StartTangent => ((Vector3D)(PEnd - PStart)).NormalizeOrZero();
 
 		/// <summary>
-		/// Tangente di end (sola lettura)
+		/// Tangente di end (sola lettura). Per un segmento di lunghezza nulla restituisce Zero.
 		/// </summary>
-		public override Vector3D EndTangent => (PEnd - PStart).Normalize();
+		public override Vector3D EndTangent => ((Vector3D)(PEnd - PStart)).NormalizeOrZero();
 
 		/// <summary>
 		/// Lunghezza del segmento
@@ -119,8 +119,8 @@ namespace Axiom.GeoShape.Curves
 		public override Curve3D MirrorX()
 		{
 			Line3D result = ToLine2D();
-			result.PStart.Y *= -1;
-			result.PEnd.Y *= -1;
+			result.PStart = result.PStart.WithY(-result.PStart.Y);
+			result.PEnd = result.PEnd.WithY(-result.PEnd.Y);
 			return result;
 		}
 
@@ -131,8 +131,8 @@ namespace Axiom.GeoShape.Curves
 		public override Curve3D MirrorY()
 		{
 			Line3D result = ToLine2D();
-			result.PStart.X *= -1;
-			result.PEnd.X *= -1;
+			result.PStart = result.PStart.WithX(-result.PStart.X);
+			result.PEnd = result.PEnd.WithX(-result.PEnd.X);
 			return result;
 		}
 
@@ -215,14 +215,11 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public override Point3D Evaluate(double offset, out Vector3D tangent)
 		{
-			Point3D result = new Point3D
-			{
-				X = PStart.X + offset * (PEnd.X - PStart.X),
-				Y = PStart.Y + offset * (PEnd.Y - PStart.Y),
-				Z = PStart.Z + offset * (PEnd.Z - PStart.Z)
-			};
-			tangent = PEnd - PStart;
-			tangent.SetNormalize();
+			Point3D result = new Point3D(
+				PStart.X + offset * (PEnd.X - PStart.X),
+				PStart.Y + offset * (PEnd.Y - PStart.Y),
+				PStart.Z + offset * (PEnd.Z - PStart.Z));
+			tangent = ((Vector3D)(PEnd - PStart)).NormalizeOrZero();
 
 			return result;
 		}
@@ -238,7 +235,14 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public override Point3D EvaluateAbs(double offset, out Vector3D tangent)
 		{
-			double relOffset = offset / Length;
+			double length = Length;
+			// Segmento di lunghezza nulla: qualunque offset corrisponde al punto di start, tangente nulla.
+			if (length.IsEquals(0))
+			{
+				tangent = Vector3D.Zero;
+				return new Point3D(PStart);
+			}
+			double relOffset = offset / length;
 			return Evaluate(relOffset, out tangent);
 		}
 
@@ -338,7 +342,16 @@ namespace Axiom.GeoShape.Curves
 			Point3D result;
 			Vector3D vecLine = PEnd - PStart;
 			Vector3D vecPoint = point - PStart;
-			double l = vecLine.SetNormalize();
+			double l = vecLine.Length;
+			vecLine = vecLine.NormalizeOrZero();
+
+			// Segmento di lunghezza nulla: si degrada al punto di start (nessun NaN da 0/0).
+			if (l.IsEquals(0))
+			{
+				offset = 0;
+				isInside = point.IsEquals(PStart);
+				return new Point3D(PStart);
+			}
 
 			double proj = vecPoint.Dot(vecLine);
 			offset = proj / l;
@@ -420,6 +433,11 @@ namespace Axiom.GeoShape.Curves
 			bool result = false;
 			offset = 0;
 
+			double length = Length;
+			// Segmento di lunghezza nulla: il punto appartiene alla "curva" solo se coincide con lo start.
+			if (length.IsEquals(0))
+				return point.IsEquals(PStart, tolerance);
+
 			// distanza dalla linea
 			double distance = DistancePerp(point);
 
@@ -427,12 +445,12 @@ namespace Axiom.GeoShape.Curves
 			if (distance.IsEquals(0, tolerance))
 			{
 				// controlla se sta tra start ed end
-				double startDistance = (point - PStart).Dot((PEnd - PStart).Normalize());
+				double startDistance = (point - PStart).Dot(((Vector3D)(PEnd - PStart)).NormalizeOrZero());
 
 				if (startDistance.IsEquals(0, tolerance)) startDistance = 0;
-				if (startDistance.IsEquals(Length, tolerance)) startDistance = Length;
+				if (startDistance.IsEquals(length, tolerance)) startDistance = length;
 
-				offset = startDistance / Length;
+				offset = startDistance / length;
 				if (offset >= 0 && offset <= 1)
 					result = true;
 			}

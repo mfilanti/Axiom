@@ -34,6 +34,12 @@ namespace Axiom.GeoShape.Elements
 		/// Direzione Y locale (calcolata come Normal x XAxis)
 		/// </summary>
 		public Vector3D YAxis => Normal.Cross(XAxis);
+
+		/// <summary>
+		/// Indica se il piano è "nullo"/degenere, cioè con normale nulla (es. <see cref="ZeroPlane"/>,
+		/// o il risultato di <see cref="FromPoints"/> quando i punti non definiscono un piano valido).
+		/// </summary>
+		public bool IsNull => Normal.IsZero();
 		#endregion
 
 		#region Constructors
@@ -46,7 +52,10 @@ namespace Axiom.GeoShape.Elements
 		/// <param name="location"></param>
 		public Plane3D(Vector3D normal, Point3D location)
 		{
-			Normal = normal.Normalize();
+			// NormalizeOrZero: una normale nulla NON lancia più eccezione ma produce un piano
+			// "nullo" (degenere), rilevabile con IsNull. In precedenza costruire un piano da una
+			// normale nulla (es. Plane3D.ZeroPlane) lanciava InvalidOperationException.
+			Normal = normal.NormalizeOrZero();
 			XAxis = Vector3D.Zero;
 			Location = location;
 			ResetXAxis();
@@ -61,8 +70,8 @@ namespace Axiom.GeoShape.Elements
 		/// <param name="location"></param>
 		public Plane3D(Vector3D normal, Vector3D xAxis, Point3D location)
 		{
-			Normal = normal.Normalize();
-			XAxis = xAxis.Normalize();
+			Normal = normal.NormalizeOrZero();
+			XAxis = xAxis.NormalizeOrZero();
 			Location = location;
 		}
 		#endregion
@@ -99,12 +108,19 @@ namespace Axiom.GeoShape.Elements
 		/// <returns></returns>
 		public void ResetXAxis()
 		{
+			// Piano nullo (normale nulla): nessun asse X definito.
+			if (Normal.IsZero())
+			{
+				XAxis = Vector3D.Zero;
+				return;
+			}
+
 			if (Normal.IsEquals(Vector3D.NegativeUnitX))
 				XAxis = Vector3D.NegativeUnitY;
 			else if (Normal.IsEquals(Vector3D.UnitX))
 				XAxis = Vector3D.UnitY;
 			else
-				XAxis = (Normal.Cross(Vector3D.UnitX)).Cross(Normal).Normalize();
+				XAxis = (Normal.Cross(Vector3D.UnitX)).Cross(Normal).NormalizeOrZero();
 		}
 
 		/// <summary>
@@ -280,9 +296,10 @@ namespace Axiom.GeoShape.Elements
 		public Point3D Project2D(Point3D point)
 		{
 			Point3D projection3 = Project(point);
-			Point3D result = new Point3D();
-			result.X = (projection3 - Location).Dot(XAxis);
-			result.Y = (projection3 - Location).Dot(YAxis);
+			Point3D result = new Point3D(
+				(projection3 - Location).Dot(XAxis),
+				(projection3 - Location).Dot(YAxis),
+				0);
 			return result;
 		}
 
@@ -476,17 +493,17 @@ namespace Axiom.GeoShape.Elements
 					if (sameX)
 					{
 						result = Plane3D.YZPlane;
-						result.Location.X = x;
+						result.Location = result.Location.WithX(x);
 					}
 					if (sameY)
 					{
 						result = Plane3D.XZPlane;
-						result.Location.Y = y;
+						result.Location = result.Location.WithY(y);
 					}
 					if (sameZ)
 					{
 						result = Plane3D.XYPlane;
-						result.Location.Z = z;
+						result.Location = result.Location.WithZ(z);
 					}
 				}
 			}

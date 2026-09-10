@@ -345,11 +345,15 @@ namespace Axiom.GeoShape.Curves
 			// N.B. Funzione approssimata
 			double l = 0;
 			double step = 0.001; // un millesimo di grado
+			// Limite superiore: un giro completo (oltre non ha senso per un'ellisse). Evita il ciclo
+			// infinito quando l'ellisse è degenere (A=B=0) e l'arco non cresce mai, o se 'offset' non
+			// è raggiungibile.
+			double maxAngle = 2 * Math.PI + step;
 			Vector3D tangent;
 			Point3D point1 = EvaluateAngle(0, out tangent);
 			Point3D point2;
 			double offsetAng = 0;
-			while (l < offset)
+			while (l < offset && offsetAng < maxAngle)
 			{
 				offsetAng += step;
 				point2 = EvaluateAngle(offsetAng, out tangent);
@@ -363,11 +367,14 @@ namespace Axiom.GeoShape.Curves
 		{
 			double offset = 0;
 			double step = 0.001; // un millesimo di grado
+			// Limite superiore per evitare cicli infiniti con offsetAng non finito o eccessivo.
+			double maxAngle = Math.Min(offsetAng, 2 * Math.PI + step);
+			if (double.IsNaN(maxAngle)) return 0;
 			Vector3D tangent;
 			Point3D point1 = EvaluateAngle(0, out tangent);
 			Point3D point2;
 			double actualOffsetAng = 0;
-			while (actualOffsetAng < offsetAng)
+			while (actualOffsetAng < maxAngle)
 			{
 				actualOffsetAng += step;
 				point2 = EvaluateAngle(actualOffsetAng, out tangent);
@@ -385,16 +392,14 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public double EllipseAngleToCircularAngle(double ellipseRadAngle)
 		{
-			Point3D point = new Point3D(0, 0);
-
 			// Riportiamo l'angolo tra 0 e 360 per comodità
 			ellipseRadAngle = ellipseRadAngle.AngleToRange02PI();
 
 			double a2 = A * A;
 			double b2 = B * B;
 			double tan2 = Math.Tan(ellipseRadAngle) * Math.Tan(ellipseRadAngle);
-			point.X = A * B / (Math.Sqrt(b2 + a2 * tan2));
-			point.Y = A * B * Math.Tan(ellipseRadAngle) / (Math.Sqrt(b2 + a2 * tan2));
+			double denom = Math.Sqrt(b2 + a2 * tan2);
+			Point3D point = new Point3D(A * B / denom, A * B * Math.Tan(ellipseRadAngle) / denom);
 			// La formula sopra vale solo per il primo e quarto quadrante, altrimenti va invertito
 			if (ellipseRadAngle > Math.PI / 2 && ellipseRadAngle < 1.5 * Math.PI)
 				point = -point;
@@ -436,7 +441,18 @@ namespace Axiom.GeoShape.Curves
 		{
 			Point3D result;
 
-			Point3D point = new Point3D();
+			// Ellisse degenere (un semiasse nullo): non è una curva valida. Si restituisce il centro
+			// con tangente nulla, evitando le divisioni per zero (A*B/sqrt(...), B/A) che darebbero NaN.
+			if (A.IsEquals(0) || B.IsEquals(0))
+			{
+				tangent = Vector3D.Zero;
+				return new Point3D(Center);
+			}
+
+			// N.B. new Point3D() è (NaN,NaN,NaN): qui il punto è planare (Z=0) e vengono impostate solo
+			// X e Y più sotto. Va quindi inizializzato a (0,0,0), altrimenti Z resta NaN e contamina
+			// l'intero risultato dopo Rotate/Multiply (bug latente non colto per assenza di test).
+			Point3D point = new Point3D(0, 0, 0);
 			Vector3D tangent2 = Vector3D.Zero;
 			double angle;
 			if (CounterClockWise == true)
@@ -450,16 +466,15 @@ namespace Axiom.GeoShape.Curves
 			// PI e 1.5*PI sono casi limite per cui la tan va all'infinito per cui vanno gestiti a parte
 			if (angle == Math.PI / 2 || angle == 1.5 * Math.PI)
 			{
-				point.X = A * Math.Cos(angle);
-				point.Y = B * Math.Sin(angle);
+				point = new Point3D(A * Math.Cos(angle), B * Math.Sin(angle), 0);
 			}
 			else
 			{
 				double a2 = A * A;
 				double b2 = B * B;
 				double tan2 = Math.Tan(angle) * Math.Tan(angle);
-				point.X = A * B / (Math.Sqrt(b2 + a2 * tan2));
-				point.Y = A * B * Math.Tan(angle) / (Math.Sqrt(b2 + a2 * tan2));
+				double denom = Math.Sqrt(b2 + a2 * tan2);
+				point = new Point3D(A * B / denom, A * B * Math.Tan(angle) / denom, 0);
 				// La formula sopra vale solo per il primo e quarto quadrante, altrimenti va invertito
 				if (angle > Math.PI / 2 && angle < 1.5 * Math.PI)
 					point = -point;
@@ -467,12 +482,11 @@ namespace Axiom.GeoShape.Curves
 
 			double tanAngle = EllipseAngleToCircularAngle(angle);
 
-			tangent2.X = -Math.Sin(tanAngle);
-			tangent2.Y = B / A * Math.Cos(tanAngle);
+			tangent2 = new Vector3D(-Math.Sin(tanAngle), B / A * Math.Cos(tanAngle), 0);
 			if (CounterClockWise == false)
-				tangent2.SetNegate();
+				tangent2 = tangent2.Negate();
 
-			tangent2.SetNormalize();
+			tangent2 = tangent2.NormalizeOrZero();
 
 			point = (Point3D)((Vector3D)point).Rotate(Vector3D.UnitZ, RotationA);
 			result = RMatrix.Multiply((Point3D)point);
@@ -597,8 +611,11 @@ namespace Axiom.GeoShape.Curves
 			bool result = false;
 			offset = -1;
 
-			Vector3D direction = ((Vector3D)(point - Center)).Normalize();
-			Vector3D directionStart = ((Vector3D)(StartPoint - Center)).Normalize();
+			// Punto coincidente col centro (o ellisse degenere): niente Normalize su vettore nullo.
+			Vector3D direction = ((Vector3D)(point - Center)).NormalizeOrZero();
+			Vector3D directionStart = ((Vector3D)(StartPoint - Center)).NormalizeOrZero();
+			if (direction.IsZero() || directionStart.IsZero())
+				return false;
 			Vector3D refZ = (CounterClockWise ? Vector3D.UnitZ : Vector3D.NegativeUnitZ);
 			double offsetAngle = direction.Angle(directionStart, refZ);
 
@@ -624,8 +641,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public static Ellipse3D FromEllipse2D(Ellipse3D ellipse2, double z)
 		{
-			Point3D center = (Point3D)ellipse2.Center;
-			center.Z = z;
+			Point3D center = ellipse2.Center.WithZ(z);
 			return new Ellipse3D(center, ellipse2.A, ellipse2.B, ellipse2.RotationA, ellipse2.StartAngle, ellipse2.EndAngle, ellipse2.CounterClockWise, RTMatrix.Identity);
 		}
 

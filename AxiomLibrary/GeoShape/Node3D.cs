@@ -178,21 +178,21 @@ namespace Axiom.GeoShape
 		public bool Visible { get; set; }
 
 		/// <summary>
-		/// Posizione X. 
+		/// Posizione X.
 		/// </summary>
 		[XmlIgnore()]
 		public double X
 		{
-			get => _rtMatrix[0, 3]; set => _rtMatrix[0, 3] = value;
+			get => _rtMatrix[0, 3]; set { _rtMatrix[0, 3] = value; PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
-		/// Posizione Y. 
+		/// Posizione Y.
 		/// </summary>
 		[XmlIgnore()]
 		public double Y
 		{
-			get => _rtMatrix[1, 3]; set => _rtMatrix[1, 3] = value;
+			get => _rtMatrix[1, 3]; set { _rtMatrix[1, 3] = value; PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
@@ -201,17 +201,17 @@ namespace Axiom.GeoShape
 		[XmlIgnore()]
 		public double Z
 		{
-			get => _rtMatrix[2, 3]; set => _rtMatrix[2, 3] = value;
+			get => _rtMatrix[2, 3]; set { _rtMatrix[2, 3] = value; PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
-		/// Traslazione. 
+		/// Traslazione.
 		/// </summary>
 		[XmlIgnore()]
 		public Vector3D Translation
 		{
 			get => _rtMatrix.Translation;
-			set => _rtMatrix.Translation = value;
+			set { _rtMatrix.Translation = value; PropagateWorldMatrixIfNeeded(); }
 		}
 
 		/// <summary>
@@ -273,6 +273,24 @@ namespace Axiom.GeoShape
 		#endregion CONSTRUCTORS
 
 		#region Public Methods
+		/// <summary>
+		/// Propaga ai nodi e alle entità figlie la matrice di mondo corrente aggiornando il loro
+		/// ParentRTMatrix. Va richiamato quando la traslazione locale (X, Y, Z, Translation) viene
+		/// modificata direttamente sui campi della matrice, bypassando il setter di RTMatrix.
+		/// La propagazione avviene solo se <see cref="DoRTRecursion"/> è true (coerente col setter di RTMatrix).
+		/// </summary>
+		private void PropagateWorldMatrixIfNeeded()
+		{
+			if (!DoRTRecursion) return;
+
+			RTMatrix absoluteMatrix = _parentRTMatrix.Multiply(_rtMatrix);
+			foreach (KeyValuePair<string, Node3D> kvp in Nodes)
+				kvp.Value.ParentRTMatrix = absoluteMatrix;
+
+			foreach (KeyValuePair<string, Entity3D> kvp in Entities)
+				kvp.Value.ParentRTMatrix = absoluteMatrix;
+		}
+
 		/// <summary>
 		/// Aggiunge un nodo alla lista assegnando correttamente il path e il ParentRTMatrix
 		/// </summary>

@@ -820,9 +820,6 @@ namespace Axiom.GeoShape.Entities
 		/// <returns></returns>
 		public bool Contains(Point3D point)
 		{
-			// Test con UnitZ perturbato
-			Vector3D testDirection = new Vector3D(0.001, 0.001, 0.99);
-			testDirection.SetNormalize();
 			return Contains(point, Vector3D.UnitZ);
 		}
 

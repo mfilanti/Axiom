@@ -47,9 +47,7 @@ namespace Axiom.GeoShape.Curves
 		{
 			get
 			{
-				Vector3D result = _points[1] - _points[0];
-				result.SetNormalize();
-				return result;
+				return ((Vector3D)(_points[1] - _points[0])).NormalizeOrZero();
 			}
 		}
 
@@ -61,9 +59,7 @@ namespace Axiom.GeoShape.Curves
 		{
 			get
 			{
-				Vector3D result = _points[_points.Count - 1] - _points[_points.Count - 2];
-				result.SetNormalize();
-				return result;
+				return ((Vector3D)(_points[_points.Count - 1] - _points[_points.Count - 2])).NormalizeOrZero();
 			}
 
 		}

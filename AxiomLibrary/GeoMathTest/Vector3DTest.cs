@@ -1,3 +1,5 @@
+using Axiom.GeoMath;
+
 namespace Axiom.GeoMathTest;
 
 [TestClass]
@@ -6,9 +8,183 @@ public class Vector3DTest
     [TestMethod]
     public void TestCtor()
     {
-        var v = new Axiom.GeoMath.Vector3D(1.0, 2.0, 3.0);
+        var v = new Vector3D(1.0, 2.0, 3.0);
         Assert.AreEqual(1.0, v.X);
         Assert.AreEqual(2.0, v.Y);
         Assert.AreEqual(3.0, v.Z);
-	}
+        Assert.AreEqual(v.Norm, v.Length);
+        Assert.AreEqual(14, v.LengthSquared);
+    }
+
+    [TestMethod]
+    public void TestIndexer()
+    {
+        var v = new Vector3D(1, 2, 3);
+        Assert.AreEqual(1, v[0]);
+        Assert.AreEqual(2, v[1]);
+        Assert.AreEqual(3, v[2]);
+        // Vector3D è immutabile: l'indexer è di sola lettura, per "modificare" si usa With.
+        v = v.WithY(5);
+        Assert.AreEqual(5, v.Y);
+    }
+
+    [TestMethod]
+    public void TestEqualsAndNormalize()
+    {
+        var v1 = new Vector3D(1, 2, 3);
+        var v2 = new Vector3D(1.000000001, 2.000000001, 3.000000001);
+        Assert.IsTrue(v1.IsEquals(v2));
+        Assert.IsTrue(v1.IsEquals(v2, 0.001));
+
+        var normalized = v1.Normalize();
+        Assert.IsTrue(normalized.Length.IsEquals(1));
+
+        // Immutabile: si usano Length + NormalizeOrZero al posto di SetNormalize.
+        var v3 = new Vector3D(3, 0, 0);
+        Assert.AreEqual(3, v3.Length);
+        Assert.IsTrue(v3.NormalizeOrZero().IsEquals(Vector3D.UnitX));
+
+        var zero = new Vector3D(0, 0, 0);
+        Assert.AreEqual(0, zero.Length);
+        Assert.IsTrue(zero.NormalizeOrZero().IsEquals(Vector3D.Zero));
+    }
+
+    [TestMethod]
+    public void TestNormalizeThrowsOnZero()
+    {
+        Assert.ThrowsException<InvalidOperationException>(() => Vector3D.Zero.Normalize());
+    }
+
+    /// <summary>
+    /// Robustezza: alternative sicure a Normalize() che NON lanciano su vettore nullo/NaN.
+    /// </summary>
+    [TestMethod]
+    public void TestSafeNormalization()
+    {
+        // TryNormalize su vettore valido
+        Assert.IsTrue(new Vector3D(3, 0, 0).TryNormalize(out var n));
+        Assert.IsTrue(n.IsEquals(Vector3D.UnitX));
+
+        // TryNormalize su vettore nullo: false, out = Zero, nessuna eccezione
+        Assert.IsFalse(Vector3D.Zero.TryNormalize(out var z));
+        Assert.IsTrue(z.IsEquals(Vector3D.Zero));
+
+        // TryNormalize su vettore NaN: false
+        Assert.IsFalse(Vector3D.NullVector.TryNormalize(out _));
+
+        // NormalizeOrZero
+        Assert.IsTrue(new Vector3D(0, 5, 0).NormalizeOrZero().IsEquals(Vector3D.UnitY));
+        Assert.IsTrue(Vector3D.Zero.NormalizeOrZero().IsEquals(Vector3D.Zero));
+
+        // IsZero
+        Assert.IsTrue(Vector3D.Zero.IsZero());
+        Assert.IsFalse(Vector3D.UnitX.IsZero());
+        Assert.IsTrue(new Vector3D(1e-7, 0, 0).IsZero());
+        Assert.IsFalse(new Vector3D(1e-7, 0, 0).IsZero(1e-9));
+    }
+
+    [TestMethod]
+    public void TestNegate()
+    {
+        var v = new Vector3D(1, -2, 3);
+        var neg = v.Negate();
+        Assert.IsTrue(neg.IsEquals(new Vector3D(-1, 2, -3)));
+        Assert.IsTrue(neg.Negate().IsEquals(new Vector3D(1, -2, 3)));
+        // L'originale è immutato.
+        Assert.IsTrue(v.IsEquals(new Vector3D(1, -2, 3)));
+    }
+
+    [TestMethod]
+    public void TestDotCrossAndPerpendicular()
+    {
+        var v1 = new Vector3D(1, 0, 0);
+        var v2 = new Vector3D(0, 1, 0);
+        Assert.AreEqual(0, v1.Dot(v2));
+        Assert.IsTrue(v1.Cross(v2).IsEquals(Vector3D.UnitZ));
+        Assert.IsTrue(Vector3D.UnitX.Perpendicular().IsEquals(Vector3D.UnitY));
+        Assert.IsTrue(Vector3D.NegativeUnitX.Perpendicular().IsEquals(Vector3D.NegativeUnitY));
+        var perpendicular = new Vector3D(1, 1, 0).Perpendicular();
+        Assert.IsTrue(perpendicular.Length.IsEquals(1));
+        Assert.IsTrue(perpendicular.Dot(new Vector3D(1, 1, 0)).IsEquals(0));
+    }
+
+    [TestMethod]
+    public void TestParallelAndAngles()
+    {
+        Assert.IsTrue(new Vector3D(2, 0, 0).IsParallel(Vector3D.UnitX));
+        Assert.IsFalse(new Vector3D(1, 0, 0).IsParallel(Vector3D.UnitY));
+        Assert.IsTrue(new Vector3D(1, 0, 0).ApproxEqualsInnerAngle(new Vector3D(2, 0, 0)));
+        Assert.AreEqual(Math.PI / 2, Vector3D.UnitX.Angle(Vector3D.UnitY), 1e-10);
+        Assert.AreEqual(0, Vector3D.UnitZ.Angle(), 1e-10);
+        Assert.AreEqual(Math.PI / 2, Vector3D.UnitY.Angle(Vector3D.UnitX, Vector3D.UnitZ), 1e-10);
+    }
+
+    [TestMethod]
+    public void TestRotateAndSlerp()
+    {
+        var rotated = Vector3D.UnitX.Rotate(Vector3D.UnitZ, Math.PI / 2);
+        Assert.IsTrue(rotated.IsEquals(Vector3D.UnitY, 1e-10));
+
+        var slerpSame = Vector3D.UnitX.Slerp(Vector3D.UnitX, 0.5, Vector3D.UnitZ);
+        Assert.IsTrue(slerpSame.IsEquals(Vector3D.UnitX));
+
+        var slerpQuarter = Vector3D.UnitX.Slerp(Vector3D.UnitY, 0.5, Vector3D.UnitZ);
+        Assert.IsTrue(slerpQuarter.IsParallel(new Vector3D(1, 1, 0)));
+
+        // Robustezza: vettori opposti. Slerp deve usare il piano dato da normal (UnitZ) e ruotare
+        // di 180°·t, quindi a metà il risultato giace lungo Y (in passato lanciava eccezione).
+        var slerpOpposite = Vector3D.UnitX.Slerp(Vector3D.NegativeUnitX, 0.5, Vector3D.UnitZ);
+        Assert.IsTrue(slerpOpposite.Length.IsEquals(1), $"Slerp opposti non unitario: {slerpOpposite}");
+        Assert.IsTrue(slerpOpposite.IsParallel(Vector3D.UnitY), $"Slerp opposti non lungo Y: {slerpOpposite}");
+
+        // Slerp non deve modificare i vettori in ingresso (nessun effetto collaterale).
+        var src = new Vector3D(1, 0, 0);
+        var dst = new Vector3D(0, 1, 0);
+        src.Slerp(dst, 0.5, Vector3D.UnitZ);
+        Assert.IsTrue(src.IsEquals(new Vector3D(1, 0, 0)), "Slerp ha mutato il vettore sorgente.");
+        Assert.IsTrue(dst.IsEquals(new Vector3D(0, 1, 0)), "Slerp ha mutato il vettore destinazione.");
+    }
+
+    /// <summary>
+    /// Robustezza: operazioni su vettori degeneri (nulli / paralleli) non devono lanciare né produrre NaN.
+    /// </summary>
+    [TestMethod]
+    public void TestDegenerateOperationsDoNotThrow()
+    {
+        // Perpendicular
+        Assert.IsTrue(Vector3D.Zero.Perpendicular().IsEquals(Vector3D.Zero));
+        var perpParallelX = new Vector3D(5, 0, 0).Perpendicular(); // parallelo a X ma non unitario
+        Assert.IsTrue(perpParallelX.Length.IsEquals(1));
+        Assert.IsTrue(perpParallelX.Dot(new Vector3D(5, 0, 0)).IsEquals(0));
+
+        // Angle su vettore nullo -> 0 (niente eccezione)
+        Assert.AreEqual(0, Vector3D.Zero.Angle(Vector3D.UnitX), 1e-12);
+        Assert.AreEqual(0, Vector3D.UnitX.Angle(Vector3D.Zero), 1e-12);
+        Assert.AreEqual(0, Vector3D.Zero.Angle(), 1e-12);
+
+        // IsParallel con vettore nullo -> false (niente eccezione)
+        Assert.IsFalse(Vector3D.Zero.IsParallel(Vector3D.UnitX));
+        Assert.IsFalse(Vector3D.UnitX.IsParallel(Vector3D.Zero));
+
+        // Rotate: vettore nullo, o asse parallelo al vettore -> invariato (niente eccezione)
+        Assert.IsTrue(Vector3D.Zero.Rotate(Vector3D.UnitZ, Math.PI / 3).IsEquals(Vector3D.Zero));
+        Assert.IsTrue(Vector3D.UnitZ.Rotate(Vector3D.UnitZ, Math.PI / 3).IsEquals(Vector3D.UnitZ));
+    }
+
+    [TestMethod]
+    public void TestOperatorsAndConversions()
+    {
+        Vector3D fromPoint = new Point3D(1, 2, 3);
+        Assert.IsTrue(fromPoint.IsEquals(new Vector3D(1, 2, 3)));
+
+        var v = new Vector3D(1, 2, 3);
+        Assert.IsTrue((v + new Vector3D(1, 1, 1)).IsEquals(new Vector3D(2, 3, 4)));
+        Assert.IsTrue((v - new Vector3D(1, 1, 1)).IsEquals(new Vector3D(0, 1, 2)));
+        Assert.IsTrue((-v).IsEquals(new Vector3D(-1, -2, -3)));
+        Assert.IsTrue((v * 2).IsEquals(new Vector3D(2, 4, 6)));
+        Assert.IsTrue((2 * v).IsEquals(new Vector3D(2, 4, 6)));
+        Assert.IsTrue((v / 2).IsEquals(new Vector3D(0.5, 1, 1.5)));
+
+        Assert.AreEqual("(1, 2, 3)", v.ToString());
+    }
 }

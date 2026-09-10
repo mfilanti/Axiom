@@ -189,12 +189,15 @@ namespace Axiom.GeoShape.Elements
 		/// <param name="boxToAdd"></param>
 		public void Union(AABBox3D boxToAdd)
 		{
-			if (boxToAdd.MinPoint.X < MinPoint.X) MinPoint.X = boxToAdd.MinPoint.X;
-			if (boxToAdd.MinPoint.Y < MinPoint.Y) MinPoint.Y = boxToAdd.MinPoint.Y;
-			if (boxToAdd.MinPoint.Z < MinPoint.Z) MinPoint.Z = boxToAdd.MinPoint.Z;
-			if (boxToAdd.MaxPoint.X > MaxPoint.X) MaxPoint.X = boxToAdd.MaxPoint.X;
-			if (boxToAdd.MaxPoint.Y > MaxPoint.Y) MaxPoint.Y = boxToAdd.MaxPoint.Y;
-			if (boxToAdd.MaxPoint.Z > MaxPoint.Z) MaxPoint.Z = boxToAdd.MaxPoint.Z;
+			// Point3D è immutabile: si ricostruiscono i punti anziché mutarne le coordinate.
+			MinPoint = new Point3D(
+				Math.Min(MinPoint.X, boxToAdd.MinPoint.X),
+				Math.Min(MinPoint.Y, boxToAdd.MinPoint.Y),
+				Math.Min(MinPoint.Z, boxToAdd.MinPoint.Z));
+			MaxPoint = new Point3D(
+				Math.Max(MaxPoint.X, boxToAdd.MaxPoint.X),
+				Math.Max(MaxPoint.Y, boxToAdd.MaxPoint.Y),
+				Math.Max(MaxPoint.Z, boxToAdd.MaxPoint.Z));
 		}
 
 		/// <summary>
@@ -203,12 +206,10 @@ namespace Axiom.GeoShape.Elements
 		/// <param name="point"></param>
 		public void EnlargeByPoint(Point3D point)
 		{
-			if (point.X < MinPoint.X) MinPoint.X = point.X;
-			if (point.Y < MinPoint.Y) MinPoint.Y = point.Y;
-			if (point.Z < MinPoint.Z) MinPoint.Z = point.Z;
-			if (point.X > MaxPoint.X) MaxPoint.X = point.X;
-			if (point.Y > MaxPoint.Y) MaxPoint.Y = point.Y;
-			if (point.Z > MaxPoint.Z) MaxPoint.Z = point.Z;
+			MinPoint = new Point3D(
+				Math.Min(MinPoint.X, point.X), Math.Min(MinPoint.Y, point.Y), Math.Min(MinPoint.Z, point.Z));
+			MaxPoint = new Point3D(
+				Math.Max(MaxPoint.X, point.X), Math.Max(MaxPoint.Y, point.Y), Math.Max(MaxPoint.Z, point.Z));
 		}
 
 		/// <summary>
@@ -220,12 +221,8 @@ namespace Axiom.GeoShape.Elements
 		/// <param name="offsetZ">Z</param>
 		public void Enlarge(double offsetX, double offsetY, double offsetZ)
 		{
-			MinPoint.X -= offsetX;
-			MinPoint.Y -= offsetY;
-			MinPoint.Z -= offsetZ;
-			MaxPoint.X += offsetX;
-			MaxPoint.Y += offsetY;
-			MaxPoint.Z += offsetZ;
+			MinPoint = new Point3D(MinPoint.X - offsetX, MinPoint.Y - offsetY, MinPoint.Z - offsetZ);
+			MaxPoint = new Point3D(MaxPoint.X + offsetX, MaxPoint.Y + offsetY, MaxPoint.Z + offsetZ);
 		}
 
 		/// <summary>
@@ -277,14 +274,14 @@ namespace Axiom.GeoShape.Elements
 			}
 			else
 			{
-				Point3D min = MinPoint;
-				Point3D max = MaxPoint;
-				if (bBox.MinPoint.X > min.X) min.X = bBox.MinPoint.X;
-				if (bBox.MinPoint.Y > min.Y) min.Y = bBox.MinPoint.Y;
-				if (bBox.MinPoint.Z > min.Z) min.Z = bBox.MinPoint.Z;
-				if (bBox.MaxPoint.X < max.X) max.X = bBox.MaxPoint.X;
-				if (bBox.MaxPoint.Y < max.Y) max.Y = bBox.MaxPoint.Y;
-				if (bBox.MaxPoint.Z < max.Z) max.Z = bBox.MaxPoint.Z;
+				Point3D min = new Point3D(
+					Math.Max(MinPoint.X, bBox.MinPoint.X),
+					Math.Max(MinPoint.Y, bBox.MinPoint.Y),
+					Math.Max(MinPoint.Z, bBox.MinPoint.Z));
+				Point3D max = new Point3D(
+					Math.Min(MaxPoint.X, bBox.MaxPoint.X),
+					Math.Min(MaxPoint.Y, bBox.MaxPoint.Y),
+					Math.Min(MaxPoint.Z, bBox.MaxPoint.Z));
 
 				intersection = new AABBox3D(min, max);
 			}
@@ -381,26 +378,21 @@ namespace Axiom.GeoShape.Elements
 		/// <returns></returns>
 		public static AABBox3D FromPoints(IEnumerable<Point3D> points)
 		{
-			AABBox3D result = AABBox3D.NullAABBox;
+			// Si accumulano min/max su variabili locali e si costruiscono i punti (immutabili) alla fine.
+			// Con sequenza vuota si ottiene il NullAABBox (min = MaxValue, max = MinValue).
+			double minX = double.MaxValue, minY = double.MaxValue, minZ = double.MaxValue;
+			double maxX = double.MinValue, maxY = double.MinValue, maxZ = double.MinValue;
 			foreach (Point3D point in points)
 			{
-				if (point.X < result.MinPoint.X)
-					result.MinPoint.X = point.X;
-				if (point.X > result.MaxPoint.X)
-					result.MaxPoint.X = point.X;
-
-				if (point.Y < result.MinPoint.Y)
-					result.MinPoint.Y = point.Y;
-				if (point.Y > result.MaxPoint.Y)
-					result.MaxPoint.Y = point.Y;
-
-				if (point.Z < result.MinPoint.Z)
-					result.MinPoint.Z = point.Z;
-				if (point.Z > result.MaxPoint.Z)
-					result.MaxPoint.Z = point.Z;
+				if (point.X < minX) minX = point.X;
+				if (point.X > maxX) maxX = point.X;
+				if (point.Y < minY) minY = point.Y;
+				if (point.Y > maxY) maxY = point.Y;
+				if (point.Z < minZ) minZ = point.Z;
+				if (point.Z > maxZ) maxZ = point.Z;
 			}
 
-			return result;
+			return new AABBox3D(new Point3D(minX, minY, minZ), new Point3D(maxX, maxY, maxZ));
 		}
 		#endregion STATICS
 

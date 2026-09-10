@@ -1,11 +1,17 @@
-﻿using System;
+using System;
 
 namespace Axiom.GeoMath
 {
 	/// <summary>
-	/// Rappresenta un vettore 3D.
+	/// Vettore 3D <b>immutabile</b> (readonly struct): le componenti non cambiano dopo la costruzione,
+	/// tutte le operazioni restituiscono NUOVE istanze. Per "modificare" una componente usare i metodi
+	/// <see cref="WithX"/>/<see cref="WithY"/>/<see cref="WithZ"/>/<see cref="With(double,double,double)"/>.
 	/// </summary>
-	public class Vector3D
+	/// <remarks>
+	/// Essendo uno struct, <c>Vector3D</c> non può essere <c>null</c>: il vettore "nullo" sentinella
+	/// (componenti NaN) è <see cref="NullVector"/>. N.B. <c>default(Vector3D)</c> è (0,0,0) = <see cref="Zero"/>.
+	/// </remarks>
+	public readonly struct Vector3D : IEquatable<Vector3D>
 	{
 		#region STATIC
 		/// <summary>
@@ -24,12 +30,12 @@ namespace Axiom.GeoMath
 		public static Vector3D UnitZ => new Vector3D(0, 0, 1);
 
 		/// <summary>
-		/// Vettore unitario negativo lungo l'asse Z.
+		/// Vettore unitario negativo lungo l'asse X.
 		/// </summary>
 		public static Vector3D NegativeUnitX => new Vector3D(-1, 0, 0);
 
 		/// <summary>
-		/// Vettore unitario negativo lungo l'asse Z.
+		/// Vettore unitario negativo lungo l'asse Y.
 		/// </summary>
 		public static Vector3D NegativeUnitY => new Vector3D(0, -1, 0);
 
@@ -44,28 +50,24 @@ namespace Axiom.GeoMath
 		public static Vector3D Zero => new Vector3D(0, 0, 0);
 
 		/// <summary>
-		/// Vettore nullo: Vector3D(double.NaN, double.NaN, double.NaN)
+		/// Vettore nullo (sentinella): Vector3D(double.NaN, double.NaN, double.NaN)
 		/// </summary>
 		public static Vector3D NullVector => new Vector3D(double.NaN, double.NaN, double.NaN);
 		#endregion
 
-		#region Fields
-
-		#endregion
-
-		#region Properties
+		#region Properties (readonly)
 		/// <summary>
 		/// Componente X del vettore.
 		/// </summary>
-		public double X { get; set; }
+		public double X { get; }
 		/// <summary>
 		/// Componente Y del vettore.
 		/// </summary>
-		public double Y { get; set; }
+		public double Y { get; }
 		/// <summary>
 		/// Componente Z del vettore.
 		/// </summary>
-		public double Z { get; set; }
+		public double Z { get; }
 
 		/// <summary>
 		/// Restituisce la norma (lunghezza) del vettore.
@@ -81,8 +83,6 @@ namespace Axiom.GeoMath
 		/// Lungezza del vettore.
 		/// </summary>
 		public double Length => Norm;
-
-
 		#endregion
 
 		#region Constructors
@@ -96,7 +96,7 @@ namespace Axiom.GeoMath
 			Z = z;
 		}
 		/// <summary>
-		/// Crea un nuovo vettore 3D.
+		/// Crea un nuovo vettore 3D (copia).
 		/// </summary>
 		public Vector3D(Vector3D vector3D)
 			: this(vector3D.X, vector3D.Y, vector3D.Z)
@@ -104,10 +104,32 @@ namespace Axiom.GeoMath
 		}
 		#endregion
 
+		#region With (immutabilità)
+		/// <summary>
+		/// Restituisce una copia con la componente X indicata.
+		/// </summary>
+		public Vector3D WithX(double x) => new Vector3D(x, Y, Z);
+
+		/// <summary>
+		/// Restituisce una copia con la componente Y indicata.
+		/// </summary>
+		public Vector3D WithY(double y) => new Vector3D(X, y, Z);
+
+		/// <summary>
+		/// Restituisce una copia con la componente Z indicata.
+		/// </summary>
+		public Vector3D WithZ(double z) => new Vector3D(X, Y, z);
+
+		/// <summary>
+		/// Restituisce una copia con le componenti indicate.
+		/// </summary>
+		public Vector3D With(double x, double y, double z) => new Vector3D(x, y, z);
+		#endregion
+
 		#region Methods
 
 		/// <summary>
-		/// Accesso tramite indice
+		/// Accesso tramite indice (0 = X, 1 = Y, 2 = Z). Sola lettura.
 		/// </summary>
 		/// <param name="index"></param>
 		/// <returns></returns>
@@ -132,21 +154,6 @@ namespace Axiom.GeoMath
 						break;
 				}
 				return result;
-			}
-			set
-			{
-				switch (index)
-				{
-					case 0:
-						X = value;
-						break;
-					case 1:
-						Y = value;
-						break;
-					case 2:
-						Z = value;
-						break;
-				}
 			}
 		}
 
@@ -177,7 +184,7 @@ namespace Axiom.GeoMath
 		}
 
 		/// <summary>
-		/// Confronta i due vettori considerando la tolleranza uguale a MathUtils.Tolerance. 
+		/// Confronta i due vettori considerando la tolleranza uguale a MathUtils.Tolerance.
 		/// Il confronto viene effettuato guardando se l'angolo interno (in radianti) tende a zero.
 		/// </summary>
 		/// <param name="vector"></param>
@@ -185,7 +192,7 @@ namespace Axiom.GeoMath
 		public bool ApproxEqualsInnerAngle(Vector3D vector) => Angle(vector).IsEquals(0);
 
 		/// <summary>
-		/// Confronta i due vettori considerando la tolleranza indicata. 
+		/// Confronta i due vettori considerando la tolleranza indicata.
 		/// Il confronto viene effettuato guardando se l'angolo interno (in radianti) tende a zero.
 		/// </summary>
 		/// <param name="vector"></param>
@@ -203,32 +210,39 @@ namespace Axiom.GeoMath
 		}
 
 		/// <summary>
-		/// NOrmalizza il vettore corrente.
+		/// Indica se il vettore è (circa) nullo, entro <see cref="MathUtils.FineTolerance"/>.
 		/// </summary>
-		public double SetNormalize()
-		{
-			double length = Norm;
-			if (length > double.Epsilon)
-			{
-				double inverseLength = 1.0 / length;
+		public bool IsZero() => IsZero(MathUtils.FineTolerance);
 
-				X *= inverseLength;
-				Y *= inverseLength;
-				Z *= inverseLength;
+		/// <summary>
+		/// Indica se il vettore è (circa) nullo, entro la tolleranza indicata.
+		/// </summary>
+		/// <param name="tolerance">Tolleranza sulla norma.</param>
+		public bool IsZero(double tolerance) => !(Norm > tolerance);
+
+		/// <summary>
+		/// Tenta di normalizzare il vettore SENZA lanciare eccezioni. Alternativa sicura a
+		/// <see cref="Normalize"/> per input potenzialmente degeneri.
+		/// </summary>
+		/// <param name="normalized">Il versore, oppure <see cref="Zero"/> se il vettore è nullo/NaN.</param>
+		/// <returns><c>true</c> se la normalizzazione è riuscita; <c>false</c> se il vettore è nullo o NaN.</returns>
+		public bool TryNormalize(out Vector3D normalized)
+		{
+			double norm = Norm;
+			if (double.IsNaN(norm) || norm <= double.Epsilon)
+			{
+				normalized = Vector3D.Zero;
+				return false;
 			}
-			return length;
+			normalized = new Vector3D(X / norm, Y / norm, Z / norm);
+			return true;
 		}
 
 		/// <summary>
-		/// Cambia segno a tutte le componenti
+		/// Restituisce il versore, oppure <see cref="Zero"/> se il vettore è nullo/NaN
+		/// (nessuna eccezione). Alternativa sicura a <see cref="Normalize"/>.
 		/// </summary>
-		/// <returns></returns>
-		public void SetNegate()
-		{
-			X = -X;
-			Y = -Y;
-			Z = -Z;
-		}
+		public Vector3D NormalizeOrZero() => TryNormalize(out Vector3D n) ? n : Vector3D.Zero;
 
 		/// <summary>
 		/// Prodotto scalare tra questo vettore e un altro.
@@ -253,54 +267,59 @@ namespace Axiom.GeoMath
 		public override string ToString() => $"({X}, {Y}, {Z})";
 
 		/// <summary>
-		/// Restituisce un vettore perpendicolare (normalizzato). 
-		/// Tende a restituire il vettore lungo X. 
+		/// Restituisce un vettore perpendicolare (normalizzato).
+		/// Tende a restituire il vettore lungo X.
 		/// Regola: [(this x UnitX) x this] con eccezioni nel caso this sia UnitX o NegativeUnitX.
 		/// </summary>
 		/// <returns></returns>
 		public Vector3D Perpendicular()
 		{
-			Vector3D result;
+			// Vettore nullo: non esiste un perpendicolare definito -> Zero (nessuna eccezione).
+			if (IsZero())
+				return Vector3D.Zero;
 
 			if (IsEquals(Vector3D.NegativeUnitX))
-				result = Vector3D.NegativeUnitY;
-			else if (IsEquals(Vector3D.UnitX))
-				result = Vector3D.UnitY;
-			else
-				result = (Cross(Vector3D.UnitX)).Cross(this).Normalize();
+				return Vector3D.NegativeUnitY;
+			if (IsEquals(Vector3D.UnitX))
+				return Vector3D.UnitY;
 
-			return result;
+			Vector3D cross = Cross(Vector3D.UnitX);
+			if (cross.IsZero())
+				// this è parallelo all'asse X (ma non ±UnitX): un perpendicolare valido è ±UnitY.
+				return X >= 0 ? Vector3D.UnitY : Vector3D.NegativeUnitY;
+
+			return cross.Cross(this).NormalizeOrZero();
 		}
 
-        /// <summary>
-        /// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
-        /// Con tolleranza pari a MathUtils.Tolerance.
-        /// </summary>
-        /// <param name="vector"></param>
-        /// <param name="tolerance"></param>
-        /// <returns></returns>
-        public bool IsParallel(Vector3D vector) => IsParallel(vector, MathUtils.FineTolerance);
+		/// <summary>
+		/// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1.
+		/// Con tolleranza pari a MathUtils.Tolerance.
+		/// </summary>
+		/// <param name="vector"></param>
+		/// <returns></returns>
+		public bool IsParallel(Vector3D vector) => IsParallel(vector, MathUtils.FineTolerance);
 
-        /// <summary>
-        /// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1. 
-        /// Con tolleranza indicata.
-        /// </summary>
-        /// <param name="vector"></param>
-        /// <param name="tolerance"></param>
-        /// <returns></returns>
-        public bool IsParallel(Vector3D vector, double tolerance)
+		/// <summary>
+		/// Indica se i due vettori sono paralleli, controlla che la proiezione sia circa 1.
+		/// Con tolleranza indicata.
+		/// </summary>
+		/// <param name="vector"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public bool IsParallel(Vector3D vector, double tolerance)
 		{
-			Vector3D v1 = Normalize();
-			Vector3D v2 = vector.Normalize();
+			// Un vettore nullo non ha direzione: per definizione non è parallelo ad alcunché.
+			if (!TryNormalize(out Vector3D v1) || !vector.TryNormalize(out Vector3D v2))
+				return false;
 			bool result = MathExtensions.IsEquals(Math.Abs(v1.Dot(v2)), 1, tolerance);
 			return result;
 		}
 
 		/// <summary>
-		/// Restituisce la interpolazione sferica lineare. 
-		/// Se i due vettori sono identici restituisce  
-		/// Se sono opposti ci sarebbero infiniti piani su cui ruotare, in questo caso considera il piano 
-		/// individuato dal parametro normal (che altrimenti non viene considerato). 
+		/// Restituisce la interpolazione sferica lineare.
+		/// Se i due vettori sono identici restituisce this.
+		/// Se sono opposti ci sarebbero infiniti piani su cui ruotare, in questo caso considera il piano
+		/// individuato dal parametro normal (che altrimenti non viene considerato).
 		/// Il parametro t deve essere compreso tra 0 e 1.
 		/// </summary>
 		/// <param name="destination"></param>
@@ -309,21 +328,20 @@ namespace Axiom.GeoMath
 		public Vector3D Slerp(Vector3D destination, double t, Vector3D normal)
 		{
 			Vector3D result = this;
-			Vector3D v0 = this;
-			Vector3D v1 = destination;
-			v0.SetNormalize();
-			v1.SetNormalize();
+			Vector3D v0 = NormalizeOrZero();
+			Vector3D v1 = destination.NormalizeOrZero();
 
 			double d = v0.Dot(v1);
 			// Se il dot è 1 allora i due vettori sono uguali
 			if (d < 1)
 			{
-				Vector3D planeNormal = Cross(destination).Normalize();
-				// Se sono opposti considera il parametro normal
-				if (d.IsEquals(-1))
-					planeNormal = normal;
+				// Se sono opposti (d ≈ -1) ci sono infiniti piani di rotazione: si usa il piano
+				// indicato dal parametro normal. Altrimenti il piano è dato dal prodotto vettoriale.
+				Vector3D planeNormal = d.IsEquals(-1)
+					? normal
+					: Cross(destination).NormalizeOrZero();
 
-				if (planeNormal.IsEquals(Vector3D.Zero) == false)
+				if (planeNormal.IsZero() == false)
 				{
 					double angle = destination.Angle(this, planeNormal);
 					result = Rotate(planeNormal, t * angle);
@@ -334,12 +352,13 @@ namespace Axiom.GeoMath
 		}
 
 		/// <summary>
-		/// Determina l'angolo INTERNO tra this e il vettore passato come parametro.
+		/// Determina l'angolo INTERNO tra this e l'asse Z.
 		/// Restituisce un angolo in radianti compreso tra 0 e + PI (N.B. angolo interno)
 		/// </summary>
 		public double Angle()
 		{
-			Vector3D a = Normalize();
+			if (!TryNormalize(out Vector3D a))
+				return 0;
 			Vector3D b = Vector3D.UnitZ;
 			return Math.Atan2(a.Cross(b).Length, a.Dot(b));
 		}
@@ -352,14 +371,14 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public double Angle(Vector3D vector)
 		{
-			Vector3D a = Normalize();
-			Vector3D b = vector.Normalize();
+			if (!TryNormalize(out Vector3D a) || !vector.TryNormalize(out Vector3D b))
+				return 0;
 			return Math.Atan2(a.Cross(b).Length, a.Dot(b));
 		}
 
 		/// <summary>
-		/// Determina l'angolo di this rispetto a refX considerando refZ come riferimento Z. 
-		/// Restituisce un angolo in radianti compreso tra -PI e + PI (N.B. Può essere o meno l'angolo interno). 
+		/// Determina l'angolo di this rispetto a refX considerando refZ come riferimento Z.
+		/// Restituisce un angolo in radianti compreso tra -PI e + PI (N.B. Può essere o meno l'angolo interno).
 		/// Normal deve essere perpendicolare a this e vector.
 		/// </summary>
 		/// <param name="refX"></param>
@@ -367,8 +386,8 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public double Angle(Vector3D refX, Vector3D refZ)
 		{
-			Vector3D a = Normalize();
-			Vector3D b = refX.Normalize();
+			if (!TryNormalize(out Vector3D a) || !refX.TryNormalize(out Vector3D b))
+				return 0;
 			Vector3D cross = a.Cross(b);
 			double result = Math.Atan2(cross.Length, a.Dot(b));
 			if (cross.Dot(refZ) > 0)
@@ -384,13 +403,19 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public Vector3D Rotate(Vector3D normal, double radAngle)
 		{
+			// Vettore nullo o asse di rotazione nullo: nulla da ruotare.
+			if (!TryNormalize(out Vector3D thisNorm) || normal.IsZero())
+				return this;
+
+			// Se l'asse è parallelo al vettore, la rotazione lo lascia invariato
+			// (e il Cross sarebbe nullo, causando in precedenza un'eccezione in Normalize).
+			if (!normal.Cross(thisNorm).TryNormalize(out Vector3D locY))
+				return this;
+
 			RTMatrix matrixA = RTMatrix.FromEulerAnglesXYZ(0, 0, radAngle);
 			RTMatrix matrixB = RTMatrix.Identity;
-			Vector3D thisNorm = Normalize();
-			Vector3D locX, locY, locZ;
-			locZ = normal;
-			locY = normal.Cross(thisNorm).Normalize();
-			locX = locY.Cross(locZ);
+			Vector3D locZ = normal;
+			Vector3D locX = locY.Cross(locZ);
 			matrixB.SetFromAxes(locX, locY, locZ);
 			return (matrixB * matrixA * matrixB.Transpose()) * this;
 		}
@@ -399,12 +424,25 @@ namespace Axiom.GeoMath
 		/// Restituisce un vettore con segno cambiato per tutte le componenti
 		/// </summary>
 		/// <returns></returns>
-		public Vector3D Negate()
-		{
-			Vector3D result = new(this);
-			result.SetNegate();
-			return result;
-		}
+		public Vector3D Negate() => new Vector3D(-X, -Y, -Z);
+		#endregion
+
+		#region Equality
+		/// <summary>
+		/// Uguaglianza con tolleranza (vedi <see cref="IsEquals(Vector3D)"/>).
+		/// </summary>
+		public bool Equals(Vector3D other) => IsEquals(other);
+
+		/// <summary>
+		/// Uguaglianza con tolleranza.
+		/// </summary>
+		public override bool Equals(object obj) => obj is Vector3D other && IsEquals(other);
+
+		/// <summary>
+		/// HashCode. Poiché <see cref="Equals(object)"/> confronta con tolleranza (non compatibile con
+		/// un hash discriminante), si usa un hash costante: Vector3D non è adatto come chiave di hash.
+		/// </summary>
+		public override int GetHashCode() => 0;
 		#endregion
 
 		#region Operators
@@ -414,6 +452,16 @@ namespace Axiom.GeoMath
 		/// </summary>
 		/// <param name="point3D"></param>
 		public static implicit operator Vector3D(Point3D point3D) => new(point3D.X, point3D.Y, point3D.Z);
+
+		/// <summary>
+		/// Uguaglianza con tolleranza. N.B. essendo uno struct i valori non possono essere null.
+		/// </summary>
+		public static bool operator ==(Vector3D a, Vector3D b) => a.IsEquals(b);
+
+		/// <summary>
+		/// Disuguaglianza con tolleranza.
+		/// </summary>
+		public static bool operator !=(Vector3D a, Vector3D b) => !a.IsEquals(b);
 
 		/// <summary>
 		/// Somma tra due vettori.
