@@ -24,12 +24,12 @@ namespace Axiom.GeoMath
 		public static Vector3D UnitZ => new Vector3D(0, 0, 1);
 
 		/// <summary>
-		/// Vettore unitario negativo lungo l'asse Z.
+		/// Vettore unitario negativo lungo l'asse X.
 		/// </summary>
 		public static Vector3D NegativeUnitX => new Vector3D(-1, 0, 0);
 
 		/// <summary>
-		/// Vettore unitario negativo lungo l'asse Z.
+		/// Vettore unitario negativo lungo l'asse Y.
 		/// </summary>
 		public static Vector3D NegativeUnitY => new Vector3D(0, -1, 0);
 
@@ -220,6 +220,41 @@ namespace Axiom.GeoMath
 		}
 
 		/// <summary>
+		/// Indica se il vettore è (circa) nullo, entro <see cref="MathUtils.FineTolerance"/>.
+		/// </summary>
+		public bool IsZero() => IsZero(MathUtils.FineTolerance);
+
+		/// <summary>
+		/// Indica se il vettore è (circa) nullo, entro la tolleranza indicata.
+		/// </summary>
+		/// <param name="tolerance">Tolleranza sulla norma.</param>
+		public bool IsZero(double tolerance) => !(Norm > tolerance);
+
+		/// <summary>
+		/// Tenta di normalizzare il vettore SENZA lanciare eccezioni. Alternativa sicura a
+		/// <see cref="Normalize"/> per input potenzialmente degeneri.
+		/// </summary>
+		/// <param name="normalized">Il versore, oppure <see cref="Zero"/> se il vettore è nullo/NaN.</param>
+		/// <returns><c>true</c> se la normalizzazione è riuscita; <c>false</c> se il vettore è nullo o NaN.</returns>
+		public bool TryNormalize(out Vector3D normalized)
+		{
+			double norm = Norm;
+			if (double.IsNaN(norm) || norm <= double.Epsilon)
+			{
+				normalized = Vector3D.Zero;
+				return false;
+			}
+			normalized = new Vector3D(X / norm, Y / norm, Z / norm);
+			return true;
+		}
+
+		/// <summary>
+		/// Restituisce il versore, oppure <see cref="Zero"/> se il vettore è nullo/NaN
+		/// (nessuna eccezione). Alternativa sicura a <see cref="Normalize"/>.
+		/// </summary>
+		public Vector3D NormalizeOrZero() => TryNormalize(out Vector3D n) ? n : Vector3D.Zero;
+
+		/// <summary>
 		/// Cambia segno a tutte le componenti
 		/// </summary>
 		/// <returns></returns>
@@ -260,16 +295,21 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public Vector3D Perpendicular()
 		{
-			Vector3D result;
+			// Vettore nullo: non esiste un perpendicolare definito -> Zero (nessuna eccezione).
+			if (IsZero())
+				return Vector3D.Zero;
 
 			if (IsEquals(Vector3D.NegativeUnitX))
-				result = Vector3D.NegativeUnitY;
-			else if (IsEquals(Vector3D.UnitX))
-				result = Vector3D.UnitY;
-			else
-				result = (Cross(Vector3D.UnitX)).Cross(this).Normalize();
+				return Vector3D.NegativeUnitY;
+			if (IsEquals(Vector3D.UnitX))
+				return Vector3D.UnitY;
 
-			return result;
+			Vector3D cross = Cross(Vector3D.UnitX);
+			if (cross.IsZero())
+				// this è parallelo all'asse X (ma non ±UnitX): un perpendicolare valido è ±UnitY.
+				return X >= 0 ? Vector3D.UnitY : Vector3D.NegativeUnitY;
+
+			return cross.Cross(this).NormalizeOrZero();
 		}
 
         /// <summary>
@@ -290,8 +330,9 @@ namespace Axiom.GeoMath
         /// <returns></returns>
         public bool IsParallel(Vector3D vector, double tolerance)
 		{
-			Vector3D v1 = Normalize();
-			Vector3D v2 = vector.Normalize();
+			// Un vettore nullo non ha direzione: per definizione non è parallelo ad alcunché.
+			if (!TryNormalize(out Vector3D v1) || !vector.TryNormalize(out Vector3D v2))
+				return false;
 			bool result = MathExtensions.IsEquals(Math.Abs(v1.Dot(v2)), 1, tolerance);
 			return result;
 		}
@@ -309,8 +350,8 @@ namespace Axiom.GeoMath
 		public Vector3D Slerp(Vector3D destination, double t, Vector3D normal)
 		{
 			Vector3D result = this;
-			Vector3D v0 = this;
-			Vector3D v1 = destination;
+			Vector3D v0 = new Vector3D(this);
+			Vector3D v1 = new Vector3D(destination);
 			v0.SetNormalize();
 			v1.SetNormalize();
 
@@ -318,12 +359,15 @@ namespace Axiom.GeoMath
 			// Se il dot è 1 allora i due vettori sono uguali
 			if (d < 1)
 			{
-				Vector3D planeNormal = Cross(destination).Normalize();
-				// Se sono opposti considera il parametro normal
-				if (d.IsEquals(-1))
-					planeNormal = normal;
+				// Se sono opposti (d ≈ -1) ci sono infiniti piani di rotazione: si usa il piano
+				// indicato dal parametro normal. Altrimenti il piano è dato dal prodotto vettoriale.
+				// N.B. In precedenza il Cross veniva normalizzato PRIMA di questo controllo, quindi
+				// per vettori opposti/paralleli Normalize lanciava eccezione: ora è gestito.
+				Vector3D planeNormal = d.IsEquals(-1)
+					? normal
+					: Cross(destination).NormalizeOrZero();
 
-				if (planeNormal.IsEquals(Vector3D.Zero) == false)
+				if (planeNormal.IsZero() == false)
 				{
 					double angle = destination.Angle(this, planeNormal);
 					result = Rotate(planeNormal, t * angle);
@@ -339,7 +383,8 @@ namespace Axiom.GeoMath
 		/// </summary>
 		public double Angle()
 		{
-			Vector3D a = Normalize();
+			if (!TryNormalize(out Vector3D a))
+				return 0;
 			Vector3D b = Vector3D.UnitZ;
 			return Math.Atan2(a.Cross(b).Length, a.Dot(b));
 		}
@@ -352,8 +397,8 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public double Angle(Vector3D vector)
 		{
-			Vector3D a = Normalize();
-			Vector3D b = vector.Normalize();
+			if (!TryNormalize(out Vector3D a) || !vector.TryNormalize(out Vector3D b))
+				return 0;
 			return Math.Atan2(a.Cross(b).Length, a.Dot(b));
 		}
 
@@ -367,8 +412,8 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public double Angle(Vector3D refX, Vector3D refZ)
 		{
-			Vector3D a = Normalize();
-			Vector3D b = refX.Normalize();
+			if (!TryNormalize(out Vector3D a) || !refX.TryNormalize(out Vector3D b))
+				return 0;
 			Vector3D cross = a.Cross(b);
 			double result = Math.Atan2(cross.Length, a.Dot(b));
 			if (cross.Dot(refZ) > 0)
@@ -384,13 +429,19 @@ namespace Axiom.GeoMath
 		/// <returns></returns>
 		public Vector3D Rotate(Vector3D normal, double radAngle)
 		{
+			// Vettore nullo o asse di rotazione nullo: nulla da ruotare.
+			if (!TryNormalize(out Vector3D thisNorm) || normal.IsZero())
+				return new Vector3D(this);
+
+			// Se l'asse è parallelo al vettore, la rotazione lo lascia invariato
+			// (e il Cross sarebbe nullo, causando in precedenza un'eccezione in Normalize).
+			if (!normal.Cross(thisNorm).TryNormalize(out Vector3D locY))
+				return new Vector3D(this);
+
 			RTMatrix matrixA = RTMatrix.FromEulerAnglesXYZ(0, 0, radAngle);
 			RTMatrix matrixB = RTMatrix.Identity;
-			Vector3D thisNorm = Normalize();
-			Vector3D locX, locY, locZ;
-			locZ = normal;
-			locY = normal.Cross(thisNorm).Normalize();
-			locX = locY.Cross(locZ);
+			Vector3D locZ = normal;
+			Vector3D locX = locY.Cross(locZ);
 			matrixB.SetFromAxes(locX, locY, locZ);
 			return (matrixB * matrixA * matrixB.Transpose()) * this;
 		}

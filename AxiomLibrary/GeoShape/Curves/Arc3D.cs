@@ -249,12 +249,35 @@ namespace Axiom.GeoShape.Curves
 		public Arc3D(Point3D start, Point3D end, Vector3D startTangent)
 		{
 			Vector3D vES = end - start;
-			Vector3D vESn = vES.Normalize();
-			Vector3D vZ = vESn.Cross(startTangent).Normalize();
+
+			// Casi degeneri (niente eccezioni/NaN): start coincidente con end, oppure tangente
+			// parallela alla corda -> l'arco non è definito, si costruisce un arco degenere (raggio 0).
+			if (!vES.TryNormalize(out Vector3D vESn) || !vESn.Cross(startTangent).TryNormalize(out Vector3D vZ))
+			{
+				Center = new Point3D(start);
+				Radius = 0;
+				RMatrix = RTMatrix.Identity;
+				CounterClockWise = true;
+				StartAngle = 0;
+				EndAngle = 0;
+				return;
+			}
+
 			Vector3D vESperp = vZ.Cross(vESn);
 
 			double dX = Math.Abs(startTangent.Dot(vESn));
 			double dY = Math.Abs(startTangent.Dot(vESperp));
+			if (dY.IsEquals(0))
+			{
+				// Tangente allineata alla corda: la curva sarebbe un segmento -> arco degenere.
+				Center = new Point3D(start);
+				Radius = 0;
+				RMatrix = RTMatrix.Identity;
+				CounterClockWise = true;
+				StartAngle = 0;
+				EndAngle = 0;
+				return;
+			}
 			double d = vES.Length / 2 * dX / dY;
 			Vector3D dirCenter;
 			if (startTangent.Dot(vESn) >= 0)
@@ -292,7 +315,7 @@ namespace Axiom.GeoShape.Curves
 
 			Center = start + 0.5 * (end - start) + d * dirCenter;
 			Radius = (start - Center).Length;
-			Vector3D vX = (start - Center).Normalize();
+			Vector3D vX = ((Vector3D)(start - Center)).NormalizeOrZero();
 			RMatrix = RTMatrix.FromVectors(vX, vZ.Cross(vX), vZ);
 
 			StartAngle = 0;
@@ -550,7 +573,9 @@ namespace Axiom.GeoShape.Curves
 			bool result = false;
 			Vector3D v1 = pEnd - pInt;
 			Vector3D v2 = pStart - pInt;
-			Vector3D vZ = v1.Cross(v2).Normalize();
+			// NormalizeOrZero: se i tre punti sono allineati (o coincidenti) il cross è nullo e in
+			// precedenza Normalize lanciava un'eccezione PRIMA del controllo qui sotto.
+			Vector3D vZ = v1.Cross(v2).NormalizeOrZero();
 			// Se il vettore è zero allora i tre punti sono allineati
 			if (vZ.IsEquals(Vector3D.Zero) == false)
 			{

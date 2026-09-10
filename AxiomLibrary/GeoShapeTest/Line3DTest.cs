@@ -40,4 +40,35 @@ public class Line3DTest
         Assert.IsTrue(clone.IsEquals(line));
         Assert.IsTrue(clone.IsEquals(line, 0.001));
     }
+
+    /// <summary>
+    /// Robustezza: un segmento di lunghezza nulla (start == end) non deve lanciare né produrre NaN
+    /// su tangenti, valutazione, proiezione e IsOnCurve.
+    /// </summary>
+    [TestMethod]
+    public void TestZeroLengthSegment_NoCrashNoNaN()
+    {
+        var p = new Point3D(3, 4, 5);
+        var line = new Line3D(p, new Point3D(p));
+
+        Assert.AreEqual(0, line.Length);
+        // Tangenti: vettore nullo, non NaN, nessuna eccezione.
+        Assert.IsTrue(line.StartTangent.IsZero());
+        Assert.IsTrue(line.EndTangent.IsZero());
+
+        // EvaluateAbs: qualunque offset -> il punto di start, tangente nulla.
+        var eval = line.EvaluateAbs(1.0, out var tangent);
+        Assert.IsTrue(eval.IsEquals(p), $"EvaluateAbs inatteso: {eval}");
+        Assert.IsTrue(tangent.IsZero());
+
+        // Projection: si degrada al punto di start, offset 0 (niente NaN da 0/0).
+        var proj = line.Projection(new Point3D(10, 10, 10), out bool isInside, out double offset);
+        Assert.IsTrue(proj.IsEquals(p));
+        Assert.AreEqual(0, offset);
+        Assert.IsFalse(isInside);
+
+        // IsOnCurve: vero solo se il punto coincide con lo start.
+        Assert.IsTrue(line.IsOnCurve(p, 1e-6, out _));
+        Assert.IsFalse(line.IsOnCurve(new Point3D(0, 0, 0), 1e-6, out _));
+    }
 }

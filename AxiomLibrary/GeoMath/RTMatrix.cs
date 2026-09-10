@@ -141,11 +141,15 @@ namespace Axiom.GeoMath
         /// <returns></returns>
         public static RTMatrix FromNormal(Vector3D normal, Vector3D trasl)
         {
-            normal.SetNormalize();
-            Vector3D x = normal.Perpendicular();
-            Vector3D y = normal.Cross(x);
-            RTMatrix result = new RTMatrix(x, y, normal, trasl);
-            return result;
+            // Normale nulla: nessuna rotazione definita -> solo traslazione (rotazione identità).
+            // TryNormalize evita sia l'eccezione sia l'effetto collaterale sul parametro (in
+            // precedenza SetNormalize mutava il vettore passato).
+            if (!normal.TryNormalize(out Vector3D n))
+                return FromTraslation(trasl);
+
+            Vector3D x = n.Perpendicular();
+            Vector3D y = n.Cross(x);
+            return new RTMatrix(x, y, n, trasl);
         }
 
         /// <summary>

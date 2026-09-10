@@ -84,6 +84,27 @@ namespace Axiom.GeoMathTest
 			Assert.IsTrue(nullPoint == null);
 		}
 
+		/// <summary>
+		/// Robustezza: contratto Equals/GetHashCode. Due punti "uguali" secondo Equals (tollerante)
+		/// devono avere lo STESSO hash, anche se non identici bit-a-bit e a cavallo di una cella di
+		/// arrotondamento. In precedenza l'hash arrotondava alla griglia della tolleranza e poteva
+		/// differire per punti uguali, violando il contratto.
+		/// </summary>
+		[TestMethod]
+		public void TestEqualsHashCodeContract_TolerantEqualPoints()
+		{
+			// A cavallo della cella di arrotondamento (0.0000049 e 0.0000051 arrotondavano a celle diverse)
+			var a = new Point3D(0.0000049, 1, 2);
+			var b = new Point3D(0.0000051, 1, 2);
+			Assert.IsTrue(a.Equals(b), "I due punti devono risultare uguali (tolleranza).");
+			Assert.AreEqual(a.GetHashCode(), b.GetHashCode(), "Punti uguali DEVONO avere lo stesso hash.");
+
+			// Anche punti chiaramente diversi rispettano il contratto (hash non deve contraddire Equals).
+			var c = new Point3D(100, 200, 300);
+			if (a.Equals(c))
+				Assert.AreEqual(a.GetHashCode(), c.GetHashCode());
+		}
+
 		[TestMethod]
 		public void TestEqualsWithNullAndDifferentType()
 		{

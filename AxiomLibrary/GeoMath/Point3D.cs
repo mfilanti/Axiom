@@ -187,21 +187,29 @@ namespace Axiom.GeoMath
 		/// <summary>
 		/// HashCode per il punto 3D.
 		/// </summary>
+		/// <remarks>
+		/// <see cref="Equals(object)"/> confronta i punti con una <b>tolleranza</b> (vedi
+		/// <see cref="IsEquals(Point3D)"/>). Un'uguaglianza tollerante NON è compatibile con un hash
+		/// discriminante: due punti "uguali" a cavallo di una cella di arrotondamento potrebbero
+		/// ottenere hash diversi, violando il contratto Equals/GetHashCode (con conseguenti lookup
+		/// falliti in HashSet/Dictionary). Per garantire il contratto si usa quindi un hash costante:
+		/// tutti i punti finiscono nello stesso bucket e la disambiguazione è demandata a Equals.
+		/// N.B. Point3D NON è pensato come chiave di dizionario/hashset (sarebbe O(n) per lookup):
+		/// se serve indicizzare punti, usare una struttura spaziale (es. Octree) o una chiave esatta.
+		/// </remarks>
 		/// <returns></returns>
-		public override int GetHashCode()
-		{
-			// Usa una tolleranza per evitare problemi di arrotondamento
-			int hashX = Math.Round(X / MathUtils.FineTolerance).GetHashCode();
-			int hashY = Math.Round(Y / MathUtils.FineTolerance).GetHashCode();
-			int hashZ = Math.Round(Z / MathUtils.FineTolerance).GetHashCode();
-			return HashCode.Combine(hashX, hashY, hashZ);
-		}
+		public override int GetHashCode() => 0;
 
         /// <summary>
         /// Indica che il punto è NaN.
         /// </summary>
         /// <returns></returns>
         public bool IsNan() => double.IsNaN(X) || double.IsNaN(Y) || double.IsNaN(Z);
+
+        /// <summary>
+        /// Rappresentazione testuale del punto.
+        /// </summary>
+        public override string ToString() => $"({X}, {Y}, {Z})";
 
         /// <summary>
         /// Trasforma il punto in un vettore.

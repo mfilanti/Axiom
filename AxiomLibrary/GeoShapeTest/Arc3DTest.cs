@@ -45,4 +45,29 @@ public class Arc3DTest
         var offPlane = new Point3D(Math.Sqrt(0.5), Math.Sqrt(0.5), 1);
         Assert.IsFalse(arc.IsOnCurve(offPlane, 1e-6, out _));
     }
+
+    /// <summary>
+    /// Robustezza: costruttori e Set3Points con input degeneri (punti coincidenti/collineari,
+    /// tangente allineata) non devono lanciare eccezioni.
+    /// </summary>
+    [TestMethod]
+    public void TestDegenerateConstructionDoesNotThrow()
+    {
+        // Set3Points su 3 punti allineati -> false (in passato lanciava da Normalize).
+        var arc = new Arc3D();
+        bool ok = arc.Set3Points(new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(2, 0, 0));
+        Assert.IsFalse(ok, "Tre punti allineati non definiscono un arco.");
+
+        // Costruttore (start, end, tangent) con start == end -> arco degenere (raggio 0), niente crash.
+        var degenerate = new Arc3D(new Point3D(1, 1, 0), new Point3D(1, 1, 0), Vector3D.UnitX);
+        Assert.AreEqual(0, degenerate.Radius, 1e-9);
+
+        // Costruttore (start, end, tangent) con tangente allineata alla corda -> arco degenere.
+        var straight = new Arc3D(new Point3D(0, 0, 0), new Point3D(2, 0, 0), Vector3D.UnitX);
+        Assert.AreEqual(0, straight.Radius, 1e-9);
+
+        // Costruttore (start, end, center) con punti collineari (cross nullo) -> nessuna eccezione.
+        var collinear = new Arc3D(new Point3D(1, 0, 0), new Point3D(2, 0, 0), new Point3D(0, 0, 0), true);
+        Assert.IsFalse(double.IsNaN(collinear.Radius));
+    }
 }

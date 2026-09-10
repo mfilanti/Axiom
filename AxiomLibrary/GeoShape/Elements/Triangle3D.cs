@@ -16,10 +16,18 @@ namespace Axiom.GeoShape.Elements
 	{
 		#region properties
 		/// <summary>
-		/// Normale uscente. 
-		/// Considerando i 3 punti in ordine antiorario.
+		/// Normale uscente (versore), considerando i 3 punti in ordine antiorario.
+		/// Per un triangolo DEGENERE (punti coincidenti o collineari, area nulla) restituisce
+		/// <see cref="Vector3D.Zero"/> invece di lanciare un'eccezione: verificare con
+		/// <see cref="IsDegenerate"/> quando la normale è significativa.
 		/// </summary>
-		public Vector3D Normal => (P2 - P1).Cross(P3 - P1).Normalize();
+		public Vector3D Normal => (P2 - P1).Cross(P3 - P1).NormalizeOrZero();
+
+		/// <summary>
+		/// Indica se il triangolo è degenere (area nulla: punti coincidenti o collineari).
+		/// In tal caso <see cref="Normal"/> è nulla e le operazioni geometriche non sono affidabili.
+		/// </summary>
+		public bool IsDegenerate => (P2 - P1).Cross(P3 - P1).IsZero();
 
 		/// <summary>
 		/// Centro del triangolo, inteso come baricentro.
@@ -1039,8 +1047,14 @@ namespace Axiom.GeoShape.Elements
 			double dot11 = v1.Dot(v1);
 			double dot12 = v1.Dot(v2);
 
+			// Triangolo degenere (area nulla): non contiene alcun punto. Evita divisione per zero
+			// e la conseguente propagazione di NaN nelle coordinate baricentriche.
+			double denom = dot00 * dot11 - dot01 * dot01;
+			if (denom.IsEquals(0))
+				return false;
+
 			// Calcola le coordinate baricentriche
-			double invDenom = 1 / (dot00 * dot11 - dot01 * dot01);
+			double invDenom = 1 / denom;
 			double u = (dot11 * dot02 - dot01 * dot12) * invDenom;
 			double v = (dot00 * dot12 - dot01 * dot02) * invDenom;
 

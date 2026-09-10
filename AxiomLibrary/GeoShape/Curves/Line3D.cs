@@ -28,14 +28,14 @@ namespace Axiom.GeoShape.Curves
 		public override Point3D EndPoint => PEnd;
 
 		/// <summary>
-		/// Tangente di start (sola lettura)
+		/// Tangente di start (sola lettura). Per un segmento di lunghezza nulla restituisce Zero.
 		/// </summary>
-		public override Vector3D StartTangent => (PEnd - PStart).Normalize();
+		public override Vector3D StartTangent => ((Vector3D)(PEnd - PStart)).NormalizeOrZero();
 
 		/// <summary>
-		/// Tangente di end (sola lettura)
+		/// Tangente di end (sola lettura). Per un segmento di lunghezza nulla restituisce Zero.
 		/// </summary>
-		public override Vector3D EndTangent => (PEnd - PStart).Normalize();
+		public override Vector3D EndTangent => ((Vector3D)(PEnd - PStart)).NormalizeOrZero();
 
 		/// <summary>
 		/// Lunghezza del segmento
@@ -238,7 +238,14 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public override Point3D EvaluateAbs(double offset, out Vector3D tangent)
 		{
-			double relOffset = offset / Length;
+			double length = Length;
+			// Segmento di lunghezza nulla: qualunque offset corrisponde al punto di start, tangente nulla.
+			if (length.IsEquals(0))
+			{
+				tangent = Vector3D.Zero;
+				return new Point3D(PStart);
+			}
+			double relOffset = offset / length;
 			return Evaluate(relOffset, out tangent);
 		}
 
@@ -340,6 +347,14 @@ namespace Axiom.GeoShape.Curves
 			Vector3D vecPoint = point - PStart;
 			double l = vecLine.SetNormalize();
 
+			// Segmento di lunghezza nulla: si degrada al punto di start (nessun NaN da 0/0).
+			if (l.IsEquals(0))
+			{
+				offset = 0;
+				isInside = point.IsEquals(PStart);
+				return new Point3D(PStart);
+			}
+
 			double proj = vecPoint.Dot(vecLine);
 			offset = proj / l;
 
@@ -420,6 +435,11 @@ namespace Axiom.GeoShape.Curves
 			bool result = false;
 			offset = 0;
 
+			double length = Length;
+			// Segmento di lunghezza nulla: il punto appartiene alla "curva" solo se coincide con lo start.
+			if (length.IsEquals(0))
+				return point.IsEquals(PStart, tolerance);
+
 			// distanza dalla linea
 			double distance = DistancePerp(point);
 
@@ -427,12 +447,12 @@ namespace Axiom.GeoShape.Curves
 			if (distance.IsEquals(0, tolerance))
 			{
 				// controlla se sta tra start ed end
-				double startDistance = (point - PStart).Dot((PEnd - PStart).Normalize());
+				double startDistance = (point - PStart).Dot(((Vector3D)(PEnd - PStart)).NormalizeOrZero());
 
 				if (startDistance.IsEquals(0, tolerance)) startDistance = 0;
-				if (startDistance.IsEquals(Length, tolerance)) startDistance = Length;
+				if (startDistance.IsEquals(length, tolerance)) startDistance = length;
 
-				offset = startDistance / Length;
+				offset = startDistance / length;
 				if (offset >= 0 && offset <= 1)
 					result = true;
 			}

@@ -345,11 +345,15 @@ namespace Axiom.GeoShape.Curves
 			// N.B. Funzione approssimata
 			double l = 0;
 			double step = 0.001; // un millesimo di grado
+			// Limite superiore: un giro completo (oltre non ha senso per un'ellisse). Evita il ciclo
+			// infinito quando l'ellisse è degenere (A=B=0) e l'arco non cresce mai, o se 'offset' non
+			// è raggiungibile.
+			double maxAngle = 2 * Math.PI + step;
 			Vector3D tangent;
 			Point3D point1 = EvaluateAngle(0, out tangent);
 			Point3D point2;
 			double offsetAng = 0;
-			while (l < offset)
+			while (l < offset && offsetAng < maxAngle)
 			{
 				offsetAng += step;
 				point2 = EvaluateAngle(offsetAng, out tangent);
@@ -363,11 +367,14 @@ namespace Axiom.GeoShape.Curves
 		{
 			double offset = 0;
 			double step = 0.001; // un millesimo di grado
+			// Limite superiore per evitare cicli infiniti con offsetAng non finito o eccessivo.
+			double maxAngle = Math.Min(offsetAng, 2 * Math.PI + step);
+			if (double.IsNaN(maxAngle)) return 0;
 			Vector3D tangent;
 			Point3D point1 = EvaluateAngle(0, out tangent);
 			Point3D point2;
 			double actualOffsetAng = 0;
-			while (actualOffsetAng < offsetAng)
+			while (actualOffsetAng < maxAngle)
 			{
 				actualOffsetAng += step;
 				point2 = EvaluateAngle(actualOffsetAng, out tangent);
@@ -436,7 +443,18 @@ namespace Axiom.GeoShape.Curves
 		{
 			Point3D result;
 
-			Point3D point = new Point3D();
+			// Ellisse degenere (un semiasse nullo): non è una curva valida. Si restituisce il centro
+			// con tangente nulla, evitando le divisioni per zero (A*B/sqrt(...), B/A) che darebbero NaN.
+			if (A.IsEquals(0) || B.IsEquals(0))
+			{
+				tangent = Vector3D.Zero;
+				return new Point3D(Center);
+			}
+
+			// N.B. new Point3D() è (NaN,NaN,NaN): qui il punto è planare (Z=0) e vengono impostate solo
+			// X e Y più sotto. Va quindi inizializzato a (0,0,0), altrimenti Z resta NaN e contamina
+			// l'intero risultato dopo Rotate/Multiply (bug latente non colto per assenza di test).
+			Point3D point = new Point3D(0, 0, 0);
 			Vector3D tangent2 = Vector3D.Zero;
 			double angle;
 			if (CounterClockWise == true)
@@ -597,8 +615,11 @@ namespace Axiom.GeoShape.Curves
 			bool result = false;
 			offset = -1;
 
-			Vector3D direction = ((Vector3D)(point - Center)).Normalize();
-			Vector3D directionStart = ((Vector3D)(StartPoint - Center)).Normalize();
+			// Punto coincidente col centro (o ellisse degenere): niente Normalize su vettore nullo.
+			Vector3D direction = ((Vector3D)(point - Center)).NormalizeOrZero();
+			Vector3D directionStart = ((Vector3D)(StartPoint - Center)).NormalizeOrZero();
+			if (direction.IsZero() || directionStart.IsZero())
+				return false;
 			Vector3D refZ = (CounterClockWise ? Vector3D.UnitZ : Vector3D.NegativeUnitZ);
 			double offsetAngle = direction.Angle(directionStart, refZ);
 

@@ -58,4 +58,48 @@ public class Plane3DTest
         var parallelPlane = new Plane3D(Vector3D.UnitZ, new Point3D(0, 0, 10));
         Assert.IsFalse(parallelPlane.IntersectTriangle(triangle, out _));
     }
+
+    /// <summary>
+    /// Robustezza: costruire un piano da una normale nulla (es. Plane3D.ZeroPlane) NON deve lanciare
+    /// eccezione (in passato Vector3D.Zero.Normalize() lanciava). Il piano risultante è "nullo".
+    /// </summary>
+    [TestMethod]
+    public void TestZeroPlaneAndNullNormalDoNotThrow()
+    {
+        // In precedenza la sola valutazione di questa proprietà statica lanciava un'eccezione.
+        var zero = Plane3D.ZeroPlane;
+        Assert.IsTrue(zero.IsNull, "ZeroPlane deve risultare 'nullo'.");
+        Assert.IsTrue(zero.Normal.IsZero());
+
+        var fromZeroNormal = new Plane3D(Vector3D.Zero, new Point3D(1, 2, 3));
+        Assert.IsTrue(fromZeroNormal.IsNull);
+
+        // Un piano valido non è nullo.
+        var valid = new Plane3D(Vector3D.UnitZ, Point3D.Zero);
+        Assert.IsFalse(valid.IsNull);
+    }
+
+    /// <summary>
+    /// Robustezza: FromPoints non deve lanciare (partiva da ZeroPlane, che lanciava) e deve
+    /// restituire un piano valido per punti complanari, ZeroPlane per punti collineari/insufficienti.
+    /// </summary>
+    [TestMethod]
+    public void TestFromPoints()
+    {
+        // Quattro punti complanari nel piano XY -> piano valido con normale lungo Z.
+        var points = new List<Point3D>
+        {
+            new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(1, 1, 0), new Point3D(0, 1, 0)
+        };
+        var plane = Plane3D.FromPoints(points);
+        Assert.IsFalse(plane.IsNull, "Punti complanari devono dare un piano valido.");
+        Assert.IsTrue(plane.Normal.IsParallel(Vector3D.UnitZ), $"Normale attesa lungo Z: {plane.Normal}");
+
+        // Punti collineari -> piano nullo (nessuna eccezione).
+        var collinear = new List<Point3D>
+        {
+            new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(2, 0, 0)
+        };
+        Assert.IsTrue(Plane3D.FromPoints(collinear).IsNull);
+    }
 }

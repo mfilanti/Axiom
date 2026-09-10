@@ -18,6 +18,27 @@ public class Triangle3DTest
         Assert.IsTrue(defaultTriangle.P1.IsEquals(Point3D.Zero));
     }
 
+    /// <summary>
+    /// Robustezza: un triangolo degenere (punti collineari, area nulla) non deve lanciare eccezione.
+    /// Normal restituisce Zero, IsDegenerate è true, Contains restituisce false senza NaN.
+    /// </summary>
+    [TestMethod]
+    public void TestDegenerateTriangle()
+    {
+        // Tre punti collineari lungo X.
+        var degenerate = new Triangle3D(new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(2, 0, 0));
+
+        Assert.IsTrue(degenerate.IsDegenerate, "Il triangolo collineare deve risultare degenere.");
+        Assert.IsTrue(degenerate.Normal.IsZero(), "La normale di un triangolo degenere deve essere nulla (niente eccezione).");
+        Assert.IsTrue(degenerate.Area.IsEquals(0), "L'area di un triangolo degenere è nulla.");
+        // Contains non deve lanciare né restituire true (nessuna area contenente).
+        Assert.IsFalse(degenerate.Contains(new Point3D(0.5, 0, 0), false));
+
+        // Un triangolo valido non è degenere.
+        var valid = new Triangle3D(new Point3D(0, 0, 0), new Point3D(1, 0, 0), new Point3D(0, 1, 0));
+        Assert.IsFalse(valid.IsDegenerate);
+    }
+
     [TestMethod]
     public void TestEqualsAndIsEquals()
     {

@@ -119,7 +119,7 @@ namespace Axiom.GeoShape.Curves
 		/// <summary>
 		/// Passo dell'elica. 
 		/// </summary>
-		public double Pitch => Depth / SpanAngle * 2 * Math.PI;
+		public double Pitch => SpanAngle.IsEquals(0) ? 0 : Depth / SpanAngle * 2 * Math.PI;
 		#endregion
 
 		#region Ctor
@@ -236,7 +236,8 @@ namespace Axiom.GeoShape.Curves
 		public override Point3D Evaluate(double offset, out Vector3D tangent)
 		{
 			double absOffset = offset * Length;
-			double radOffsetAngle = FromAbsOffsetToRadOffset(absOffset) / Radius;
+			// Raggio nullo (elica degenerata su una retta): niente divisione per zero.
+			double radOffsetAngle = Radius.IsEquals(0) ? 0 : FromAbsOffsetToRadOffset(absOffset) / Radius;
 			return EvaluateAngle(radOffsetAngle, out tangent);
 		}
 
@@ -251,7 +252,7 @@ namespace Axiom.GeoShape.Curves
 		/// <returns></returns>
 		public override Point3D EvaluateAbs(double offset, out Vector3D tangent)
 		{
-			double radOffsetAngle = FromAbsOffsetToRadOffset(offset) / Radius;
+			double radOffsetAngle = Radius.IsEquals(0) ? 0 : FromAbsOffsetToRadOffset(offset) / Radius;
 			return EvaluateAngle(radOffsetAngle, out tangent);
 		}
 
@@ -267,8 +268,10 @@ namespace Axiom.GeoShape.Curves
 		{
 			Point3D result = new Point3D();
 			tangent = Vector3D.Zero;
-			double offsetZ = -Depth * offsetRadAngle / SpanAngle;
-			double tangentZ = (new Vector3D(Length, 0, -Depth)).Normalize().Z;
+			// SpanAngle nullo: l'elica degenera (nessuna avanzamento in Z) -> offsetZ = 0 (niente NaN).
+			double offsetZ = SpanAngle.IsEquals(0) ? 0 : -Depth * offsetRadAngle / SpanAngle;
+			// Length e Depth entrambi nulli -> vettore nullo: NormalizeOrZero evita l'eccezione.
+			double tangentZ = (new Vector3D(Length, 0, -Depth)).NormalizeOrZero().Z;
 
 			if (CounterClockWise == true)
 			{
