@@ -22,7 +22,7 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="entity"></param>
 		/// <param name="maxError"></param>
 		/// <returns></returns>
-		public static Mesh3D FromEntity3D(this Entity3D entity, double maxError)
+		public static Mesh3D FromEntity3D(this Entity3D entity, double maxError, Delegates.ComputeTriangulationDelegate triangulator = null)
 		{
 			Mesh3D result = null;
 
@@ -31,9 +31,9 @@ namespace Axiom.GeoShape.Entities
 			else if (entity is Cylinder3D cylinder)
 				result = FromCylinder3D(cylinder, maxError);
 			else if (entity is Extrusion3D extrusion)
-				result = FromExtrusion3D(extrusion, maxError);
+				result = FromExtrusion3D(extrusion, maxError, triangulator);
 			else if (entity is SweepExtrusion3D sweep)
-				result = FromSweepExtrusion3D(sweep, maxError);
+				result = FromSweepExtrusion3D(sweep, maxError, triangulator);
 			else if (entity is OBBox3D oBBox)
 				result = FromOBBox3D(oBBox);
 			else if (entity is Sphere3D sphere)
@@ -43,7 +43,7 @@ namespace Axiom.GeoShape.Entities
 			else if (entity is Revolution3D revolution)
 				result = FromRevolution3D(revolution, maxError);
 			else if (entity is PlanarFace3D planar)
-				result = FromPlanarFace3D(planar, maxError);
+				result = FromPlanarFace3D(planar, maxError, triangulator);
 			else if (entity is FigureEntity3D figureEntity)
 				result = FromFigureEntity3D(figureEntity, maxError);
 
@@ -155,9 +155,9 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="extrusion"></param>
 		/// <param name="maxError"></param>
 		/// <returns></returns>
-		public static Mesh3D FromExtrusion3D(Extrusion3D extrusion, double maxError)
+		public static Mesh3D FromExtrusion3D(Extrusion3D extrusion, double maxError, Delegates.ComputeTriangulationDelegate triangulator = null)
 		{
-			return FromExtrusion3D(extrusion, true, maxError);
+			return FromExtrusion3D(extrusion, true, maxError, triangulator);
 		}
 
 		/// <summary>
@@ -170,7 +170,7 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="createStartEndSurfaces"></param>
 		/// <param name="maxError"></param>
 		/// <returns></returns>
-		public static Mesh3D FromExtrusion3D(Extrusion3D extrusion, bool createStartEndSurfaces, double maxError)
+		public static Mesh3D FromExtrusion3D(Extrusion3D extrusion, bool createStartEndSurfaces, double maxError, Delegates.ComputeTriangulationDelegate triangulator = null)
 		{
 			Mesh3D result = null;
 			if (extrusion != null)
@@ -190,8 +190,8 @@ namespace Axiom.GeoShape.Entities
 					Figure3D approx = figure.ApproxFigureMaxChordalDeviation(true, true, maxError, maxError, out tangents);
 
 					List<Triangle3D> closingFace = null;
-					if (createStartEndSurfaces && Delegates.ComputeTriangulation != null)
-						closingFace = Delegates.ComputeTriangulation(approx);
+					if (createStartEndSurfaces && triangulator != null)
+						closingFace = triangulator(approx);
 
 					if (extrusion.StartCuts != null && extrusion.EndCuts != null)
 						ModifyProfileByCuts(ref approx, ref tangents, direction, length, extrusion.StartCuts, extrusion.EndCuts);
@@ -532,9 +532,9 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="extrusion"></param>
 		/// <param name="maxError"></param>
 		/// <returns></returns>
-		public static Mesh3D FromSweepExtrusion3D(SweepExtrusion3D extrusion, double maxError)
+		public static Mesh3D FromSweepExtrusion3D(SweepExtrusion3D extrusion, double maxError, Delegates.ComputeTriangulationDelegate triangulator = null)
 		{
-			return FromSweepExtrusion3D(extrusion, true, maxError);
+			return FromSweepExtrusion3D(extrusion, true, maxError, triangulator);
 		}
 
 		/// <summary>
@@ -547,7 +547,7 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="createStartEndSurfaces"></param>
 		/// <param name="maxError"></param>
 		/// <returns></returns>
-		public static Mesh3D FromSweepExtrusion3D(SweepExtrusion3D sweep, bool createStartEndSurfaces, double maxError)
+		public static Mesh3D FromSweepExtrusion3D(SweepExtrusion3D sweep, bool createStartEndSurfaces, double maxError, Delegates.ComputeTriangulationDelegate triangulator = null)
 		{
 			Mesh3D result = null;
 			if (sweep != null)
@@ -566,8 +566,8 @@ namespace Axiom.GeoShape.Entities
 					Figure3D sectionApprox = section3.ApproxFigureMaxChordalDeviation(true, true, maxError, maxError, out sectionTangents);
 
 					List<Triangle3D> closingFace = null;
-					if (createStartEndSurfaces && Delegates.ComputeTriangulation != null)
-						closingFace = Delegates.ComputeTriangulation(sectionApprox);
+					if (createStartEndSurfaces && triangulator != null)
+						closingFace = triangulator(sectionApprox);
 
 					List<Vector3D> pathTangents;
 					Figure3D pathApprox = sweep.ExtrusionPath.ApproxFigureMaxChordalDeviation(true, true, maxError, maxError, out pathTangents);
@@ -1095,7 +1095,7 @@ namespace Axiom.GeoShape.Entities
 		/// <param name="planarFace"></param>
 		/// <param name="maxError"></param>
 		/// <returns></returns>
-		public static Mesh3D FromPlanarFace3D(PlanarFace3D planarFace, double maxError)
+		public static Mesh3D FromPlanarFace3D(PlanarFace3D planarFace, double maxError, Delegates.ComputeTriangulationDelegate triangulator = null)
 		{
 			Mesh3D result = null;
 			if (planarFace != null)
@@ -1110,9 +1110,9 @@ namespace Axiom.GeoShape.Entities
 
 					Figure3D approx = figure.ApproxFigureMaxChordalDeviation(true, true, maxError, maxError);
 
-					if (Delegates.ComputeTriangulation != null)
+					if (triangulator != null)
 					{
-						List<Triangle3D> triangulation = Delegates.ComputeTriangulation(approx);
+						List<Triangle3D> triangulation = triangulator(approx);
 						if (triangulation != null)
 							result.Triangles = triangulation;
 					}
