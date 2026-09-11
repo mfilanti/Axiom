@@ -1,4 +1,3 @@
-﻿using Axiom.GeoShape.Elements;
 using System.Collections.Generic;
 
 namespace Axiom.GeoMath

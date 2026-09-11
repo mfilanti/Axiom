@@ -67,10 +67,11 @@ graph TD
 Dipendenze NuGet: `GeoMath` e `GeoShape` referenziano `System.Text.Json` 10.0.1. `AxiomUtilities` non
 ha dipendenze esterne.
 
-> **Anomalia di namespace (importante).** Il tipo `AABBox3D` è fisicamente nel progetto **GeoMath**
-> (`GeoMath/AABBox3D.cs`) ma è dichiarato nel namespace **`Axiom.GeoShape.Elements`**. È l'unico
-> "sconfinamento" tra i due progetti: `OctreeNode<T>` (in GeoMath) importa `Axiom.GeoShape.Elements`
-> per usarlo. Da tenere presente negli `using`.
+> ℹ️ **Namespace bonificati.** Il tipo `AABBox3D` (nel progetto GeoMath) è ora nel namespace
+> **`Axiom.GeoMath`** (in precedenza era, in modo anomalo, in `Axiom.GeoShape.Elements`). Analogamente
+> `Axiom.Utilities.ObjectExtensions` (prima `AxiomUtilities`) e `Axiom.Cosmos.Starships.ShipFlightController`
+> (prima `Assets.AxiomCore.Cosmos_Link.Starships`, retaggio Unity) sono stati riportati al namespace
+> coerente col progetto/cartella.
 
 ## 1.4 Configurazione, build e test
 
@@ -209,8 +210,8 @@ string chiaro  = cifrato.Decrypt("la-mia-chiave");   // -> "messaggio segreto"
 
 ### 3.2 `ObjectExtensions` — clonazione
 
-> ⚠️ Questa classe è dichiarata nel namespace **`AxiomUtilities`** (senza punto), diversamente da
-> `StringExtensions` che è in `Axiom.Utilities`. Incoerenza di naming.
+Come `StringExtensions`, è nel namespace **`Axiom.Utilities`** (in precedenza era `AxiomUtilities`,
+incoerenza ora bonificata).
 
 | Metodo | Firma |
 |---|---|
@@ -372,7 +373,7 @@ la traslazione), `WithScale(s)`, `WithVector(col,v)`. Es. `m = m.WithTranslation
 
 ### 4.6 `AABBox3D` — bounding box allineato agli assi
 
-> Namespace `Axiom.GeoShape.Elements` (vedi §1.3). `ICloneable`.
+> Namespace `Axiom.GeoMath` (nel progetto GeoMath; vedi §1.3). `ICloneable`.
 
 **Proprietà:** `MinPoint`/`MaxPoint` (get/set), `Center`, `LX`/`LY`/`LZ`, `MaxSide`/`MinSide`,
 `Area`, `Volume`, gli 8 vertici (`XmaxYminZminPoint`…), `Points` (lista degli 8).
@@ -611,8 +612,8 @@ pilotaggio di navi. Due anime:
 | `Utils` | `CosmosOctreeNode` (wrapper Barnes-Hut sull'octree) |
 | root | factory: `GalaxyFactory`, `SpaceSimulationFactory` |
 
-> ⚠️ `ShipFlightController` è dichiarato nel namespace `Assets.AxiomCore.Cosmos_Link.Starships`
-> (retaggio del progetto Unity), non allineato alla cartella `Starships`.
+> ℹ️ `ShipFlightController` è ora nel namespace `Axiom.Cosmos.Starships` (in precedenza
+> `Assets.AxiomCore.Cosmos_Link.Starships`, retaggio del progetto Unity, non allineato alla cartella).
 
 ### 6.2 Modelli
 
@@ -1047,11 +1048,10 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
 
 - **Commento errato:** ✅ **corretto** — in `ShipPilot.ApplyLinearDamping` il commento «Perde il 5%»
   è stato riscritto per riflettere il reale decadimento `velocità *= 0.5^dt` (dimezzamento al secondo).
-- **Naming namespace incoerente** (non modificato — sono scelte "storiche" il cui rename sarebbe
-  *breaking*): `ObjectExtensions` è in `AxiomUtilities` mentre il resto è in `Axiom.Utilities`;
-  `ShipFlightController` è in `Assets.AxiomCore.Cosmos_Link.Starships` (retaggio Unity, referenziato
-  con quel `using` anche nei test); `AABBox3D` è in `Axiom.GeoShape.Elements` pur stando nel progetto
-  GeoMath. Da valutare in un intervento di refactoring dedicato.
+- **Naming namespace incoerente:** ✅ **bonificato** — `ObjectExtensions` è ora in `Axiom.Utilities`
+  (prima `AxiomUtilities`); `ShipFlightController` in `Axiom.Cosmos.Starships` (prima
+  `Assets.AxiomCore.Cosmos_Link.Starships`, retaggio Unity); `AABBox3D` in `Axiom.GeoMath` (prima
+  `Axiom.GeoShape.Elements` pur stando nel progetto GeoMath). Aggiornati i relativi `using`.
 - **Crittografia (`StringExtensions`)** (non modificato — hardening, non un bug): derivazione chiave
   con padding invece di una KDF; nessuna autenticazione (AES-CBC anziché AES-GCM). Adeguato solo per
   offuscamento interno.

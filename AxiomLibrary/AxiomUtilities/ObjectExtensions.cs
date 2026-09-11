@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AxiomUtilities
+namespace Axiom.Utilities
 {
 	/// <summary>
 	/// Estensioni per gli oggetti

@@ -1,5 +1,4 @@
-﻿using Assets.AxiomCore.Cosmos_Link.Starships;
-using Axiom.Cosmos.Models;
+﻿using Axiom.Cosmos.Models;
 using Axiom.Cosmos.Simulation;
 using Axiom.Cosmos.Utils;
 using Axiom.GeoMath;
