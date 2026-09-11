@@ -10,7 +10,7 @@ namespace Axiom.Cosmos.Dynamics
 	public sealed class NewtonianGravity : IGravityField
 	{
 		private readonly IReadOnlyList<CelestialBody> _bodies;
-		private const double G = 6.67430e-11;
+		private const double G = PhysicalConstants.G;
 
 		/// <summary>
 		/// Costruttore di default: nessun corpo di riferimento memorizzato.

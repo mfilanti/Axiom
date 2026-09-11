@@ -63,13 +63,13 @@ namespace Axiom.Cosmos.Simulation
 		{
 			if (_currentGalaxy == null) return;
 
-			// 1. Fisica Celeste
-			var gravityField = _currentGalaxy.UpdatePhysics(deltaTime);
+			// 1. Fisica Celeste (via motore unico)
+			var gravityField = _physics.UpdateGalaxy(_currentGalaxy, deltaTime);
 
-			// 2. Loop Navi
+			// 2. Loop Navi (stesso motore, nessuna duplicazione della fisica)
 			foreach (var pilot in _pilots)
 			{
-				pilot.UpdatePhysics(gravityField, deltaTime);
+				pilot.UpdatePhysics(_physics, gravityField, deltaTime);
 			}
 		}
 

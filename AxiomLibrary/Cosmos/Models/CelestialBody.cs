@@ -1,80 +1,25 @@
-﻿using Axiom.Cosmos.Dynamics;
 using Axiom.GeoMath;
-using Axiom.GeoShape;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Axiom.Cosmos.Models
 {
-	public abstract class CelestialBody : Node3D, IPointWeighted
+	public abstract class CelestialBody : PhysicsBody
 	{
-		#region Fields
-
-		#endregion
-
 		#region Properties
-		/// <summary>
-		/// Nome del corpo celeste
-		/// </summary>
-		public string Name { get; set; }
-
-		/// <summary>
-		/// Massa del corpo celeste in kg
-		/// </summary>
-		public double Mass { get; set; }
-
 		/// <summary>
 		/// Raggio del corpo celeste in metri
 		/// </summary>
 		public double Radius { get; set; }
+		#endregion
 
+		#region Constructors
 		/// <summary>
-		/// Stato cinematico del corpo celeste
+		/// Costruttore del corpo celeste
 		/// </summary>
-		public DynamicsState Dynamics { get; set; }
-
-		/// <summary>
-		/// Modello di moto del corpo celeste
-		/// </summary>
-		public IMotionModel Motion { get; set; }
-
-		/// <summary>
-		/// Posizione assoluta
-		/// </summary>
-
-        public Vector3D Position => WorldMatrix.Translation;
-
-		/// <summary>
-		/// Vettore Z della matrice di mondo (direzione avanti)
-		/// </summary>
-		public Vector3D ZVector => WorldMatrix.ZVector;
-
-		/// <summary>
-		/// Vettore Y della matrice di mondo (direzione su)
-		/// </summary>
-		public Vector3D YVector => WorldMatrix.YVector;
-
-		/// <summary>
-		/// Vettore X della matrice di mondo (direzione destra)
-		/// </summary>
-		public Vector3D XVector => WorldMatrix.XVector;
-		/// <summary>
-		/// Peso del corpo celeste (in fisica è la Massa)
-		/// </summary>
-		public double Weight => Mass;
-
-        #endregion
-
-        #region Constructors
-        /// <summary>
-        /// Costruttore del corpo celeste
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="mass"></param>
-        /// <param name="radius"></param>
-        /// <param name="position"></param>
-        protected CelestialBody(string name, double mass, double radius, Vector3D position) : base()
+		/// <param name="name"></param>
+		/// <param name="mass"></param>
+		/// <param name="radius"></param>
+		/// <param name="position"></param>
+		protected CelestialBody(string name, double mass, double radius, Vector3D position) : base()
 		{
 			Name = name;
 			Mass = mass;

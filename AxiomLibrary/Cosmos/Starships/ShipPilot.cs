@@ -1,8 +1,6 @@
-﻿using Axiom.Cosmos.Models;
 using Axiom.Cosmos.Simulation;
 using Axiom.Cosmos.Utils;
 using Axiom.GeoMath;
-using System;
 
 namespace Axiom.Cosmos.Starships
 {
@@ -13,7 +11,7 @@ namespace Axiom.Cosmos.Starships
         public IInputProvider Input { get; }
 
         /// <summary>
-        /// Vettore di gravità attuale applicato alla nave.
+        /// Vettore di gravità attuale applicato alla nave (per HUD/telemetria).
         /// </summary>
         public Vector3D Gravity = Vector3D.Zero;
 
@@ -23,13 +21,18 @@ namespace Axiom.Cosmos.Starships
             Input = input;
             Controller = new ShipFlightController(ship);
         }
-        public void UpdatePhysics(CosmosOctreeNode gravityField, double deltaTime)
+
+        /// <summary>
+        /// Aggiorna la nave per un passo: prima l'input (orientamento), poi la fisica delegata al
+        /// motore unico <see cref="CosmosPhysicsEngine"/>, infine la sincronizzazione della matrice.
+        /// </summary>
+        public void UpdatePhysics(CosmosPhysicsEngine engine, CosmosOctreeNode gravityField, double deltaTime)
         {
             // A. Prima l'input (orienta la nave)
             ProcessInput(deltaTime);
 
-            // B. Poi la fisica (muove la nave)
-            ApplyShipPhysics(Ship, gravityField, deltaTime);
+            // B. Poi la fisica (muove la nave) — un solo punto di verità nel motore
+            Gravity = engine.ApplyShipPhysics(Ship, gravityField, deltaTime);
 
             // C. Infine sincronizza
             Ship.UpdateRTMatrix();
@@ -49,37 +52,6 @@ namespace Axiom.Cosmos.Starships
                 throttleDelta = Input.ThrottleDelta;
             }
             Controller.HandleInput(pitch, yaw, roll, throttleDelta, dt);
-        }
-
-        /// <summary>
-        /// Applica la fisica alla nave, considerando il campo gravitazionale e la spinta dei motori.
-        /// </summary>
-        /// <param name="ship"></param>
-        /// <param name="gravityField"></param>
-        /// <param name="dt"></param>
-        private void ApplyShipPhysics(Starship ship, CosmosOctreeNode gravityField, double dt)
-        {
-            // Gravità + Motore
-            Gravity = (gravityField == null) ? Vector3D.Zero : gravityField.GetAcceleration(ship, Galaxy.G);
-            Vector3D engineAcc = ship.GetThrustForce() / ship.Mass;
-            ship.Dynamics.Acceleration = Gravity + engineAcc;
-
-            //// Damping Lineare
-            ApplyLinearDamping(ship, dt);
-
-            ship.Motion?.Integrate(ship, ship.Dynamics, dt);
-        }
-
-        // All'interno della logica di movimento della nave
-        public void ApplyLinearDamping(Starship ship, double dt)
-        {
-            double dampingFactor = 0.50; // Fattore di decadimento: velocità *= 0.5^dt (si dimezza ogni secondo)
-
-            // Se non stiamo accelerando o se vogliamo un feeling "frenato"
-            if (ship.CurrentThrottle < 0.1)
-            {
-                ship.Dynamics.Velocity *= Math.Pow(dampingFactor, dt);
-            }
         }
     }
 }

@@ -608,8 +608,8 @@ pilotaggio di navi. Due anime:
 
 | Cartella / Namespace | Contenuto |
 |---|---|
-| `Models` | `CelestialBody`, `Star`, `Planet`, `Moon`, `Galaxy`, `Universe`, `GalaxyExtensions` |
-| `Dynamics` (+ `Abstracts`) | `IGravityField`, `IMotionModel`, `DynamicsState`, `EulerIntegrator`, `NewtonianGravity`, `VelocityVerletMotion` |
+| `Models` | `PhysicsBody`, `CelestialBody`, `Star`, `Planet`, `Moon`, `Galaxy`, `Universe`, `GalaxyExtensions` |
+| `Dynamics` (+ `Abstracts`) | `IGravityField`, `IMotionModel`, `DynamicsState`, `EulerIntegrator`, `NewtonianGravity`, `VelocityVerletMotion`, `GravitySolver`, `PhysicalConstants` |
 | `Simulation` | `CosmosPhysicsEngine`, `IInputProvider`, `SpaceSimulation` |
 | `Starships` | `Starship`, `ShipPilot`, `ShipFlightController` |
 | `Utils` | `CosmosOctreeNode` (wrapper Barnes-Hut sull'octree) |
@@ -618,25 +618,28 @@ pilotaggio di navi. Due anime:
 > ℹ️ `ShipFlightController` è ora nel namespace `Axiom.Cosmos.Starships` (in precedenza
 > `Assets.AxiomCore.Cosmos_Link.Starships`, retaggio del progetto Unity, non allineato alla cartella).
 
+> ✅ **Bonifica architetturale.** Introdotta la base comune **`PhysicsBody`** (stato fisico condiviso da
+> corpi celesti e navi); il solver gravitazionale è stato estratto da `Galaxy` in **`GravitySolver`**
+> (i modelli descrivono la scena, il solver la fa evolvere); la fisica delle navi, prima duplicata tra
+> `CosmosPhysicsEngine` e `ShipPilot`, vive ora nel **solo** `CosmosPhysicsEngine` (usato realmente da
+> `SpaceSimulation`); la costante `G` è centralizzata in **`PhysicalConstants`**.
+
 ### 6.2 Modelli
 
-**`CelestialBody`** (astratta) — base di tutti i corpi. Estende `Node3D` e implementa
-`IPointWeighted` (`Weight => Mass`).
+**`PhysicsBody`** (astratta) — base comune a tutti i corpi soggetti alla dinamica (celesti e navi).
+Estende `Node3D` e implementa `IPointWeighted` (`Weight => Mass`), raccogliendo in un solo punto lo
+stato fisico: `Name`, `Mass`, `Dynamics`, `Motion`, `Position` (`=> WorldMatrix.Translation`),
+`XVector/YVector/ZVector`. Evita di riscrivere questo boilerplate (e la gravità) per ogni sottotipo.
 
-| Membro | Firma / valore | Note |
-|---|---|---|
-| `Name`, `Mass` (kg), `Radius` (m) | proprietà | |
-| `Dynamics` | `DynamicsState` | stato cinematico (può essere `null` se non impostato) |
-| `Motion` | `IMotionModel` | integratore del moto |
-| `Position` | `=> WorldMatrix.Translation` | posizione **nel mondo** |
-| `XVector/YVector/ZVector` | assi della world matrix | |
-| `Step(double dt)` | integra il moto proprio e propaga **ricorsivamente** ai figli | usa l'accelerazione già presente in `Dynamics` |
-| `DisplayInfo()` | astratto | |
+**`CelestialBody`** (astratta, estende `PhysicsBody`) — aggiunge `Radius` (m), `Step(double dt)` (integra
+il moto proprio e propaga **ricorsivamente** ai figli) e `DisplayInfo()` (astratto). `Dynamics` resta
+`null` finché non impostata (le factory la impostano insieme a `Motion`).
 
 Sottoclassi: **`Star`** (+ `Luminosity` in Watt), **`Planet`**, **`Moon`** (nessun campo aggiuntivo).
 
-**`Galaxy`** (estende `Node3D`) — contenitore e motore di avanzamento. Costante `G = 6.67430e-11`,
-proprietà `GravityField`. **Due strategie:**
+**`Galaxy`** (estende `Node3D`) — contenitore della scena; delega l'avanzamento a **`GravitySolver`**.
+Costante `G` (alias di `PhysicalConstants.G`, mantenuta per retro-compatibilità), proprietà
+`GravityField`. **Due strategie** (entrambe inoltrate al solver):
 
 | Metodo | Algoritmo | Complessità | Ritorno |
 |---|---|---|---|
@@ -662,6 +665,8 @@ ricorsivamente l'intera gerarchia in un unico `IEnumerable<CelestialBody>`.
 | `EulerIntegrator` (`sealed`) | Eulero esplicito | `v += a·dt; x += v·dt` |
 | `NewtonianGravity` (`sealed`) | gravità diretta O(n²) | ignora coppie con dist² < 1e-6 |
 | `VelocityVerletMotion` (`sealed`) | Verlet in 2 fasi | `Integrate` (pos + ½v) + `CompleteStep` (½v) |
+| `GravitySolver` (`sealed`) | motore di integrazione | `StepDirect(bodies, field, dt)` (O(n²)) e `StepBarnesHut(bodies, dt)` → `CosmosOctreeNode`; estratto da `Galaxy` |
+| `PhysicalConstants` (`static`) | costanti condivise | `G = 6.67430e-11` (sorgente unica) |
 
 > ✅ `NewtonianGravity` ha ora costruttori che inizializzano `_bodies` (default = vuoto, oppure
 > l'elenco dei corpi) e `ComputeForce` non lancia più `NullReferenceException`
@@ -673,15 +678,17 @@ ricorsivamente l'intera gerarchia in un unico `IEnumerable<CelestialBody>`.
   corrente (`UpdatePhysics`) e poi tutti i piloti passando l'octree come campo gravitazionale.
   `AddShip(ship, input)`, `AddCelestialBody(body)`. Costruttori: `SpaceSimulation(universe)` e
   `SpaceSimulation()` (universo di default "Milky Way").
-- **`CosmosPhysicsEngine`** — fisica di basso livello: `UpdateGalaxy(...)`, `ApplyShipPhysics(ship,
-  gravityField, dt)` (gravità + spinta motori + damping).
+- **`CosmosPhysicsEngine`** — **motore unico** della fisica, realmente usato da `SpaceSimulation`:
+  `UpdateGalaxy(galaxy, dt)` → `CosmosOctreeNode` e `ApplyShipPhysics(ship, gravityField, dt)` (gravità
+  + spinta motori + damping `0.5^dt`, poi `Integrate`; restituisce il vettore gravità per HUD). La
+  logica delle navi non è più duplicata in `ShipPilot`.
 - **`IInputProvider`** — input di volo: `Pitch`, `Yaw`, `Roll`, `ThrottleDelta`.
-- **`Starship`** (estende `Node3D`, `IPointWeighted`) — `MaxThrust` (N, default `10e12`),
-  `ThrustDirection` (default `(0,0,1)`), `CurrentThrottle` (0–1), `Mass`, `Dynamics` (inizializzato),
-  `Motion` (Verlet dal costruttore), `GetThrustForce()` = `WorldMatrix.ZVector · MaxThrust · throttle`.
-- **`ShipPilot`** — accoppia nave + controller + input. `UpdatePhysics(gravityField, dt)`:
-  (A) `ProcessInput` → (B) `ApplyShipPhysics` (gravità + spinta/massa + damping, poi `Integrate`) →
-  (C) `Ship.UpdateRTMatrix()`. `ApplyLinearDamping`: se `throttle < 0.1`, `Velocity *= 0.5^dt`.
+- **`Starship`** (estende `PhysicsBody`) — `MaxThrust` (N, default `10e12`), `ThrustDirection`
+  (default `(0,0,1)`), `CurrentThrottle` (0–1); `Mass`/`Dynamics` (inizializzato)/`Motion` (Verlet dal
+  costruttore) ereditati da `PhysicsBody`. `GetThrustForce()` = `WorldMatrix.ZVector · MaxThrust · throttle`.
+- **`ShipPilot`** — accoppia nave + controller + input. `UpdatePhysics(engine, gravityField, dt)`:
+  (A) `ProcessInput` → (B) `engine.ApplyShipPhysics(...)` (delega al motore unico, salva la gravità in
+  `Gravity`) → (C) `Ship.UpdateRTMatrix()`.
 - **`ShipFlightController`** — traduce l'input in rotazioni e throttle con inerzia e smorzamento
   angolare (`AngularDamping` = 5.0, `RotationSensitivity` = 1.5, `ThrustSensitivity` = 0.05).
 - **`CosmosOctreeNode`** — wrapper Barnes-Hut sull'octree generico: `Insert(body)`,
@@ -689,8 +696,9 @@ ricorsivamente l'intera gerarchia in un unico `IEnumerable<CelestialBody>`.
 
 ### 6.5 Factory
 
-- **`GalaxyFactory`** — `CreateStarWarsUniverse()` (usa `CreateSolarSystemDebug`), `CreateSolarSystem()`,
-  `CreateSolarSystemDebug()`. I pianeti/lune ricevono velocità orbitale circolare automatica
+- **`GalaxyFactory`** — `CreateStarWarsUniverse()`, `CreateSolarSystem()`, `CreateSolarSystemDebug()`.
+  `CreateSolarSystem` e `CreateSolarSystemDebug` (prima copie identiche) delegano ora a un unico
+  builder privato `BuildSolarSystem()`. I pianeti/lune ricevono velocità orbitale circolare automatica
   `speed = √(G·M_padre / distanza)` e `VelocityVerletMotion`; il Sole ha `Motion = null` (resta fermo).
 - **`SpaceSimulationFactory`** — `CreateDefaultSimulation()`.
 
@@ -1069,9 +1077,14 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
   `Node3D.DoRTRecursion` e `Spline3D.InterpolationPointsPerSegment` (impostare in fase di init).
 - **`ObjectExtensions.MakeCopyOf`:** il ramo `toClone == null` è dopo i controlli `is`, di fatto
   irraggiungibile per un vero `null` (innocuo).
-- **`CelestialBody.Step` / integratori** assumono `Dynamics` non nullo: gli helper di `Galaxy` ora
-  saltano i corpi con `Dynamics`/`Motion` nulli, ma un uso diretto con `Motion` impostato e `Dynamics`
-  nullo resta a carico del chiamante. Le factory li impostano sempre in coppia.
+- **`CelestialBody.Step` / integratori** assumono `Dynamics` non nullo: gli helper del `GravitySolver`
+  ora saltano i corpi con `Dynamics`/`Motion` nulli, ma un uso diretto con `Motion` impostato e
+  `Dynamics` nullo resta a carico del chiamante. Le factory li impostano sempre in coppia.
+- **Struttura di Cosmos:** ✅ **bonificata** — estratta la base `PhysicsBody` (fine della doppia
+  scrittura di stato fisico e gravità tra corpi e navi); il solver gravitazionale spostato da `Galaxy`
+  a `GravitySolver`; rimossa la duplicazione della fisica navi (ora solo in `CosmosPhysicsEngine`, che
+  `SpaceSimulation` usa davvero — prima era un campo morto); `G` centralizzata in `PhysicalConstants`;
+  deduplicati i due builder del sistema solare in `GalaxyFactory`.
 
 ---
 
