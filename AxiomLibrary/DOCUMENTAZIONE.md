@@ -1111,13 +1111,15 @@ modo deterministico. Stato attuale:
 | GeoMathTest | net8.0 | 55 | GeoMath (vettori, matrici, octree, AABB) | ✅ Passed |
 | GeoShapeTest | net8.0 | 59 | GeoShape (scene-graph, curve, elementi) | ✅ Passed |
 | **PhysicsTest** | net10.0 | 20 | **`Axiom.Physics` in isolamento** (integratori, gravità, octree, solver) | ✅ Passed |
-| CosmosTest | net10.0 | 23 | Dominio + composizione Cosmos | ✅ Passed |
+| **CosmosModelTest** | net10.0 | 17 | **`Axiom.Cosmos.Model` in isolamento** (corpi, galassia, universo, navi) | ✅ Passed |
+| CosmosTest | net10.0 | 23 | Composizione Cosmos (simulazione, factory, engine) | ✅ Passed |
 | AxiomUtilitiesTest | net10.0 | 5 | Crittografia AES-GCM, clonazione | ✅ Passed |
-| **Totale** | | **162** | | ✅ **0 falliti, nessun crash** |
+| **Totale** | | **179** | | ✅ **0 falliti, nessun crash** |
 
-> ℹ️ **`PhysicsTest`** referenzia **solo** `Axiom.Physics` (non `Cosmos.Model`/`Cosmos`): collauda il
-> motore con un corpo di prova minimale `TestBody : PhysicsBody`, senza passare per i tipi di dominio.
-> Verifica così che il motore sia realmente autonomo e riusabile.
+> ℹ️ **Test isolati per libreria.** `PhysicsTest` referenzia **solo** `Axiom.Physics` (corpo di prova
+> `TestBody : PhysicsBody`); `CosmosModelTest` referenzia **solo** `Axiom.Cosmos.Model` (sistemi
+> costruiti a mano, senza la `GalaxyFactory` di composizione). Ogni libreria ha così una rete di
+> sicurezza indipendente: un accoppiamento accidentale verso un layer superiore non compilerebbe.
 
 ## 6.2 Test di regressione aggiunti
 
