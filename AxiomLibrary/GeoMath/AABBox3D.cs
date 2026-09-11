@@ -1,8 +1,7 @@
-﻿using Axiom.GeoMath;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
-namespace Axiom.GeoShape.Elements
+namespace Axiom.GeoMath
 {
 	/// <summary>
 	/// Box 3D Allineato agli assi

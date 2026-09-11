@@ -1,5 +1,4 @@
-﻿using Assets.AxiomCore.Cosmos_Link.Starships;
-using Axiom.Cosmos.Starships;
+﻿using Axiom.Cosmos.Starships;
 
 namespace CosmosTest
 {

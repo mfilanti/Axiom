@@ -1,7 +1,6 @@
-﻿using Axiom.Cosmos.Starships;
-using System;
+﻿using System;
 
-namespace Assets.AxiomCore.Cosmos_Link.Starships
+namespace Axiom.Cosmos.Starships
 {
     public class ShipFlightController
     {

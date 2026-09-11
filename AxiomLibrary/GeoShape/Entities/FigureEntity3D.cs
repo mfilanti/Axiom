@@ -1,4 +1,5 @@
 ﻿using Axiom.GeoShape.Curves;
+using Axiom.GeoMath;
 using Axiom.GeoShape.Elements;
 using System;
 using System.Collections.Generic;

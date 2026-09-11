@@ -1,5 +1,4 @@
 using Axiom.GeoMath;
-using Axiom.GeoShape.Elements;
 
 namespace Axiom.GeoMathTest;
 
