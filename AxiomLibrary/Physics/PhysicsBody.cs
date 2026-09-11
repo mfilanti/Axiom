@@ -1,14 +1,12 @@
-using Axiom.Cosmos.Dynamics;
 using Axiom.GeoMath;
 using Axiom.GeoShape;
 
-namespace Axiom.Cosmos.Models
+namespace Axiom.Physics
 {
 	/// <summary>
-	/// Base comune a tutti i corpi soggetti alla dinamica della simulazione (corpi celesti, navi).
-	/// Raccoglie in un solo punto lo stato fisico (massa, dinamica, modello di moto) e l'esposizione
-	/// come <see cref="IPointWeighted"/>, così che la gravità e l'inserimento nell'Octree non debbano
-	/// essere riscritti per ogni sottotipo.
+	/// Base comune a tutti i corpi soggetti alla dinamica del motore (astratta, indipendente dal
+	/// dominio). È un nodo dello scene-graph (<see cref="Node3D"/>) dotato di stato fisico e, in quanto
+	/// <see cref="IPointWeighted"/>, inseribile in un octree e utilizzabile dal campo gravitazionale.
 	/// </summary>
 	public abstract class PhysicsBody : Node3D, IPointWeighted
 	{

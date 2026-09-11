@@ -1,4 +1,4 @@
-﻿using Axiom.Cosmos.Starships;
+﻿using Axiom.Cosmos.Model.Starships;
 
 namespace CosmosTest
 {

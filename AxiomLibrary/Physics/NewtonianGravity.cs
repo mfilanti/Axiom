@@ -1,15 +1,12 @@
-﻿using Axiom.Cosmos.Models;
 using Axiom.GeoMath;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using System.Text;
 
-namespace Axiom.Cosmos.Dynamics
+namespace Axiom.Physics
 {
 	public sealed class NewtonianGravity : IGravityField
 	{
-		private readonly IReadOnlyList<CelestialBody> _bodies;
+		private readonly IReadOnlyList<PhysicsBody> _bodies;
 		private const double G = PhysicalConstants.G;
 
 		/// <summary>
@@ -18,19 +15,19 @@ namespace Axiom.Cosmos.Dynamics
 		/// </summary>
 		public NewtonianGravity()
 		{
-			_bodies = Array.Empty<CelestialBody>();
+			_bodies = Array.Empty<PhysicsBody>();
 		}
 
 		/// <summary>
 		/// Costruttore che memorizza l'insieme dei corpi usato da <see cref="ComputeForce"/>.
 		/// </summary>
 		/// <param name="bodies">Corpi che generano il campo gravitazionale.</param>
-		public NewtonianGravity(IReadOnlyList<CelestialBody> bodies)
+		public NewtonianGravity(IReadOnlyList<PhysicsBody> bodies)
 		{
-			_bodies = bodies ?? Array.Empty<CelestialBody>();
+			_bodies = bodies ?? Array.Empty<PhysicsBody>();
 		}
 
-		public Vector3D ComputeForce(CelestialBody body)
+		public Vector3D ComputeForce(PhysicsBody body)
 		{
 			Vector3D force = Vector3D.Zero;
 
@@ -51,8 +48,8 @@ namespace Axiom.Cosmos.Dynamics
 		}
 
 		public Vector3D ComputeAcceleration(
-		CelestialBody target,
-		IReadOnlyCollection<CelestialBody> allBodies)
+			PhysicsBody target,
+			IReadOnlyCollection<PhysicsBody> allBodies)
 		{
 			Vector3D acceleration = Vector3D.Zero;
 

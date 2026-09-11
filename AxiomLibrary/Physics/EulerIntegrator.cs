@@ -1,9 +1,6 @@
-﻿using Axiom.GeoShape;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Axiom.GeoShape;
 
-namespace Axiom.Cosmos.Dynamics
+namespace Axiom.Physics
 {
 	public sealed class EulerIntegrator : IMotionModel
 	{

@@ -1,6 +1,6 @@
 ﻿using Axiom.Cosmos;
-using Axiom.Cosmos.Models;
-using Axiom.Cosmos.Starships;
+using Axiom.Cosmos.Model;
+using Axiom.Cosmos.Model.Starships;
 using Axiom.GeoMath;
 
 namespace CosmosTest

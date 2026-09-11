@@ -1,9 +1,6 @@
-﻿using Axiom.Cosmos.Dynamics;
+﻿using Axiom.Cosmos.Model.Starships;
 using Axiom.Cosmos.Simulation;
-using Axiom.Cosmos.Starships;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Axiom.Physics;
 
 namespace Axiom.Cosmos
 {

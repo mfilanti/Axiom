@@ -1,23 +1,15 @@
-﻿using Axiom.GeoMath;
+using Axiom.GeoMath;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Axiom.Cosmos.Models
+namespace Axiom.Cosmos.Model
 {
 	public class Star : CelestialBody
 	{
-		#region Fields
-
-		#endregion
-
 		#region Properties
 		/// <summary>
 		/// Luminosità della stella in Watt
 		/// </summary>
 		public double Luminosity { get; set; }
-
-		
 		#endregion
 
 		#region Constructors

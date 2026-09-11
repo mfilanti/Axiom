@@ -1,6 +1,7 @@
 using Axiom.GeoMath;
+using Axiom.Physics;
 
-namespace Axiom.Cosmos.Models
+namespace Axiom.Cosmos.Model
 {
 	public abstract class CelestialBody : PhysicsBody
 	{
@@ -15,10 +16,6 @@ namespace Axiom.Cosmos.Models
 		/// <summary>
 		/// Costruttore del corpo celeste
 		/// </summary>
-		/// <param name="name"></param>
-		/// <param name="mass"></param>
-		/// <param name="radius"></param>
-		/// <param name="position"></param>
 		protected CelestialBody(string name, double mass, double radius, Vector3D position) : base()
 		{
 			Name = name;

@@ -1,5 +1,5 @@
-﻿using Axiom.Cosmos.Dynamics;
-using Axiom.Cosmos.Models;
+﻿using Axiom.Physics;
+using Axiom.Cosmos.Model;
 using Axiom.GeoMath;
 using System;
 using System.Collections.Generic;

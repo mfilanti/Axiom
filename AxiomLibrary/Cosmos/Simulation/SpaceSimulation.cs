@@ -1,12 +1,7 @@
-﻿using Axiom.Cosmos.Dynamics;
-using Axiom.Cosmos.Models;
-using Axiom.Cosmos.Starships;
-using Axiom.Cosmos.Utils;
-using Axiom.GeoMath;
-using System;
+using Axiom.Cosmos.Model;
+using Axiom.Cosmos.Model.Starships;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Axiom.Cosmos.Simulation
 {
@@ -18,7 +13,7 @@ namespace Axiom.Cosmos.Simulation
 		/// </summary>
 		private readonly List<ShipPilot> _pilots = new();
 		/// <summary>
-		/// Engine di fisica celeste
+		/// Engine di fisica celeste (motore unico)
 		/// </summary>
 		private readonly CosmosPhysicsEngine _physics = new();
 		/// <summary>
@@ -49,7 +44,7 @@ namespace Axiom.Cosmos.Simulation
 		{
 			_universe = new Universe("Universe");
 			_universe.Galaxies.Add(new Galaxy("Milky Way"));
-			_currentGalaxy = _universe.Galaxies.FirstOrDefault(); 
+			_currentGalaxy = _universe.Galaxies.FirstOrDefault();
 		}
 		#endregion
 
@@ -77,8 +72,6 @@ namespace Axiom.Cosmos.Simulation
 		/// <summary>
 		/// Aggiunge una nave alla simulazione con il relativo pilota
 		/// </summary>
-		/// <param name="ship"></param>
-		/// <param name="input"></param>
 		public ShipPilot AddShip(Starship ship, IInputProvider input)
 		{
 			ShipPilot r = new ShipPilot(ship, input);
@@ -89,12 +82,12 @@ namespace Axiom.Cosmos.Simulation
 			}
 			return r;
 		}
-        /// <summary>
-        /// Aggiunge un corpo celeste alla simulazione
-        /// </summary>
-        /// <param name="planet"></param>
-        public void AddCelestialBody(CelestialBody planet) => _currentGalaxy.AddCelestialBody(planet);
 
-        #endregion
-    }
+		/// <summary>
+		/// Aggiunge un corpo celeste alla simulazione
+		/// </summary>
+		public void AddCelestialBody(CelestialBody planet) => _currentGalaxy.AddCelestialBody(planet);
+
+		#endregion
+	}
 }

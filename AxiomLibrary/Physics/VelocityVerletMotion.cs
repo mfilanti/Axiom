@@ -1,10 +1,6 @@
-﻿using Axiom.GeoMath;
 using Axiom.GeoShape;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace Axiom.Cosmos.Dynamics
+namespace Axiom.Physics
 {
 	public sealed class VelocityVerletMotion : IMotionModel
 	{

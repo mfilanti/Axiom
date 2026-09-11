@@ -594,7 +594,7 @@ Mesh3D loaded = Mesh3DExtensions.FromSTLFile(file);   // loaded.Triangles.Count 
 
 ---
 
-## 6. Axiom.Cosmos — simulazione fisica spaziale
+## 6. Simulazione fisica spaziale — tre librerie
 
 Motore **n-body gravitazionale** con, sopra, un livello **arcade** in stile Star Wars per il
 pilotaggio di navi. Due anime:
@@ -604,25 +604,31 @@ pilotaggio di navi. Due anime:
 - **Arcade** — navi (`Starship`) con motori, throttle, controllo pitch/yaw/roll, smorzamento e
   "radar" (query di raggio sull'octree).
 
-### 6.1 Struttura
+### 6.1 Struttura in tre librerie
 
-| Cartella / Namespace | Contenuto |
-|---|---|
-| `Models` | `PhysicsBody`, `CelestialBody`, `Star`, `Planet`, `Moon`, `Galaxy`, `Universe`, `GalaxyExtensions` |
-| `Dynamics` (+ `Abstracts`) | `IGravityField`, `IMotionModel`, `DynamicsState`, `EulerIntegrator`, `NewtonianGravity`, `VelocityVerletMotion`, `GravitySolver`, `PhysicalConstants` |
-| `Simulation` | `CosmosPhysicsEngine`, `IInputProvider`, `SpaceSimulation` |
-| `Starships` | `Starship`, `ShipPilot`, `ShipFlightController` |
-| `Utils` | `CosmosOctreeNode` (wrapper Barnes-Hut sull'octree) |
-| root | factory: `GalaxyFactory`, `SpaceSimulationFactory` |
+Il monolite `Axiom.Cosmos` è stato **scorporato in tre assembly** con dipendenze acicliche, separando
+il motore fisico (riusabile) dal dominio e dall'orchestrazione:
 
-> ℹ️ `ShipFlightController` è ora nel namespace `Axiom.Cosmos.Starships` (in precedenza
-> `Assets.AxiomCore.Cosmos_Link.Starships`, retaggio del progetto Unity, non allineato alla cartella).
+| Assembly (progetto) | Namespace | Ruolo · dipende da |
+|---|---|---|
+| **`Axiom.Physics`** | `Axiom.Physics` | Motore fisico **generico**, indipendente dal dominio: `PhysicsBody`, `DynamicsState`, `IMotionModel`, `EulerIntegrator`, `VelocityVerletMotion`, `IGravityField`, `NewtonianGravity`, `GravitySolver`, `GravityOctree<T>`, `PhysicalConstants`. → GeoMath, GeoShape |
+| **`Axiom.Cosmos.Model`** | `Axiom.Cosmos.Model` (+ `.Starships`) | Dominio: `CelestialBody`, `Star`, `Planet`, `Moon`, `Galaxy`, `Universe`, `GalaxyExtensions`; `Starship`, `ShipFlightController`. → Physics, GeoMath, GeoShape |
+| **`Axiom.Cosmos`** | `Axiom.Cosmos` (+ `.Simulation`, `.Utils`) | Composizione: `SpaceSimulation`, `CosmosPhysicsEngine`, `IInputProvider`, `ShipPilot`, `CosmosOctreeNode`, factory `GalaxyFactory`/`SpaceSimulationFactory`. → Model, Physics |
 
-> ✅ **Bonifica architetturale.** Introdotta la base comune **`PhysicsBody`** (stato fisico condiviso da
-> corpi celesti e navi); il solver gravitazionale è stato estratto da `Galaxy` in **`GravitySolver`**
-> (i modelli descrivono la scena, il solver la fa evolvere); la fisica delle navi, prima duplicata tra
-> `CosmosPhysicsEngine` e `ShipPilot`, vive ora nel **solo** `CosmosPhysicsEngine` (usato realmente da
-> `SpaceSimulation`); la costante `G` è centralizzata in **`PhysicalConstants`**.
+```
+GeoMath / GeoShape
+        ▲
+   Axiom.Physics          (motore, non conosce il dominio)
+        ▲
+   Axiom.Cosmos.Model     (dominio, implementa le astrazioni fisiche)
+        ▲
+   Axiom.Cosmos           (simulazione + factory: unisce i due mondi)
+```
+
+> ℹ️ Il taglio è stato reso possibile **invertendo la dipendenza**: la fisica (`IGravityField`,
+> `NewtonianGravity`, `GravitySolver`, `GravityOctree<T>`) è ora definita sull'astrazione `PhysicsBody`
+> / `IPointWeighted` e **non conosce più `CelestialBody`**. Namespace riallineati agli assembly;
+> `CosmosOctreeNode` è ora una sottile specializzazione di `GravityOctree<CelestialBody>`.
 
 ### 6.2 Modelli
 
@@ -1080,11 +1086,12 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
 - **`CelestialBody.Step` / integratori** assumono `Dynamics` non nullo: gli helper del `GravitySolver`
   ora saltano i corpi con `Dynamics`/`Motion` nulli, ma un uso diretto con `Motion` impostato e
   `Dynamics` nullo resta a carico del chiamante. Le factory li impostano sempre in coppia.
-- **Struttura di Cosmos:** ✅ **bonificata** — estratta la base `PhysicsBody` (fine della doppia
-  scrittura di stato fisico e gravità tra corpi e navi); il solver gravitazionale spostato da `Galaxy`
-  a `GravitySolver`; rimossa la duplicazione della fisica navi (ora solo in `CosmosPhysicsEngine`, che
-  `SpaceSimulation` usa davvero — prima era un campo morto); `G` centralizzata in `PhysicalConstants`;
-  deduplicati i due builder del sistema solare in `GalaxyFactory`.
+- **Struttura di Cosmos:** ✅ **bonificata e scorporata in 3 librerie** (vedi §6.1) — `Axiom.Physics`
+  (motore generico), `Axiom.Cosmos.Model` (dominio), `Axiom.Cosmos` (composizione), con dipendenze
+  acicliche ottenute invertendo la dipendenza della fisica dai tipi di dominio. Interventi correlati:
+  base comune `PhysicsBody`, solver estratto in `GravitySolver`, fisica navi non più duplicata (solo in
+  `CosmosPhysicsEngine`, usato davvero da `SpaceSimulation`), `G` centralizzata in `PhysicalConstants`,
+  octree generico `GravityOctree<T>`, builder del sistema solare deduplicati in `GalaxyFactory`.
 
 ---
 

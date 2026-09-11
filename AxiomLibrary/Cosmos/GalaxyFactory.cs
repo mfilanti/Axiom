@@ -1,6 +1,6 @@
-using Axiom.Cosmos.Dynamics;
-using Axiom.Cosmos.Models;
+using Axiom.Cosmos.Model;
 using Axiom.GeoMath;
+using Axiom.Physics;
 using System;
 
 namespace Axiom.Cosmos

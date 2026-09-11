@@ -1,4 +1,4 @@
-﻿using Axiom.Cosmos.Models;
+﻿using Axiom.Cosmos.Model;
 using Axiom.Cosmos.Utils;
 using Axiom.GeoMath;
 using Axiom.GeoShape.Elements;
