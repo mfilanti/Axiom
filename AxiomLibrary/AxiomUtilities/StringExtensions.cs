@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+using System;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,69 +6,114 @@ namespace Axiom.Utilities
 {
     public static class StringExtensions
     {
-		/// <summary>
-		/// Cripta una stringa utilizzando AES con una chiave fornita.
-		/// </summary>
-		/// <param name="plainText">Testo</param>
-		/// <param name="key">Chiave</param>
-		/// <returns>testo criptato</returns>
-		public static string Encrypt(this string plainText, string key)
-		{
-			using var aes = Aes.Create();
-			// 1. Prepariamo la chiave (deve essere di 32 byte per AES-256)
-			aes.Key = Encoding.UTF8.GetBytes(key.PadRight(32).Substring(0, 32));
+        // Parametri di formato per la cifratura autenticata.
+        // Layout del blob (prima della codifica Base64):
+        //   [ salt (16) ][ nonce (12) ][ tag (16) ][ ciphertext (N) ]
+        private const int SaltSize = 16;   // sale casuale per la derivazione della chiave (KDF)
+        private const int NonceSize = 12;  // dimensione standard del nonce per AES-GCM
+        private const int TagSize = 16;    // dimensione del tag di autenticazione (max per AES-GCM)
+        private const int KeySize = 32;    // AES-256
+        private const int Pbkdf2Iterations = 100_000;
 
-			// 2. Generiamo un IV casuale nuovo ogni volta
-			aes.GenerateIV();
-			byte[] iv = aes.IV;
+        /// <summary>
+        /// Cripta una stringa con AES-256-GCM (cifratura <b>autenticata</b>).
+        /// La chiave AES è derivata dalla passphrase con PBKDF2 (SHA-256, sale casuale),
+        /// non con un semplice padding; ogni chiamata usa sale e nonce casuali, quindi lo
+        /// stesso testo produce ogni volta un risultato diverso.
+        /// </summary>
+        /// <param name="plainText">Testo in chiaro.</param>
+        /// <param name="key">Passphrase.</param>
+        /// <returns>Blob Base64 contenente sale, nonce, tag e dati cifrati.</returns>
+        public static string Encrypt(this string plainText, string key)
+        {
+            if (plainText == null) throw new ArgumentNullException(nameof(plainText));
+            if (key == null) throw new ArgumentNullException(nameof(key));
 
-			using var encryptor = aes.CreateEncryptor(aes.Key, iv);
-			using var ms = new MemoryStream();
+            // 1. Sale e nonce casuali, nuovi ad ogni chiamata.
+            byte[] salt = new byte[SaltSize];
+            byte[] nonce = new byte[NonceSize];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+                rng.GetBytes(nonce);
+            }
 
-			// 3. Scriviamo l'IV non cifrato all'inizio dello stream
-			ms.Write(iv, 0, iv.Length);
+            // 2. Derivazione della chiave AES-256 dalla passphrase (KDF, non padding).
+            byte[] aesKey = DeriveKey(key, salt);
 
-			using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-			using (var sw = new StreamWriter(cs))
-			{
-				sw.Write(plainText);
-			}
+            byte[] plainBytes = Encoding.UTF8.GetBytes(plainText);
+            byte[] cipherBytes = new byte[plainBytes.Length];
+            byte[] tag = new byte[TagSize];
 
-			// Il risultato contiene: [16 byte di IV] + [Dati Cifrati]
-			return Convert.ToBase64String(ms.ToArray());
-		}
+            // 3. Cifratura autenticata.
+            using (var aes = new AesGcm(aesKey))
+            {
+                aes.Encrypt(nonce, plainBytes, cipherBytes, tag);
+            }
 
-		/// <summary>
-		/// Decripta una stringa AES con la chiave fornita.
-		/// </summary>
-		/// <param name="cipherText">Testo criptato</param>
-		/// <param name="key">Chiave</param>
-		/// <returns>Testo in chiaro</returns>
-		public static string Decrypt(this string cipherText, string key)
-		{
-			// 1. Convertiamo la stringa Base64 in byte
-			byte[] fullCipher = Convert.FromBase64String(cipherText);
+            // 4. Composizione del blob: [salt][nonce][tag][ciphertext].
+            byte[] blob = new byte[SaltSize + NonceSize + TagSize + cipherBytes.Length];
+            int offset = 0;
+            Buffer.BlockCopy(salt, 0, blob, offset, SaltSize); offset += SaltSize;
+            Buffer.BlockCopy(nonce, 0, blob, offset, NonceSize); offset += NonceSize;
+            Buffer.BlockCopy(tag, 0, blob, offset, TagSize); offset += TagSize;
+            Buffer.BlockCopy(cipherBytes, 0, blob, offset, cipherBytes.Length);
 
-			using var aes = Aes.Create();
-			// Prepariamo la chiave (stessa logica usata nell'Encrypt)
-			aes.Key = Encoding.UTF8.GetBytes(key.PadRight(32).Substring(0, 32));
+            return Convert.ToBase64String(blob);
+        }
 
-			// 2. Estraiamo l'IV (i primi 16 byte)
-			byte[] iv = new byte[16];
-			byte[] cipherData = new byte[fullCipher.Length - 16];
+        /// <summary>
+        /// Decripta una stringa prodotta da <see cref="Encrypt"/>.
+        /// Verifica il tag di autenticazione: se il testo cifrato (o la chiave) è stato
+        /// manomesso, viene sollevata una <see cref="CryptographicException"/> anziché
+        /// restituire dati corrotti.
+        /// </summary>
+        /// <param name="cipherText">Blob Base64 prodotto da <see cref="Encrypt"/>.</param>
+        /// <param name="key">Passphrase.</param>
+        /// <returns>Testo in chiaro.</returns>
+        public static string Decrypt(this string cipherText, string key)
+        {
+            if (cipherText == null) throw new ArgumentNullException(nameof(cipherText));
+            if (key == null) throw new ArgumentNullException(nameof(key));
 
-			Buffer.BlockCopy(fullCipher, 0, iv, 0, 16);
-			Buffer.BlockCopy(fullCipher, 16, cipherData, 0, cipherData.Length);
+            byte[] blob = Convert.FromBase64String(cipherText);
+            if (blob.Length < SaltSize + NonceSize + TagSize)
+                throw new CryptographicException("Testo cifrato non valido o troncato.");
 
-			aes.IV = iv;
+            // 1. Estrazione delle sezioni del blob.
+            byte[] salt = new byte[SaltSize];
+            byte[] nonce = new byte[NonceSize];
+            byte[] tag = new byte[TagSize];
+            int cipherLen = blob.Length - SaltSize - NonceSize - TagSize;
+            byte[] cipherBytes = new byte[cipherLen];
 
-			// 3. Decriptiamo il resto dei dati
-			using var decryptor = aes.CreateDecryptor(aes.Key, aes.IV);
-			using var ms = new MemoryStream(cipherData);
-			using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-			using var sr = new StreamReader(cs);
+            int offset = 0;
+            Buffer.BlockCopy(blob, offset, salt, 0, SaltSize); offset += SaltSize;
+            Buffer.BlockCopy(blob, offset, nonce, 0, NonceSize); offset += NonceSize;
+            Buffer.BlockCopy(blob, offset, tag, 0, TagSize); offset += TagSize;
+            Buffer.BlockCopy(blob, offset, cipherBytes, 0, cipherLen);
 
-			return sr.ReadToEnd();
-		}
-	}
+            // 2. Ri-derivazione della stessa chiave dal sale memorizzato.
+            byte[] aesKey = DeriveKey(key, salt);
+
+            // 3. Decifratura autenticata (lancia se il tag non combacia).
+            byte[] plainBytes = new byte[cipherLen];
+            using (var aes = new AesGcm(aesKey))
+            {
+                aes.Decrypt(nonce, cipherBytes, tag, plainBytes);
+            }
+
+            return Encoding.UTF8.GetString(plainBytes);
+        }
+
+        /// <summary>
+        /// Deriva una chiave AES-256 dalla passphrase usando PBKDF2 (SHA-256).
+        /// </summary>
+        private static byte[] DeriveKey(string key, byte[] salt)
+        {
+            using var kdf = new Rfc2898DeriveBytes(
+                Encoding.UTF8.GetBytes(key), salt, Pbkdf2Iterations, HashAlgorithmName.SHA256);
+            return kdf.GetBytes(KeySize);
+        }
+    }
 }
