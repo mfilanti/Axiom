@@ -1103,17 +1103,21 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
 > run di GeoShapeTest in modo non deterministico (esecuzione parallela). Corretti BUG-09 e BUG-10, la
 > suite gira per intero e in modo **deterministico**, sia in sequenziale sia in parallelo.
 
-Dopo le correzioni e l'aggiunta dei test di regressione, **tutti i test passano** (119 in totale, con
-11 nuovi test di regressione; inoltre 2 test preesistenti — `Cylinder3DTest`, `Spline3DTest` — ora
-passano correttamente dopo le correzioni):
+Dopo le correzioni, i refactor e l'aggiunta di nuovi test, **tutti i test passano** e la suite gira in
+modo deterministico. Stato attuale:
 
-| Progetto | Framework | Test | di cui nuovi | Esito |
+| Progetto | Framework | Test | Copre | Esito |
 |---|---|---|---|---|
-| GeoMathTest | net8.0 | 50 | +3 (octree ×2, sentinella NaN) | ✅ Passed |
-| GeoShapeTest | net8.0 | 45 | +2 (propagazione, Arc.IsOnCurve) | ✅ Passed |
-| CosmosTest | net10.0 | 23 | +6 (BugRegressionTests) | ✅ Passed |
-| AxiomUtilitiesTest | net10.0 | 1 | — | ✅ Passed |
-| **Totale** | | **119** | **+11** | ✅ **0 falliti, nessun crash** |
+| GeoMathTest | net8.0 | 55 | GeoMath (vettori, matrici, octree, AABB) | ✅ Passed |
+| GeoShapeTest | net8.0 | 59 | GeoShape (scene-graph, curve, elementi) | ✅ Passed |
+| **PhysicsTest** | net10.0 | 20 | **`Axiom.Physics` in isolamento** (integratori, gravità, octree, solver) | ✅ Passed |
+| CosmosTest | net10.0 | 23 | Dominio + composizione Cosmos | ✅ Passed |
+| AxiomUtilitiesTest | net10.0 | 5 | Crittografia AES-GCM, clonazione | ✅ Passed |
+| **Totale** | | **162** | | ✅ **0 falliti, nessun crash** |
+
+> ℹ️ **`PhysicsTest`** referenzia **solo** `Axiom.Physics` (non `Cosmos.Model`/`Cosmos`): collauda il
+> motore con un corpo di prova minimale `TestBody : PhysicsBody`, senza passare per i tipi di dominio.
+> Verifica così che il motore sia realmente autonomo e riusabile.
 
 ## 6.2 Test di regressione aggiunti
 
