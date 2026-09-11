@@ -1,9 +1,7 @@
-﻿using Axiom.GeoShape;
-using System;
+using Axiom.GeoShape;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Axiom.Cosmos.Models
+namespace Axiom.Cosmos.Model
 {
 	public static class GalaxyExtensions
 	{

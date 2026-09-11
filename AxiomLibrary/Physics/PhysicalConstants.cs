@@ -1,8 +1,8 @@
-namespace Axiom.Cosmos.Dynamics
+namespace Axiom.Physics
 {
 	/// <summary>
-	/// Costanti fisiche condivise dalla simulazione Cosmos.
-	/// Punto unico di verità: evita la ripetizione del valore di G in più classi.
+	/// Costanti fisiche condivise dal motore.
+	/// Punto unico di verità: evita la ripetizione del valore di G nelle varie classi.
 	/// </summary>
 	public static class PhysicalConstants
 	{

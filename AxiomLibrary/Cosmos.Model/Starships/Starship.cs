@@ -1,9 +1,8 @@
-using Axiom.Cosmos.Dynamics;
-using Axiom.Cosmos.Models;
 using Axiom.GeoMath;
+using Axiom.Physics;
 using System;
 
-namespace Axiom.Cosmos.Starships
+namespace Axiom.Cosmos.Model.Starships
 {
 	public class Starship : PhysicsBody
 	{

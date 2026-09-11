@@ -1,5 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Axiom.Cosmos.Models;
+using Axiom.Cosmos.Model;
 using Axiom.GeoShape.Elements;
 using Axiom.GeoMath;
 using System.Collections.Generic;

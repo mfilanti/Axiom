@@ -1,15 +1,9 @@
-﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Axiom.Cosmos.Models
+namespace Axiom.Cosmos.Model
 {
 	public class Universe
 	{
-		#region Fields
-
-		#endregion
-
 		#region Properties
 		/// <summary>
 		/// Nome dell'universo
@@ -36,25 +30,19 @@ namespace Axiom.Cosmos.Models
 		{
 			Name = name;
 		}
-
 		#endregion
 
 		#region Methods
-
 		public void Step(double deltaTime)
 		{
-			// 1. L'universo coordina la fisica globale
-			// In un gioco Star Wars, qui potresti gestire il passaggio da un sistema solare all'altro
+			// L'universo coordina la fisica globale: avanza ogni galassia.
 			foreach (var galaxy in Galaxies)
 			{
 				galaxy.Step(deltaTime);
 			}
 
-			// 2. Aggiornamento corpi fuori dalle galassie
-			// (Qui andrebbe un Octree globale se i corpi intergalattici sono molti)
+			// (Qui andrebbe un Octree globale se i corpi intergalattici sono molti.)
 		}
 		#endregion
-
-		
 	}
 }

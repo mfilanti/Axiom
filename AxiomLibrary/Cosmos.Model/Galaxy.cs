@@ -1,10 +1,9 @@
-using Axiom.Cosmos.Dynamics;
-using Axiom.Cosmos.Utils;
 using Axiom.GeoShape;
+using Axiom.Physics;
 using System;
 using System.Linq;
 
-namespace Axiom.Cosmos.Models
+namespace Axiom.Cosmos.Model
 {
 	public class Galaxy : Node3D
 	{
@@ -63,7 +62,7 @@ namespace Axiom.Cosmos.Models
 		/// </summary>
 		/// <param name="deltaTime">Delta di tempo</param>
 		/// <returns>L'Octree costruito sulle posizioni aggiornate, oppure null se non ci sono corpi.</returns>
-		public CosmosOctreeNode UpdatePhysics(double deltaTime)
+		public GravityOctree<PhysicsBody> UpdatePhysics(double deltaTime)
 			=> _solver.StepBarnesHut(this.GetAllBodies().ToList(), deltaTime);
 		#endregion
 	}

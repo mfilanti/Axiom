@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<AssemblyName>Axiom.Cosmos</AssemblyName>
-		<RootNamespace>Axiom.Cosmos</RootNamespace>
+		<AssemblyName>Axiom.Cosmos.Model</AssemblyName>
+		<RootNamespace>Axiom.Cosmos.Model</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\GeoMath\GeoMath.csproj" />
 	  <ProjectReference Include="..\GeoShape\GeoShape.csproj" />
 	  <ProjectReference Include="..\Physics\Physics.csproj" />
-	  <ProjectReference Include="..\Cosmos.Model\Cosmos.Model.csproj" />
 	</ItemGroup>
 
 </Project>
