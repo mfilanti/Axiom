@@ -74,8 +74,6 @@ namespace Axiom.Cosmos.Utils
 
 			if (node.IsLeaf)
 			{
-				// Accesso alle entries del nodo generico tramite riflessione o rendendo _entries protected/internal
-				// In alternativa, aggiungi un metodo GetEntries() a OctreeNode<T>
 				foreach (var body in node.GetEntries())
 				{
 					if (body == target) continue;
