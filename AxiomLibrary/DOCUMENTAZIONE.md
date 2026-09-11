@@ -185,16 +185,18 @@ valori fissi. Gli attori:
 
 Libreria di utilità generiche, del tutto indipendente dal resto.
 
-### 3.1 `StringExtensions` — crittografia AES-256
+### 3.1 `StringExtensions` — crittografia AES-256-GCM (autenticata)
 
-Cifra/decifra stringhe con AES-256. La chiave è normalizzata a 32 byte (padding con spazi o
-troncamento); l'IV è generato casualmente a ogni cifratura e anteposto ai dati (primi 16 byte del
-risultato Base64).
+Cifra/decifra stringhe con **AES-256-GCM** (cifratura autenticata). La chiave AES è derivata dalla
+passphrase con **PBKDF2** (SHA-256, 100 000 iterazioni, sale casuale), non più con un semplice
+padding. Ogni cifratura usa **sale e nonce casuali**, quindi lo stesso testo produce ogni volta un
+risultato diverso; il tag GCM garantisce che manomissioni del testo cifrato (o una chiave errata)
+vengano rilevate con una `CryptographicException` invece di restituire dati corrotti.
 
 | Metodo | Firma | Descrizione |
 |---|---|---|
-| `Encrypt` | `string Encrypt(this string plainText, string key)` | Cifra → Base64 di `[IV 16 byte][dati]` |
-| `Decrypt` | `string Decrypt(this string cipherText, string key)` | Operazione inversa |
+| `Encrypt` | `string Encrypt(this string plainText, string key)` | Cifra → Base64 di `[salt 16][nonce 12][tag 16][dati]` |
+| `Decrypt` | `string Decrypt(this string cipherText, string key)` | Operazione inversa; verifica il tag di autenticazione |
 
 ```csharp
 using Axiom.Utilities;
@@ -203,10 +205,11 @@ string cifrato = "messaggio segreto".Encrypt("la-mia-chiave");
 string chiaro  = cifrato.Decrypt("la-mia-chiave");   // -> "messaggio segreto"
 ```
 
-> ⚠️ **Sicurezza:** la chiave è derivata con semplice padding a 32 byte
-> (`key.PadRight(32).Substring(0, 32)`), **non** con una KDF (PBKDF2/Argon2). Il testo è UTF-8. È
-> adeguato per offuscamento/uso interno; per requisiti forti serve una derivazione robusta e
-> autenticazione (AES-GCM) — vedi [criticità minori](#criticità-minori-e-code-smell).
+> ℹ️ **Sicurezza (bonificata):** la chiave è ora derivata con **PBKDF2** (SHA-256, sale casuale) e i
+> dati sono protetti con **AES-256-GCM** (autenticazione integrata). Il formato del blob è cambiato
+> (`[salt][nonce][tag][ciphertext]`), quindi non è compatibile con i dati cifrati dalla versione
+> precedente. Resta adeguato per offuscamento/uso interno; per requisiti forti valutare un fattore di
+> lavoro KDF più alto o una passphrase ad alta entropia.
 
 ### 3.2 `ObjectExtensions` — clonazione
 
@@ -1052,9 +1055,11 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
   (prima `AxiomUtilities`); `ShipFlightController` in `Axiom.Cosmos.Starships` (prima
   `Assets.AxiomCore.Cosmos_Link.Starships`, retaggio Unity); `AABBox3D` in `Axiom.GeoMath` (prima
   `Axiom.GeoShape.Elements` pur stando nel progetto GeoMath). Aggiornati i relativi `using`.
-- **Crittografia (`StringExtensions`)** (non modificato — hardening, non un bug): derivazione chiave
-  con padding invece di una KDF; nessuna autenticazione (AES-CBC anziché AES-GCM). Adeguato solo per
-  offuscamento interno.
+- **Crittografia (`StringExtensions`):** ✅ **bonificato** — derivazione chiave con **PBKDF2**
+  (SHA-256, sale casuale) al posto del padding; **AES-256-GCM** (cifratura autenticata) al posto di
+  AES-CBC non autenticato. Manomissioni e chiave errata ora sollevano `CryptographicException`.
+  Il formato del blob cambia (`[salt][nonce][tag][ciphertext]`): non retro-compatibile con i dati
+  cifrati in precedenza.
 - **`Vector3D.Normalize()` lancia** su vettore nullo: ✅ **mitigato** — sono state aggiunte le
   alternative sicure `TryNormalize`/`NormalizeOrZero` (usate nei percorsi a rischio), e i punti degeneri
   di curve/elementi sono stati irrobustiti. `Normalize()` continua a lanciare per retro-compatibilità.
