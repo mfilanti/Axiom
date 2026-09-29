@@ -41,7 +41,7 @@ namespace Axiom.GeoShape.Entities
 					}
 				}
 				_shape = value;
-				if (_shape == null)
+				if (_shape is not null)
 				{
 					foreach (var item in _shape.Parameters)
 					{

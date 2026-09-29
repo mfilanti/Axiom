@@ -1,5 +1,6 @@
 using Axiom.GeoMath;
 using Axiom.GeoShape.Curves;
+using Axiom.GeoShape.Elements;
 
 namespace GeoShapeTest;
 
@@ -69,5 +70,39 @@ public class Arc3DTest
         // Costruttore (start, end, center) con punti collineari (cross nullo) -> nessuna eccezione.
         var collinear = new Arc3D(new Point3D(1, 0, 0), new Point3D(2, 0, 0), new Point3D(0, 0, 0), true);
         Assert.IsFalse(double.IsNaN(collinear.Radius));
+    }
+
+    /// <summary>
+    /// Regressione: ApplyRT metteva la traslazione anche in RMatrix, che deve contenere solo la rotazione,
+    /// quindi i punti dell'arco risultavano traslati due volte.
+    /// </summary>
+    [TestMethod]
+    public void TestApplyRTTranslatesOnce()
+    {
+        var arc = new Arc3D(Point3D.Zero, 10, 0, Math.PI, true, RTMatrix.Identity);
+        arc.ApplyRT(RTMatrix.FromTraslation(new Vector3D(1000, 2000, 0)));
+        Assert.IsTrue(arc.Center.IsEquals(new Point3D(1000, 2000, 0)));
+        Assert.IsTrue(arc.StartPoint.IsEquals(new Point3D(1010, 2000, 0), 1e-9), $"Start {arc.StartPoint}");
+        Assert.IsTrue(arc.MiddlePoint.IsEquals(new Point3D(1000, 2010, 0), 1e-9), $"Middle {arc.MiddlePoint}");
+
+        AABBox3D box = arc.GetABBox();
+        Assert.IsTrue(box.MinPoint.IsEquals(new Point3D(990, 2000, 0), 1e-9), $"Min {box.MinPoint}");
+        Assert.IsTrue(box.MaxPoint.IsEquals(new Point3D(1010, 2010, 0), 1e-9), $"Max {box.MaxPoint}");
+    }
+
+    /// <summary>
+    /// Regressione: GetABBox usava le direzioni degli assi proiettate sul piano dell'arco senza
+    /// normalizzarle, perdendo i punti estremi quando il piano non è parallelo agli assi.
+    /// </summary>
+    [TestMethod]
+    public void TestGetABBoxOfTiltedArc()
+    {
+        double a = 0.5;
+        var arc = new Arc3D(Point3D.Zero, 10, 0, Math.PI, true, RTMatrix.Identity);
+        arc.ApplyRT(RTMatrix.FromEulerAnglesXYZ(a, 0, 0));
+        AABBox3D box = arc.GetABBox();
+        Assert.AreEqual(20, box.LX, 1e-9);
+        Assert.AreEqual(10 * Math.Cos(a), box.LY, 1e-9);
+        Assert.AreEqual(10 * Math.Sin(a), box.LZ, 1e-9);
     }
 }

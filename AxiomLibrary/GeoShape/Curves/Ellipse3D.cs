@@ -523,7 +523,8 @@ namespace Axiom.GeoShape.Curves
 		public override void ApplyRT(RTMatrix matrix)
 		{
 			Center = matrix * Center;
-			RMatrix = matrix * RMatrix;
+			// RMatrix contiene solo la rotazione: la traslazione è già applicata al centro
+			RMatrix = (matrix * RMatrix).WithTranslation(Vector3D.Zero);
 		}
 
 		/// <summary>
