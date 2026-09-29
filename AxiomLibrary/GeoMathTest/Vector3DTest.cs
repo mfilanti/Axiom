@@ -52,7 +52,7 @@ public class Vector3DTest
     [TestMethod]
     public void TestNormalizeThrowsOnZero()
     {
-        Assert.ThrowsException<InvalidOperationException>(() => Vector3D.Zero.Normalize());
+        Assert.ThrowsExactly<InvalidOperationException>(() => Vector3D.Zero.Normalize());
     }
 
     /// <summary>

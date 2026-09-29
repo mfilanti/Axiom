@@ -159,7 +159,7 @@ public class RTMatrixTest
         var matrix = RTMatrix.Identity;
         Assert.IsTrue(matrix.Inverse().IsEquals(RTMatrix.Identity));
 
-        Assert.ThrowsException<InvalidOperationException>(() => RTMatrix.Zero.Inverse());
+        Assert.ThrowsExactly<InvalidOperationException>(() => RTMatrix.Zero.Inverse());
 
         var rt = RTMatrix.FromEulerAnglesXYZ(0, 0, Math.PI / 2).WithTranslation(new Vector3D(1, 0, 0));
         var inverseRt = rt.InverseRT();

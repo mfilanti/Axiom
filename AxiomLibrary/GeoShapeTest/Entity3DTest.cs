@@ -11,7 +11,7 @@ public class Entity3DTest
     public void TestParametersFormulaSetterThrows()
     {
         var sphere = new Sphere3D(1);
-        Assert.ThrowsException<Exception>(() => sphere.ParametersFormula = new List<Parameter>());
+        Assert.ThrowsExactly<Exception>(() => sphere.ParametersFormula = new List<Parameter>());
     }
 
     // L'evaluator è iniettato come parametro (non più stato statico globale): niente race,
