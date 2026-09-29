@@ -456,7 +456,8 @@ namespace Axiom.GeoShape.Curves
 		public override void ApplyRT(RTMatrix matrix)
 		{
 			Center = matrix * Center;
-			RMatrix = matrix * RMatrix;
+			// RMatrix contiene solo la rotazione: la traslazione è già applicata al centro
+			RMatrix = (matrix * RMatrix).WithTranslation(Vector3D.Zero);
 		}
 
 		/// <summary>
@@ -493,32 +494,18 @@ namespace Axiom.GeoShape.Curves
 			List<Point3D> points = new List<Point3D>();
 			points.Add(StartPoint);
 			points.Add(EndPoint);
-			Plane3D plane = new Plane3D(RMatrix.GetVector(2), Center);
-			Vector3D projX = (plane.Project(plane.Location + Vector3D.UnitX) - plane.Location);
-			Vector3D projY = (plane.Project(plane.Location + Vector3D.UnitY) - plane.Location);
-			Vector3D projZ = (plane.Project(plane.Location + Vector3D.UnitZ) - plane.Location);
-
-
-			if (projX.IsEquals(Vector3D.Zero) == false)
+			// Punti estremi della circonferenza lungo X, Y e Z: Center ± Radius per la direzione dell'asse
+			// proiettata sul piano dell'arco e normalizzata (se non è normalizzata il punto non sta sulla curva)
+			Vector3D normal = RMatrix.GetVector(2).NormalizeOrZero();
+			foreach (Vector3D axis in new[] { Vector3D.UnitX, Vector3D.UnitY, Vector3D.UnitZ })
 			{
-				Point3D pointA = Center + Radius * projX;
+				Vector3D direction = (axis - axis.Dot(normal) * normal).NormalizeOrZero();
+				if (direction.IsEquals(Vector3D.Zero))
+					continue;
+				Point3D pointA = Center + Radius * direction;
 				if (IsOnCurve(pointA) == true) points.Add(pointA);
-				Point3D pointB = Center - Radius * projX;
+				Point3D pointB = Center - Radius * direction;
 				if (IsOnCurve(pointB) == true) points.Add(pointB);
-			}
-			if (projY.IsEquals(Vector3D.Zero) == false)
-			{
-				Point3D pointC = Center + Radius * projY;
-				if (IsOnCurve(pointC) == true) points.Add(pointC);
-				Point3D pointD = Center - Radius * projY;
-				if (IsOnCurve(pointD) == true) points.Add(pointD);
-			}
-			if (projZ.IsEquals(Vector3D.Zero) == false)
-			{
-				Point3D pointE = Center + Radius * projZ;
-				if (IsOnCurve(pointE) == true) points.Add(pointE);
-				Point3D pointF = Center - Radius * projZ;
-				if (IsOnCurve(pointF) == true) points.Add(pointF);
 			}
 			AABBox3D result = AABBox3D.FromPoints(points);
 			return result;

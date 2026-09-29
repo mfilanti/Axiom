@@ -849,7 +849,8 @@ del contorno visibile.
 
 Ogni voce riporta: **severità**, **posizione**, **causa**, **come si manifestava**, **correzione
 applicata**. I bug 01–08 erano stati individuati leggendo il codice; **BUG-09 e BUG-10** sono emersi
-eseguendo davvero i test in modo deterministico (vedi nota di trasparenza più sotto). La suite ora è
+eseguendo davvero i test in modo deterministico (vedi nota di trasparenza più sotto); **BUG-11…14**
+sono emersi usando GeoShape in un'applicazione CAD (visualizzazione, inquadrature, salvataggio). La suite ora è
 completamente verde e stabile in parallelo.
 
 Legenda severità: 🔴 alta (crash/errore certo) · 🟠 media (correttezza) · 🟡 bassa (robustezza/pulizia).
@@ -868,6 +869,10 @@ Legenda severità: 🔴 alta (crash/errore certo) · 🟠 media (correttezza) ·
 | 08 | 🟡 | `Galaxy.cs` | Velocity Verlet completo in `UpdatePhysics` | `UpdatePhysics_ShouldReturnOctreeConsistentWithUpdatedPositions` |
 | 09 | 🔴 | `Arc3D.cs` | `IsOnCurve` non ricorre più all'infinito: calcolo 2D reale | `Cylinder3DTest.TestCloneAndAabbox`, `Arc3DTest.TestIsOnCurve` |
 | 10 | 🔴 | `MathExtensions.cs` | `IsNull`/`IsNotNull` riconoscono il sentinella NaN | `MathExtensionsTest.TestNullPointSentinelIsRecognizedAsNull`, `Spline3DTest.TestSplineBasics` |
+| 11 | 🟠 | `Arc3D.cs`, `Ellipse3D.cs`, `Helix3D.cs` | `ApplyRT` non mette più la traslazione in `RMatrix` | `Arc3DTest.TestApplyRTTranslatesOnce`, `Entity3DExtensionsTest.TestRevolutionAABBoxWithMatrix` |
+| 12 | 🟠 | `Arc3D.cs` | `GetABBox` usa le direzioni proiettate **normalizzate** | `Arc3DTest.TestGetABBoxOfTiltedArc` |
+| 13 | 🟠 | `Entity3DExtensions.cs` | `FromTorus3D(torus, maxError)` passa `sides`/`slices` nell'ordine giusto | `Entity3DExtensionsTest.TestThinTorusFollowsMajorCircle` |
+| 14 | 🟠 | `Revolution3D.cs` | Il setter di `Shape` registra i parametri del profilo (`is not null`) | `Revolution3DTest.TestShapeRegistersProfileParameters` (+2) |
 
 > ⚠️ **Nota di trasparenza sui test.** BUG-09 e BUG-10 sono stati scoperti *dopo* la prima analisi:
 > `Arc3D.IsOnCurve` andava in **StackOverflow** e faceva crashare il *test host* di GeoShapeTest. Il
@@ -1061,6 +1066,72 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
 
 ---
 
+### BUG-11 — `ApplyRT` di archi, ellissi ed eliche: traslazione applicata due volte
+🟠 **Media** · `GeoShape/Curves/Arc3D.cs`, `Ellipse3D.cs`, `Helix3D.cs` (`ApplyRT`)
+
+`RMatrix` rappresenta **solo l'orientamento** della curva: i punti si calcolano come
+`RMatrix * locale + Center`. `ApplyRT(matrix)` trasformava correttamente il centro, ma poi faceva
+`RMatrix = matrix * RMatrix`, copiando in `RMatrix` anche la **traslazione** di `matrix`, che quindi
+veniva applicata una seconda volta a ogni punto valutato.
+
+*Come si manifestava:* un semicerchio di raggio 10 traslato di (1000, 2000) aveva il punto iniziale in
+(2010, 4000) invece che in (1010, 2000). Ne risentiva tutto ciò che trasforma curve in coordinate mondo,
+per esempio `Revolution3D.GetAABBox` (che costruisce circonferenze e applica la matrice dell'entità):
+l'ingombro di una rivoluzione non nell'origine era enormemente sbagliato.
+
+*Correzione applicata:* `RMatrix = (matrix * RMatrix).WithTranslation(Vector3D.Zero);` nelle tre
+curve. Test: `Arc3DTest.TestApplyRTTranslatesOnce`, `Entity3DExtensionsTest.TestRevolutionAABBoxWithMatrix`.
+
+---
+
+### BUG-12 — `Arc3D.GetABBox`: punti estremi persi sugli archi inclinati
+🟠 **Media** · `GeoShape/Curves/Arc3D.cs` (`GetABBox`)
+
+I punti estremi della circonferenza lungo X/Y/Z si ottengono spostandosi dal centro di un raggio lungo
+la direzione dell'asse **proiettata sul piano dell'arco**. La proiezione non veniva normalizzata: se il
+piano non è parallelo all'asse la sua lunghezza è < 1, il punto calcolato cade *dentro* la circonferenza,
+`IsOnCurve` lo scarta e il box si riduce ai soli estremi dell'arco.
+
+*Come si manifestava:* un semicerchio nel piano XY ruotato di 0,5 rad attorno a X risultava piatto
+(ingombro Y e Z nulli invece di 10·cos 0,5 e 10·sin 0,5).
+
+*Correzione applicata:* direzione = proiezione normalizzata (`NormalizeOrZero`), saltando gli assi
+perpendicolari al piano. Test: `Arc3DTest.TestGetABBoxOfTiltedArc`.
+
+---
+
+### BUG-13 — `FromTorus3D`: suddivisioni scambiate (toro sottile → poligono)
+🟠 **Media** · `GeoShape/Entities/Entity3DExtensions.cs` (`FromTorus3D(Torus3D, double)`)
+
+L'overload con `maxError` calcola `slices` (suddivisioni della circonferenza principale, dal raggio
+esterno) e `sides` (suddivisioni della sezione, dal raggio del tubo), ma chiamava
+`FromTorus3D(torus, slices, sides)` mentre la firma è `(torus, sides, slices)`. Inoltre l'arrotondamento
+a multipli di 4 di `sides` usava il resto di `slices`.
+
+*Come si manifestava:* il numero di lati lungo la circonferenza principale dipendeva dal **raggio del
+tubo**: un toro di raggio 500 con tubo 0,8 veniva tassellato come un pentagono.
+
+*Correzione applicata:* argomenti nell'ordine corretto e `r = sides % 4`. Test:
+`Entity3DExtensionsTest.TestThinTorusFollowsMajorCircle` (ogni vertice sta sulla superficie e nessun
+triangolo si allontana dal tubo oltre la tolleranza).
+
+---
+
+### BUG-14 — `Revolution3D.Shape`: parametri del profilo mai registrati
+🟠 **Media** · `GeoShape/Entities/Revolution3D.cs` (setter di `Shape`)
+
+Dopo aver assegnato il nuovo profilo, il setter registrava i suoi parametri solo `if (_shape == null)`:
+condizione invertita, quindi i parametri **non venivano mai aggiunti** e, con `Shape = null`, il ciclo
+su `_shape.Parameters` lanciava `NullReferenceException`.
+
+*Come si manifestava:* i parametri di un profilo parametrico non comparivano in `ParametersFormula`
+della rivoluzione (non modificabili né salvabili); sostituendo il profilo restavano i parametri vecchi.
+
+*Correzione applicata:* `if (_shape is not null)`. Test: `Revolution3DTest.TestShapeRegistersProfileParameters`,
+`TestReplacingShapeSwapsParameters`, `TestShapeSetToNullDoesNotThrow`.
+
+---
+
 ### Criticità minori e code smell
 
 🟡 A bassa priorità. Stato aggiornato dopo gli interventi:
@@ -1145,13 +1216,13 @@ modo deterministico. Stato attuale:
 | Progetto | Framework | Test | Copre | Esito |
 |---|---|---|---|---|
 | GeoMathTest | net8.0 | 55 | GeoMath (vettori, matrici, octree, AABB) | ✅ Passed |
-| GeoShapeTest | net8.0 | 59 | GeoShape (scene-graph, curve, elementi) | ✅ Passed |
+| GeoShapeTest | net8.0 | 66 | GeoShape (scene-graph, curve, elementi) | ✅ Passed |
 | **PhysicsTest** | net10.0 | 20 | **`Axiom.Physics` in isolamento** (integratori, gravità, octree, solver) | ✅ Passed |
 | **CosmosModelTest** | net10.0 | 17 | **`Axiom.Cosmos.Model` in isolamento** (corpi, galassia, universo, navi) | ✅ Passed |
 | **FormulaTest** | net10.0 | 13 | **`Axiom.Formula` in isolamento** (aritmetica, funzioni, variabili secondarie, cicli) | ✅ Passed |
 | CosmosTest | net10.0 | 23 | Composizione Cosmos (simulazione, factory, engine) | ✅ Passed |
 | AxiomUtilitiesTest | net10.0 | 5 | Crittografia AES-GCM, clonazione | ✅ Passed |
-| **Totale** | | **192** | | ✅ **0 falliti, nessun crash** |
+| **Totale** | | **199** | | ✅ **0 falliti, nessun crash** |
 
 > ℹ️ **Test isolati per libreria.** `PhysicsTest` referenzia **solo** `Axiom.Physics` (corpo di prova
 > `TestBody : PhysicsBody`); `CosmosModelTest` referenzia **solo** `Axiom.Cosmos.Model` (sistemi
@@ -1164,7 +1235,12 @@ modo deterministico. Stato attuale:
   `TestPointsOnSplitPlane_AreNotDuplicated`.
 - **Sentinella NaN** (`GeoMathTest/MathExtensionsTest.cs`): `TestNullPointSentinelIsRecognizedAsNull`.
 - **Scene-graph** (`GeoShapeTest/Node3DTest.cs`): `TestTranslationAndXyzPropagateToChildren`.
-- **Arco** (`GeoShapeTest/Arc3DTest.cs`): `TestIsOnCurve` (niente StackOverflow, esito corretto).
+- **Arco** (`GeoShapeTest/Arc3DTest.cs`): `TestIsOnCurve` (niente StackOverflow, esito corretto),
+  `TestApplyRTTranslatesOnce`, `TestGetABBoxOfTiltedArc`.
+- **Toro e rivoluzione** (`GeoShapeTest/Entity3DExtensionsTest.cs`): `TestThinTorusFollowsMajorCircle`,
+  `TestRevolutionAABBoxWithMatrix`.
+- **Profilo della rivoluzione** (`GeoShapeTest/Revolution3DTest.cs`): `TestShapeRegistersProfileParameters`,
+  `TestReplacingShapeSwapsParameters`, `TestShapeSetToNullDoesNotThrow`.
 - **Cosmos** (`CosmosTest/BugRegressionTests.cs`): `NewtonianGravity_ComputeForce_DoesNotThrow_AndAttracts`,
   `CreateDefaultSimulation_ShouldContainAShip`, `JupiterRadius_ShouldBeConsistentAcrossFactories`,
   `UpdatePhysics_ShouldReturnOctreeConsistentWithUpdatedPositions`, `TwoBodyCircularOrbit_ShouldConserveRadius`,

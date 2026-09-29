@@ -917,7 +917,7 @@ namespace Axiom.GeoShape.Entities
 				double stepRadAngle = 0;
 				stepRadAngle = 2 * Math.Acos((torus.InnerRadius - maxError) / torus.InnerRadius);
 				sides = ((int)(2 * Math.PI / stepRadAngle) + 1);
-				int r = slices % 4;
+				int r = sides % 4;
 				if (r > 0)
 					sides += 4 - r;
 			}
@@ -925,7 +925,8 @@ namespace Axiom.GeoShape.Entities
 			if (sides < 4)
 				sides = 4;
 
-			return FromTorus3D(torus, slices, sides);
+			// La firma è (torus, sides, slices): sides = suddivisioni della sezione, slices = della circonferenza principale
+			return FromTorus3D(torus, sides, slices);
 		}
 
 		/// <summary>
