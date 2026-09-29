@@ -172,6 +172,8 @@ valori fissi. Gli attori:
 >   `Entity3D.Update(variables, evaluator, out error)` (e `Node3D.UpdateRTMatrix(evaluator)`). Se
 >   `evaluator` è `null`, le formule non vengono valutate (i valori restano quelli impostati
 >   direttamente); `UpdateRTMatrix()` senza argomenti equivale a evaluator `null`.
+>   Un'implementazione pronta è fornita dalla libreria **`Axiom.Formula`** (vedi §7): basta iniettare
+>   `new FormulaEvaluator().AsDelegate()`.
 > - **Triangolatore:** parametro opzionale `triangulator` (default `null`) dei metodi di meshing che
 >   creano superfici di chiusura: `Entity3DExtensions.FromEntity3D/FromExtrusion3D/FromSweepExtrusion3D/
 >   FromPlanarFace3D(..., triangulator)` e `Mesh3D.CutByPlane(..., addClosingFace, triangulator)`. Se
@@ -1095,6 +1097,40 @@ usava un punto **NaN** come punto di controllo → **tutta l'interpolazione NaN*
 
 ---
 
+## 7. Axiom.Formula — valutatore di formule (NCalc)
+
+Implementazione concreta del punto di innesto `Delegates.EvaluatorDelegate` (vedi §nota su `Delegates`).
+Libreria **adapter** sottile attorno al pacchetto NuGet **NCalc** (7.x): tiene la dipendenza esterna
+confinata qui, mentre `GeoShape` continua a conoscere solo il delegate.
+
+| Elemento | Ruolo |
+|---|---|
+| `FormulaEvaluator.Evaluate(vars, expr, out err)` | Valuta un'espressione; firma compatibile con `EvaluatorDelegate`. In caso di errore ritorna `0` e popola `err`. |
+| `FormulaEvaluator.AsDelegate()` | Restituisce il metodo come `Delegates.EvaluatorDelegate`, pronto da iniettare in `Node3D.Update(...)`. |
+| `FormulaCycleException` | Sollevata (e catturata come errore) quando le variabili secondarie formano un ciclo. |
+
+**Caratteristiche:**
+- Aritmetica completa (`+ - * / %`, parentesi, precedenze) e funzioni built-in di NCalc (`Sqrt`, `Sin`,
+  `Cos`, `Abs`, `Min`, `Max`, `Pow`, …), con nomi di funzione **case-insensitive**.
+- Costanti `pi` ed `e`; nomi di **variabile case-insensitive**.
+- **Variabili secondarie**: una `Variable` con `Formula` non vuota viene calcolata valutando la sua
+  formula, risolvendo **ricorsivamente** le dipendenze (con memoizzazione) e **rilevando i cicli**
+  invece di andare in ricorsione infinita.
+
+```csharp
+var evaluator = new Axiom.Formula.FormulaEvaluator();
+var vars = new Dictionary<string, Variable> {
+    ["a"] = new Variable { Name = "a", Value = 5 },
+    ["b"] = new Variable { Name = "b", Formula = "a + 1" }, // secondaria
+};
+double v = evaluator.Evaluate(vars, "b * 2", out string err); // 12
+node.Update(vars, evaluator.AsDelegate(), out string uerr);   // aggancio a GeoShape
+```
+
+Dipendenze: `Axiom.Formula` → `Axiom.GeoShape` (per `Variable`/`Delegates`) + NuGet `NCalc`.
+
+---
+
 # Parte VI — Stato dei test e appendici
 
 ## 6.1 Esito dei test
@@ -1112,9 +1148,10 @@ modo deterministico. Stato attuale:
 | GeoShapeTest | net8.0 | 59 | GeoShape (scene-graph, curve, elementi) | ✅ Passed |
 | **PhysicsTest** | net10.0 | 20 | **`Axiom.Physics` in isolamento** (integratori, gravità, octree, solver) | ✅ Passed |
 | **CosmosModelTest** | net10.0 | 17 | **`Axiom.Cosmos.Model` in isolamento** (corpi, galassia, universo, navi) | ✅ Passed |
+| **FormulaTest** | net10.0 | 13 | **`Axiom.Formula` in isolamento** (aritmetica, funzioni, variabili secondarie, cicli) | ✅ Passed |
 | CosmosTest | net10.0 | 23 | Composizione Cosmos (simulazione, factory, engine) | ✅ Passed |
 | AxiomUtilitiesTest | net10.0 | 5 | Crittografia AES-GCM, clonazione | ✅ Passed |
-| **Totale** | | **179** | | ✅ **0 falliti, nessun crash** |
+| **Totale** | | **192** | | ✅ **0 falliti, nessun crash** |
 
 > ℹ️ **Test isolati per libreria.** `PhysicsTest` referenzia **solo** `Axiom.Physics` (corpo di prova
 > `TestBody : PhysicsBody`); `CosmosModelTest` referenzia **solo** `Axiom.Cosmos.Model` (sistemi

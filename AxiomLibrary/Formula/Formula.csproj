@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>Axiom.Formula</AssemblyName>
+		<RootNamespace>Axiom.Formula</RootNamespace>
+	</PropertyGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\GeoShape\GeoShape.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="NCalc" Version="7.2.0" />
+	</ItemGroup>
+
+</Project>
